@@ -1,4 +1,23 @@
 document.addEventListener("DOMContentLoaded", function () {
+  /* ===== Mobile nav toggle ===== */
+  const navToggle = document.querySelector(".nav-toggle");
+  const navLinks = document.getElementById("primary-nav");
+  if (navToggle && navLinks) {
+    navToggle.addEventListener("click", () => {
+      const isOpen = navLinks.classList.toggle("open");
+      navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    // Close menu when clicking a link (nice UX)
+    navLinks.querySelectorAll("a").forEach(a => {
+      a.addEventListener("click", () => {
+        navLinks.classList.remove("open");
+        navToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+  }
+
+  /* ===== Lightbox & gallery ===== */
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.querySelector(".lightbox-img");
   const closeBtn = document.querySelector(".close");
@@ -10,8 +29,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const thumbs = document.querySelectorAll(".thumb");
 
   // Build images array for the lightbox:
-  // - If new gallery exists: from thumbnails (or main as fallback)
-  // - Else: fall back to old .gallery-img grid (other pages)
   let images = [];
   if (mainImage) {
     images = Array.from(thumbs).map(t => t.src);
@@ -26,8 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (index < 0) index = images.length - 1;
     if (index >= images.length) index = 0;
     currentIndex = index;
-    lightboxImg.src = images[currentIndex];
-    lightbox.style.display = "flex";
+    if (lightboxImg) lightboxImg.src = images[currentIndex];
+    if (lightbox) lightbox.style.display = "flex";
   }
 
   function showIndex(index) {
@@ -64,26 +81,34 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Lightbox controls
-  closeBtn.addEventListener("click", () => {
-    lightbox.style.display = "none";
-  });
-  nextBtn.addEventListener("click", () => {
-    openLightbox(currentIndex + 1);
-  });
-  prevBtn.addEventListener("click", () => {
-    openLightbox(currentIndex - 1);
-  });
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      if (lightbox) lightbox.style.display = "none";
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      openLightbox(currentIndex + 1);
+    });
+  }
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      openLightbox(currentIndex - 1);
+    });
+  }
 
   // Close lightbox when clicking outside the image
-  lightbox.addEventListener("click", (e) => {
-    if (e.target === lightbox) {
-      lightbox.style.display = "none";
-    }
-  });
+  if (lightbox) {
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) {
+        lightbox.style.display = "none";
+      }
+    });
+  }
 
   // Keyboard navigation
   document.addEventListener("keydown", (e) => {
-    if (lightbox.style.display === "flex") {
+    if (lightbox && lightbox.style.display === "flex") {
       if (e.key === "ArrowLeft") openLightbox(currentIndex - 1);
       if (e.key === "ArrowRight") openLightbox(currentIndex + 1);
       if (e.key === "Escape") lightbox.style.display = "none";
@@ -98,12 +123,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Mobile swipe support (lightbox)
   let startX = 0;
-  lightbox.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-  });
-  lightbox.addEventListener("touchend", (e) => {
-    const endX = e.changedTouches[0].clientX;
-    if (startX - endX > 50) openLightbox(currentIndex + 1); // left
-    if (endX - startX > 50) openLightbox(currentIndex - 1); // right
-  });
+  if (lightbox) {
+    lightbox.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+    });
+    lightbox.addEventListener("touchend", (e) => {
+      const endX = e.changedTouches[0].clientX;
+      if (startX - endX > 50) openLightbox(currentIndex + 1); // left
+      if (endX - startX > 50) openLightbox(currentIndex - 1); // right
+    });
+  }
 });

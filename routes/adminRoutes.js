@@ -1,3 +1,4 @@
+// routes/adminRoutes.js
 const express = require('express');
 const router = express.Router();
 const Car = require('../models/Car');
@@ -6,24 +7,40 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Multer for add-car only
+// ---------- Multer (uploads) ----------
 const storage = multer.diskStorage({
-  destination(req, file, cb) { cb(null, 'uploads'); },
-  filename(req, file, cb) {
-    cb(null, Date.now() + '-' + Math.round(Math.random()*1e9) + path.extname(file.originalname).toLowerCase());
+  destination(req, file, cb) {
+    // Always use the absolute /uploads next to project root
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
   },
-});
-const upload = multer({
-  storage,
-  fileFilter(req, file, cb) {
-    const allowed = ['.jpg','.jpeg','.png','.gif','.webp'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.includes(ext)) return cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are allowed'));
-    cb(null, true);
+  filename(req, file, cb) {
+    cb(
+      null,
+      Date.now() +
+        '-' +
+        Math.round(Math.random() * 1e9) +
+        path.extname(file.originalname).toLowerCase()
+    );
   },
 });
 
-// very simple admin guard
+const upload = multer({
+  storage,
+  fileFilter(req, file, cb) {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowed.includes(ext)) {
+      return cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are allowed'));
+    }
+    cb(null, true);
+  },
+  // optional: limit file size to ~8 MB
+  // limits: { fileSize: 8 * 1024 * 1024 },
+});
+
+// ---------- very simple admin guard ----------
 function isAdmin(req, res, next) {
   if (req.session && req.session.admin) return next();
   return res.redirect('/admin/login');
@@ -31,8 +48,9 @@ function isAdmin(req, res, next) {
 
 router.get('/', (req, res) => res.redirect('/admin/login'));
 
-// Auth
+// ---------- Auth ----------
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
+
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === '1234') {
@@ -42,7 +60,12 @@ router.post('/login', (req, res) => {
   res.render('admin/login', { error: 'Invalid credentials' });
 });
 
-// Dashboard
+// (optional) simple logout
+router.post('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/admin/login'));
+});
+
+// ---------- Dashboard ----------
 router.get('/dashboard', isAdmin, async (req, res) => {
   try {
     const cars = await Car.find().sort({ createdAt: -1 });
@@ -52,7 +75,7 @@ router.get('/dashboard', isAdmin, async (req, res) => {
   }
 });
 
-// Appointments
+// ---------- Appointments ----------
 router.get('/appointments', isAdmin, async (req, res) => {
   try {
     const appointments = await Appointment.find().sort({ date: -1 });
@@ -61,6 +84,7 @@ router.get('/appointments', isAdmin, async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
 router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
   try {
     await Appointment.findByIdAndDelete(req.params.id);
@@ -70,12 +94,11 @@ router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// Add Car (GET)
+// ---------- Add Car ----------
 router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
 });
 
-// Add Car (POST) — now captures spec fields
 router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) => {
   try {
     const {
@@ -84,7 +107,8 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
-    const images = (req.files || []).map(f => '/uploads/' + f.filename);
+    // Public URLs for the images (served by app.use('/uploads', ...))
+    const images = (req.files || []).map(f => '/uploads/' + path.basename(f.path));
 
     const newCar = new Car({
       make: (make || '').trim(),
@@ -114,14 +138,17 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
   }
 });
 
-// Delete Car
+// ---------- Delete Car ----------
 router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
-    if (car && car.images) {
-      car.images.forEach(img => {
-        const p = path.join(__dirname, '..', img);
-        if (fs.existsSync(p)) fs.unlinkSync(p);
+    if (car && Array.isArray(car.images)) {
+      car.images.forEach(imgUrl => {
+        // imgUrl is like "/uploads/filename.jpg"
+        const diskPath = path.join(__dirname, '..', imgUrl);
+        if (fs.existsSync(diskPath)) {
+          try { fs.unlinkSync(diskPath); } catch {}
+        }
       });
     }
     await Car.findByIdAndDelete(req.params.id);
@@ -131,7 +158,7 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// Edit Car (GET) — allow editing specs too
+// ---------- Edit Car ----------
 router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -142,7 +169,6 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   }
 });
 
-// Edit Car (POST) — only change fields that were submitted (don't blank others)
 router.post('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const id = req.params.id;
@@ -159,7 +185,7 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     }
     car.price = parsedPrice;
 
-    // Always allow description (can be empty string if you want)
+    // Always allow description (can be empty string)
     car.description = (req.body.description ?? '').trim();
 
     // Helper to update only when a value was submitted
@@ -169,8 +195,6 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
         if (val !== '' && val !== null && val !== undefined) {
           car[key] = transform(val);
         }
-        // If you want to allow clearing a field when user sends empty string,
-        // replace the block above with: car[key] = val === '' ? undefined : transform(val);
       }
     };
 
@@ -191,6 +215,5 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     res.status(500).send('Error updating car');
   }
 });
-
 
 module.exports = router;

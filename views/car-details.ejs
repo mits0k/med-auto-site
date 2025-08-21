@@ -1,0 +1,86 @@
+<%- include('partials/header') %>
+
+<main class="container stack-l">
+  <!-- Title & price -->
+  <header class="car-header">
+    <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
+    <div style="text-align:center;margin-top:-6px;">
+      <span class="car-price">$<%= car.price.toLocaleString() %></span>
+    </div>
+  </header>
+
+  <!-- Gallery -->
+  <% if (car.images && car.images.length) { %>
+    <section class="gallery">
+      <!-- Main / hero image -->
+      <div class="gallery-main">
+        <img
+          id="mainImage"
+          class="gallery-img"
+          src="<%= car.images[0] %>"
+          data-index="0"
+          alt="<%= car.make %> <%= car.model %> main"
+        />
+      </div>
+
+      <!-- Thumbnail strip -->
+      <div class="thumb-strip" role="list">
+        <% car.images.forEach((img, i) => { %>
+          <img
+            role="listitem"
+            class="thumb <%= i === 0 ? 'active' : '' %>"
+            src="<%= img %>"
+            data-index="<%= i %>"
+            alt="<%= car.make %> <%= car.model %> thumbnail <%= i+1 %>"
+          />
+        <% }) %>
+      </div>
+    </section>
+  <% } else { %>
+    <div class="no-photos">No photos uploaded</div>
+  <% } %>
+
+  <!-- Specs + description -->
+  <section class="desc-panel">
+    <h2 style="margin:0 0 8px;">Specs</h2>
+
+    <ul class="spec-grid">
+      <li><span>Exterior</span><strong><%= car.exteriorColor || '—' %></strong></li>
+      <li><span>Interior</span><strong><%= car.interiorColor || '—' %></strong></li>
+      <li><span>Mileage</span><strong>
+        <% if (typeof car.mileage === 'number') { %>
+          <%= car.mileage.toLocaleString() %> km
+        <% } else { %>—<% } %>
+      </strong></li>
+      <li><span>Engine</span><strong><%= car.engine || '—' %></strong></li>
+      <li><span>Transmission</span><strong><%= car.transmission || '—' %></strong></li>
+      <li><span>Drivetrain</span><strong><%= car.drivetrain || '—' %></strong></li>
+      <li><span>Fuel</span><strong><%= car.fuel || '—' %></strong></li>
+      <li><span>Body Style</span><strong><%= car.bodyStyle || '—' %></strong></li>
+      <li><span>VIN</span><strong><%= car.vin || '—' %></strong></li>
+      <li><span>Year</span><strong><%= car.year %></strong></li>
+    </ul>
+
+    <% if (car.description) { %>
+      <h2 style="margin:18px 0 8px;">Description</h2>
+      <div class="description"><%= car.description %></div>
+    <% } %>
+  </section>
+
+  <div class="row" style="justify-content:center;">
+    <a href="/book?car=<%= car._id %>" class="btn btn-primary">Book Appointment</a>
+    <a href="/inventory" class="btn btn-muted">Back to Inventory</a>
+  </div>
+</main>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox">
+  <span class="close">&times;</span>
+  <img class="lightbox-img" src="" alt="Car image" />
+  <div class="lightbox-controls">
+    <span class="prev">&#10094;</span>
+    <span class="next">&#10095;</span>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

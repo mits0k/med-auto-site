@@ -1,0 +1,146 @@
+<%- include('../partials/header') %>
+
+<section class="form-card">
+  <h1 class="form-title">Edit Car</h1>
+
+  <% if (error) { %>
+    <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
+  <% } %>
+
+  <form action="/admin/cars/<%= car._id %>/edit" method="POST" class="form">
+    <!-- Readonly identity -->
+    <div class="form-row">
+      <div>
+        <label class="label">Make</label>
+        <input type="text" value="<%= car.make %>" readonly disabled />
+      </div>
+      <div>
+        <label class="label">Model</label>
+        <input type="text" value="<%= car.model %>" readonly disabled />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="label">Year</label>
+        <input type="number" value="<%= car.year %>" readonly disabled />
+      </div>
+      <div>
+        <label class="label">Price (editable)</label>
+        <input type="number" name="price" value="<%= car.price %>" required min="0" step="1" />
+      </div>
+    </div>
+
+    <!-- Colors -->
+    <div class="form-row">
+      <div>
+        <label class="label">Exterior Color</label>
+        <select name="exteriorColor">
+          <option value="">Select exterior</option>
+          <% ['Black','White','Gray','Silver','Blue','Red','Green','Brown','Beige','Yellow','Orange','Purple','Gold','Other'].forEach(c => { %>
+            <option value="<%= c %>" <%= car.exteriorColor === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="label">Interior Color</label>
+        <select name="interiorColor">
+          <option value="">Select interior</option>
+          <% ['Black','Gray','Beige / Tan','Brown','Red','White','Blue','Other'].forEach(c => { %>
+            <option value="<%= c %>" <%= car.interiorColor === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <!-- Mileage / Engine -->
+    <div class="form-row">
+      <div>
+        <label class="label">Mileage (km)</label>
+        <input type="number" name="mileage" value="<%= typeof car.mileage === 'number' ? car.mileage : '' %>" />
+      </div>
+      <div>
+        <label class="label">Engine</label>
+        <input type="text" name="engine" value="<%= car.engine || '' %>" />
+      </div>
+    </div>
+
+    <!-- Transmission / Drivetrain -->
+    <div class="form-row">
+      <div>
+        <label class="label">Transmission</label>
+        <select name="transmission">
+          <option value="">Select transmission</option>
+          <% ['Automatic','Manual','Dual‑clutch','CVT','Other'].forEach(t => { %>
+            <option value="<%= t %>" <%= car.transmission === t ? 'selected' : '' %>><%= t %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="label">Drivetrain</label>
+        <select name="drivetrain">
+          <option value="">Select drivetrain</option>
+          <% ['AWD','FWD','RWD','4WD / 4x4'].forEach(d => { %>
+            <option value="<%= d %>" <%= car.drivetrain === d ? 'selected' : '' %>><%= d %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fuel / Body Style -->
+    <div class="form-row">
+      <div>
+        <label class="label">Fuel</label>
+        <select name="fuel">
+          <option value="">Select fuel</option>
+          <% ['Gasoline','Diesel','Hybrid','Plug‑in Hybrid','Electric','Flex Fuel','Other'].forEach(f => { %>
+            <option value="<%= f %>" <%= car.fuel === f ? 'selected' : '' %>><%= f %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="label">Body Style</label>
+        <select name="bodyStyle">
+          <option value="">Select body style</option>
+          <% ['Sedan','Hatchback','Coupe','Convertible','SUV','Crossover','Truck','Van / Minivan','Wagon','Other'].forEach(b => { %>
+            <option value="<%= b %>" <%= car.bodyStyle === b ? 'selected' : '' %>><%= b %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <!-- VIN -->
+    <div>
+      <label class="label">VIN</label>
+      <input type="text" name="vin" value="<%= car.vin || '' %>" />
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="label">Short Description</label>
+      <textarea name="description" rows="5"><%= car.description || '' %></textarea>
+    </div>
+
+    <!-- Image preview (read‑only) -->
+    <div class="stack-m">
+      <strong>Images</strong>
+      <% if (car.images && car.images.length > 0) { %>
+        <div class="row">
+          <% car.images.forEach(img => { %>
+            <img src="<%= img %>" width="140" style="border-radius:8px;box-shadow:var(--shadow);" />
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p>No images</p>
+      <% } %>
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
+    </div>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

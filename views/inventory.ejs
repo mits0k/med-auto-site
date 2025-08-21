@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+<main class="container stack-l">
+  <h1>Inventory</h1>
+
+  <form method="GET" action="/inventory" class="row">
+    <select name="make">
+      <option value="all" <%= selectedMake === 'all' ? 'selected' : '' %>>All Makes</option>
+      <% makes.forEach(m => { %>
+        <option value="<%= m %>" <%= selectedMake === m ? 'selected' : '' %>><%= m %></option>
+      <% }) %>
+    </select>
+
+    <select name="year">
+      <option value="all" <%= selectedYear === 'all' ? 'selected' : '' %>>All Years</option>
+      <% years.sort((a,b)=>b-a).forEach(y => { %>
+        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+      <% }) %>
+    </select>
+
+    <select name="sort">
+      <option value="">Sort By</option>
+      <option value="price-asc"  <%= selectedSort === 'price-asc'  ? 'selected' : '' %>>Price: Low to High</option>
+      <option value="price-desc" <%= selectedSort === 'price-desc' ? 'selected' : '' %>>Price: High to Low</option>
+      <option value="year-asc"   <%= selectedSort === 'year-asc'   ? 'selected' : '' %>>Year: Oldest</option>
+      <option value="year-desc"  <%= selectedSort === 'year-desc'  ? 'selected' : '' %>>Year: Newest</option>
+    </select>
+
+    <button type="submit" class="btn btn-secondary">Apply</button>
+  </form>
+
+  <% if (cars.length > 0) { %>
+    <div class="vehicle-grid">
+      <% cars.forEach(car => { %>
+        <a href="/inventory/<%= car._id %>" class="vehicle-card">
+          <div class="vehicle-media">
+            <% if (car.images && car.images.length > 0) { %>
+              <img src="<%= car.images[0] %>" alt="<%= car.make %> <%= car.model %>" />
+            <% } else { %>
+              <div class="vehicle-noimg">No image</div>
+            <% } %>
+
+            <!-- top left watermark / small brand -->
+            <div class="vehicle-overlay-top">
+              <span class="wm">MED AUTO</span>
+            </div>
+
+            <!-- bottom info strip: year • mileage • price + brand dot -->
+            <div class="vehicle-overlay-bottom">
+              <div class="vinfo">
+                <span class="yb"><%= car.year %></span>
+                <% if (typeof car.mileage === 'number') { %>
+                  <span class="meta"><%= car.mileage.toLocaleString() %> kilometers</span>
+                <% } %>
+                <span class="price">$<%= car.price.toLocaleString() %></span>
+              </div>
+              <div class="branddot" title="<%= car.make %>"><%= (car.make||'')[0] || '•' %></div>
+            </div>
+          </div>
+
+          <div class="vehicle-caption">
+            <h3><%= car.make %> <%= car.model %></h3>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+
+    <div class="pager">
+      <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Prev</a>
+      <% } %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="?page=<%= i %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+      <% } %>
+      <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Next</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p>No cars match your filter.</p>
+  <% } %>
+</main>
+<%- include('partials/footer') %>

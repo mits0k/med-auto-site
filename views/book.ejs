@@ -1,0 +1,90 @@
+<%- include('partials/header') %>
+
+<main class="booking-page">
+  <h1>Book an Appointment</h1>
+  <p style="margin-top:-6px;color:#a8b3c7;">Business hours: 9:00 AM – 5:30 PM</p>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="success-popup" style="background:#ff3d71;">⚠️ <%= error %></div>
+  <% } %>
+
+  <form action="/book" method="POST" style="display:flex; flex-direction:column; gap:14px;">
+    <!-- Car selection (optional) -->
+    <label class="label" for="carId">Car you’d like to see </label>
+    <select name="carId" id="carId">
+      <option value="">— Selec Vehicle —</option>
+      <% if (Array.isArray(cars)) { %>
+        <% cars.forEach(c => { %>
+          <option value="<%= c._id %>" <%= (selectedCarId === String(c._id)) ? 'selected' : '' %>>
+            <%= c.year %> <%= c.make %> <%= c.model %>
+          </option>
+        <% }) %>
+      <% } %>
+    </select>
+
+    <input
+      type="text"
+      name="name"
+      placeholder="Your Name"
+      required
+      value="<%= typeof name !== 'undefined' ? name : '' %>"
+    />
+
+    <input
+      type="email"
+      name="email"
+      placeholder="Your Email"
+      required
+      value="<%= typeof email !== 'undefined' ? email : '' %>"
+    />
+
+    <input
+      type="tel"
+      name="phone"
+      placeholder="Phone Number"
+      required
+      value="<%= typeof phone !== 'undefined' ? phone : '' %>"
+    />
+
+    <!-- Date + Time -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <input
+        type="date"
+        name="date"
+        required
+        min="<%= typeof minDate !== 'undefined' ? minDate : '' %>"
+        value="<%= typeof date !== 'undefined' ? date : '' %>"
+      />
+      <input
+        type="time"
+        name="time"
+        required
+        min="09:00"
+        max="17:30"
+        step="1800"
+        value="<%= typeof time !== 'undefined' ? time : '' %>"
+      />
+    </div>
+
+    <textarea
+      name="message"
+      placeholder="Additional Info (optional)"
+    ><%= typeof message !== 'undefined' ? message : '' %></textarea>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;">Book Appointment</button>
+  </form>
+
+  <% if (success) { %>
+    <div class="success-popup" id="successPopup">
+      ✅ Booking confirmed!
+    </div>
+    <script>
+      setTimeout(() => {
+        const popup = document.getElementById('successPopup');
+        if (popup) popup.style.display = 'none';
+      }, 3000);
+    </script>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

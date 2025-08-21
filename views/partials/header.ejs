@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MED AUTO</title>
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top contact bar -->
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <!-- MED AUTO wordmark (clickable) -->
+        <a href="/" class="wordmark" aria-label="MED AUTO Home">
+          <span class="wm-initials">MA</span>
+          <span class="wm-text">
+            <span class="wm-title">MED AUTO</span>
+            <span class="wm-sub">SALES • FINANCING</span>
+          </span>
+        </a>
+      </div>
+      <div class="topbar-right">
+        <a class="topbar-link" href="tel:+15144634503"><strong>Tom: (514) 463-4503</strong></a>
+        <span class="divider">•</span>
+        <a class="topbar-link" href="tel:+15147751722"><strong>Dimitri: (514) 775-1722</strong></a>
+        <span class="divider">•</span>
+        <a class="topbar-link" href="https://instagram.com/medauto_mtl" target="_blank" rel="noopener">@MEDAUTO_MTL</a>
+        <span class="divider">•</span>
+        <a class="topbar-link" href="https://maps.google.com/?q=2046+Avenue+Chartier,+Dorval,+QC+H9P+1H2" target="_blank" rel="noopener">
+          2046 Avenue Chartier, Dorval, QC H9P 1H2
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main nav -->
+  <header class="site-header">
+    <nav class="nav container">
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/inventory">Inventory</a></li>
+        <li><a href="/book">Booking</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <% if (typeof session !== 'undefined' && session.admin) { %>
+          <li><a href="/admin/dashboard">Admin</a></li>
+        <% } %>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page">

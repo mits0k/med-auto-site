@@ -1,0 +1,53 @@
+<%- include('../partials/header') %>
+
+<main class="container stack-l">
+  <h1>Admin Dashboard</h1>
+
+  <div class="row-right">
+    <a href="/admin/add-car" class="btn btn-success">+ Add New Car</a>
+    <a href="/admin/appointments" class="btn btn-info">Manage Appointments</a>
+  </div>
+
+  <% if (cars.length > 0) { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Make</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>Price</th>
+          <th style="width:220px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% cars.forEach(car => { %>
+          <tr>
+            <td>
+              <% if (car.images && car.images.length > 0) { %>
+                <img src="<%= car.images[0] %>" alt="<%= car.make %>" style="width:110px;height:66px;object-fit:cover;border-radius:6px;" />
+              <% } else { %>No image<% } %>
+            </td>
+            <td><%= car.make %></td>
+            <td><%= car.model %></td>
+            <td><%= car.year %></td>
+            <td>$<%= car.price.toLocaleString() %></td>
+            <td>
+              <div class="row">
+                <a href="/admin/cars/<%= car._id %>/edit" class="btn btn-secondary">Edit</a>
+                <form action="/admin/cars/<%= car._id %>/delete" method="POST"
+                      onsubmit="return confirm('Delete this car?');">
+                  <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p>No cars available.</p>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>

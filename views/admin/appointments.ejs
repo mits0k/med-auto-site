@@ -1,0 +1,54 @@
+<%- include('../partials/header') %>
+
+<main class="container stack-l">
+  <h1>Manage Appointments</h1>
+
+  <% if (appointments.length > 0) { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contact</th>
+          <th>Car</th>
+          <th>Date & Time</th>
+          <th>Message</th>
+          <th style="width:120px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% appointments.forEach(a => { %>
+          <tr>
+            <td><strong><%= a.name %></strong></td>
+            <td>
+              <div><%= a.email %></div>
+              <div><%= a.phone %></div>
+            </td>
+            <td>
+              <% if (a.carLabel) { %>
+                <%= a.carLabel %>
+              <% } else { %>
+                —
+              <% } %>
+            </td>
+            <td><%= a.date.toLocaleString() %></td>
+            <td style="max-width:280px;"><%= a.message || '-' %></td>
+            <td>
+              <form action="/admin/appointments/<%= a._id %>/delete" method="POST"
+                    onsubmit="return confirm('Delete this appointment?');">
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p>No appointments found.</p>
+  <% } %>
+
+  <div class="row">
+    <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

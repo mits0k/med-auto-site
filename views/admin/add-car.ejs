@@ -1,0 +1,169 @@
+<%- include('../partials/header') %>
+
+<section class="form-card">
+  <h1 class="form-title">Add a Car</h1>
+
+  <% if (error) { %>
+    <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
+  <% } %>
+
+  <form action="/admin/add-car" method="POST" enctype="multipart/form-data" class="form">
+    <!-- Make / Model -->
+    <div class="form-row">
+      <div>
+        <label class="label">Make</label>
+        <input type="text" name="make" placeholder="e.g., BMW" required />
+      </div>
+      <div>
+        <label class="label">Model</label>
+        <input type="text" name="model" placeholder="e.g., 535i" required />
+      </div>
+    </div>
+
+    <!-- Year / Price -->
+    <div class="form-row">
+      <div>
+        <label class="label">Year</label>
+        <input type="number" name="year" placeholder="e.g., 2013" required />
+      </div>
+      <div>
+        <label class="label">Price</label>
+        <input type="number" name="price" placeholder="e.g., 17999" required />
+      </div>
+    </div>
+
+    <!-- Colors -->
+    <div class="form-row">
+      <div>
+        <label class="label">Exterior Color</label>
+        <select name="exteriorColor">
+          <option value="">Select exterior</option>
+          <option>Black</option>
+          <option>White</option>
+          <option>Gray</option>
+          <option>Silver</option>
+          <option>Blue</option>
+          <option>Red</option>
+          <option>Green</option>
+          <option>Brown</option>
+          <option>Beige</option>
+          <option>Yellow</option>
+          <option>Orange</option>
+          <option>Purple</option>
+          <option>Gold</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Interior Color</label>
+        <select name="interiorColor">
+          <option value="">Select interior</option>
+          <option>Black</option>
+          <option>Gray</option>
+          <option>Beige / Tan</option>
+          <option>Brown</option>
+          <option>Red</option>
+          <option>White</option>
+          <option>Blue</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Mileage / Engine -->
+    <div class="form-row">
+      <div>
+        <label class="label">Mileage (km)</label>
+        <input type="number" name="mileage" placeholder="e.g., 110000" />
+      </div>
+      <div>
+        <label class="label">Engine</label>
+        <input type="text" name="engine" placeholder="e.g., 3.0L I6 TwinPower Turbo" />
+      </div>
+    </div>
+
+    <!-- Transmission / Drivetrain -->
+    <div class="form-row">
+      <div>
+        <label class="label">Transmission</label>
+        <select name="transmission">
+          <option value="">Select transmission</option>
+          <option>Automatic</option>
+          <option>Manual</option>
+          <option>Dual‑clutch</option>
+          <option>CVT</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Drivetrain</label>
+        <select name="drivetrain">
+          <option value="">Select drivetrain</option>
+          <option>AWD</option>
+          <option>FWD</option>
+          <option>RWD</option>
+          <option>4WD / 4x4</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fuel / Body Style -->
+    <div class="form-row">
+      <div>
+        <label class="label">Fuel</label>
+        <select name="fuel">
+          <option value="">Select fuel</option>
+          <option>Gasoline</option>
+          <option>Diesel</option>
+          <option>Hybrid</option>
+          <option>Plug‑in Hybrid</option>
+          <option>Electric</option>
+          <option>Flex Fuel</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">Body Style</label>
+        <select name="bodyStyle">
+          <option value="">Select body style</option>
+          <option>Sedan</option>
+          <option>Hatchback</option>
+          <option>Coupe</option>
+          <option>Convertible</option>
+          <option>SUV</option>
+          <option>Crossover</option>
+          <option>Truck</option>
+          <option>Van / Minivan</option>
+          <option>Wagon</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- VIN -->
+    <div>
+      <label class="label">VIN</label>
+      <input type="text" name="vin" placeholder="Optional" />
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="label">Short Description</label>
+      <textarea name="description" placeholder="Add a short blurb (the specs cover the rest)"></textarea>
+    </div>
+
+    <!-- Images -->
+    <div>
+      <label class="label">Upload Car Images</label>
+      <input type="file" name="images" accept="image/*" multiple required />
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+      <button type="submit" class="btn btn-primary">Add Car</button>
+      <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
+    </div>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

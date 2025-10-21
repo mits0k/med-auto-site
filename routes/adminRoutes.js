@@ -6,38 +6,29 @@ const Appointment = require('../models/Appointment');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp'); // ✅ image processing
 
-// ---------- Multer (uploads) ----------
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    // Always use the absolute /uploads next to project root
-    const uploadDir = path.join(__dirname, '..', 'uploads');
-    fs.mkdirSync(uploadDir, { recursive: true });
-    cb(null, uploadDir);
-  },
-  filename(req, file, cb) {
-    cb(
-      null,
-      Date.now() +
-        '-' +
-        Math.round(Math.random() * 1e9) +
-        path.extname(file.originalname).toLowerCase()
-    );
-  },
-});
+// ---------- paths ----------
+const uploadDir = path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
 
+// ---------- Multer (memory) ----------
+// We keep files in memory so we can compress/resize with sharp before writing.
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter(req, file, cb) {
-    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const ext = path.extname(file.originalname).toLowerCase();
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    // Allow HEIC/HEIF inputs (iPhone) — we’ll transcode them to webp.
     if (!allowed.includes(ext)) {
-      return cb(new Error('Only image files (jpg, jpeg, png, gif, webp) are allowed'));
+      return cb(new Error('Only image files (jpg, jpeg, png, gif, webp, heic, heif) are allowed'));
     }
     cb(null, true);
   },
-  // optional: limit file size to ~8 MB
-  // limits: { fileSize: 8 * 1024 * 1024 },
+  limits: {
+    files: 20,
+    fileSize: 25 * 1024 * 1024, // up to 25MB per file (client side will already compress)
+  },
 });
 
 // ---------- very simple admin guard ----------
@@ -60,7 +51,6 @@ router.post('/login', (req, res) => {
   res.render('admin/login', { error: 'Invalid credentials' });
 });
 
-// (optional) simple logout
 router.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
@@ -107,8 +97,37 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
-    // Public URLs for the images (served by app.use('/uploads', ...))
-    const images = (req.files || []).map(f => '/uploads/' + path.basename(f.path));
+    // Process & save images:
+    // - Ensure max width 1600px (keeps detail, huge size savings)
+    // - Always output webp @ quality 80
+    // - Unique filename
+    const images = [];
+    if (Array.isArray(req.files)) {
+      // Limit concurrency to avoid CPU spikes on small instances
+      const concurrency = 3;
+      let i = 0;
+      while (i < req.files.length) {
+        const batch = req.files.slice(i, i + concurrency);
+        // Process a small batch in parallel
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(batch.map(async (f) => {
+          const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          const outPath = path.join(uploadDir, `${base}.webp`);
+          const publicUrl = `/uploads/${path.basename(outPath)}`;
+
+          // Some mobile browsers already sent us a resized/encoded blob,
+          // but we still normalize to webp & cap the width.
+          await sharp(f.buffer)
+            .rotate() // auto-orient using EXIF
+            .resize({ width: 1600, withoutEnlargement: true })
+            .webp({ quality: 80 })
+            .toFile(outPath);
+
+          images.push(publicUrl);
+        }));
+        i += concurrency;
+      }
+    }
 
     const newCar = new Car({
       make: (make || '').trim(),
@@ -144,7 +163,6 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
     const car = await Car.findById(req.params.id);
     if (car && Array.isArray(car.images)) {
       car.images.forEach(imgUrl => {
-        // imgUrl is like "/uploads/filename.jpg"
         const diskPath = path.join(__dirname, '..', imgUrl);
         if (fs.existsSync(diskPath)) {
           try { fs.unlinkSync(diskPath); } catch {}
@@ -175,7 +193,6 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     const car = await Car.findById(id);
     if (!car) return res.status(404).send('Car not found');
 
-    // Required: price
     if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
       return res.status(400).send('Price is required');
     }
@@ -185,10 +202,8 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     }
     car.price = parsedPrice;
 
-    // Always allow description (can be empty string)
     car.description = (req.body.description ?? '').trim();
 
-    // Helper to update only when a value was submitted
     const setIfProvided = (key, transform = v => v) => {
       if (Object.prototype.hasOwnProperty.call(req.body, key)) {
         const val = req.body[key];
@@ -208,11 +223,7 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     setIfProvided('bodyStyle',    v => v.trim());
     setIfProvided('vin',          v => v.trim());
 
-    /**
-     * NEW: Handle image reordering from a hidden input `imagesOrder`.
-     * - Expect a comma-separated list of image URLs that already exist on this car.
-     * - We keep any not-listed existing images at the end (so you can reorder a subset safely).
-     */
+    // Reorder images from hidden input
     if (typeof req.body.imagesOrder === 'string') {
       const requestedOrder = req.body.imagesOrder
         .split(',')
@@ -221,9 +232,7 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
 
       if (requestedOrder.length > 0 && Array.isArray(car.images)) {
         const currentSet = new Set(car.images.map(String));
-        // Keep only URLs that already belong to this car
         const cleaned = requestedOrder.filter(u => currentSet.has(u));
-        // Append any images not included in the submitted order to the end (no loss)
         const rest = car.images.filter(u => !cleaned.includes(u));
         car.images = [...cleaned, ...rest];
       }

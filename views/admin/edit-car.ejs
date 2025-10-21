@@ -7,7 +7,7 @@
     <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
   <% } %>
 
-  <form action="/admin/cars/<%= car._id %>/edit" method="POST" class="form">
+  <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form">
     <!-- Readonly identity -->
     <div class="form-row">
       <div>
@@ -71,7 +71,7 @@
         <label class="label">Transmission</label>
         <select name="transmission">
           <option value="">Select transmission</option>
-          <% ['Automatic','Manual','Dual‑clutch','CVT','Other'].forEach(t => { %>
+          <% ['Automatic','Manual','Dual clutch','CVT','Other'].forEach(t => { %>
             <option value="<%= t %>" <%= car.transmission === t ? 'selected' : '' %>><%= t %></option>
           <% }) %>
         </select>
@@ -93,7 +93,7 @@
         <label class="label">Fuel</label>
         <select name="fuel">
           <option value="">Select fuel</option>
-          <% ['Gasoline','Diesel','Hybrid','Plug‑in Hybrid','Electric','Flex Fuel','Other'].forEach(f => { %>
+          <% ['Gasoline','Diesel','Hybrid','Plug in Hybrid','Electric','Flex Fuel','Other'].forEach(f => { %>
             <option value="<%= f %>" <%= car.fuel === f ? 'selected' : '' %>><%= f %></option>
           <% }) %>
         </select>
@@ -121,18 +121,27 @@
       <textarea name="description" rows="5"><%= car.description || '' %></textarea>
     </div>
 
-    <!-- Image preview (read‑only) -->
+    <!-- ===== Image Reordering (Drag & Drop) ===== -->
     <div class="stack-m">
-      <strong>Images</strong>
+      <strong>Images (drag to reorder)</strong>
+
       <% if (car.images && car.images.length > 0) { %>
-        <div class="row">
-          <% car.images.forEach(img => { %>
-            <img src="<%= img %>" width="140" style="border-radius:8px;box-shadow:var(--shadow);" />
+        <ul id="dndList" class="dnd-list" aria-label="Reorder images">
+          <% car.images.forEach((img, i) => { %>
+            <li class="dnd-item" draggable="true" data-src="<%= img %>">
+              <div class="dnd-handle" title="Drag to reorder">⋮⋮</div>
+              <img src="<%= img %>" alt="car image <%= i+1 %>" />
+              <span class="dnd-label"><%= i+1 %></span>
+            </li>
           <% }) %>
-        </div>
+        </ul>
       <% } else { %>
         <p>No images</p>
       <% } %>
+
+      <!-- Hidden input to carry the new order to the server -->
+      <input type="hidden" id="imagesOrderInput" name="imagesOrder" value="" />
+      <small style="color:var(--muted);">Tip: the first image becomes the main photo shown on the site.</small>
     </div>
 
     <!-- Actions -->
@@ -142,5 +151,105 @@
     </div>
   </form>
 </section>
+
+<style>
+  /* Minimal styles for drag-and-drop list */
+  .dnd-list{
+    list-style:none; margin:0; padding:0;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;
+  }
+  .dnd-item{
+    position:relative; background:#0c1018; border:1px solid rgba(255,255,255,.12);
+    border-radius:10px; overflow:hidden; display:flex; align-items:center; gap:8px; padding:8px;
+  }
+  .dnd-item img{ width:100%; height:110px; object-fit:cover; border-radius:8px }
+  .dnd-handle{
+    position:absolute; top:8px; left:8px; background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.15); color:#e5e7eb; border-radius:8px;
+    padding:4px 6px; font-weight:700; cursor:grab; user-select:none; z-index:2;
+  }
+  .dnd-item.dragging{ opacity:.6; border-color: var(--brand) }
+  .dnd-item.drop-target{ outline:2px dashed var(--brand); outline-offset:-6px }
+  .dnd-label{
+    position:absolute; bottom:8px; right:8px; font-size:12px; font-weight:800;
+    background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.15);
+    color:#e5e7eb; padding:2px 6px; border-radius:999px;
+  }
+</style>
+
+<script>
+  (function(){
+    const list = document.getElementById('dndList');
+    const input = document.getElementById('imagesOrderInput');
+    const form = document.getElementById('editCarForm');
+    if (!list) return;
+
+    let dragEl = null;
+
+    const getItems = () => Array.from(list.querySelectorAll('.dnd-item'));
+    const serialize = () => getItems().map(li => li.dataset.src).join(',');
+
+    function updateLabels(){
+      getItems().forEach((li, idx) => {
+        const label = li.querySelector('.dnd-label');
+        if (label) label.textContent = String(idx + 1);
+      });
+    }
+
+    function onDragStart(e){
+      const target = e.target.closest('.dnd-item');
+      if (!target) return;
+      dragEl = target;
+      target.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // For Firefox
+      e.dataTransfer.setData('text/plain', target.dataset.src);
+    }
+
+    function onDragOver(e){
+      e.preventDefault();
+      const over = e.target.closest('.dnd-item');
+      if (!over || over === dragEl) return;
+      const rect = over.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      over.classList.add('drop-target');
+      if (before) {
+        list.insertBefore(dragEl, over);
+      } else {
+        list.insertBefore(dragEl, over.nextSibling);
+      }
+    }
+
+    function onDragLeave(e){
+      const li = e.target.closest('.dnd-item');
+      if (li) li.classList.remove('drop-target');
+    }
+
+    function onDrop(e){
+      e.preventDefault();
+      getItems().forEach(li => li.classList.remove('drop-target'));
+    }
+
+    function onDragEnd(){
+      if (dragEl) dragEl.classList.remove('dragging');
+      dragEl = null;
+      updateLabels();
+    }
+
+    list.addEventListener('dragstart', onDragStart);
+    list.addEventListener('dragover', onDragOver);
+    list.addEventListener('dragleave', onDragLeave);
+    list.addEventListener('drop', onDrop);
+    list.addEventListener('dragend', onDragEnd);
+
+    // When submitting, write the order into the hidden input
+    form.addEventListener('submit', () => {
+      input.value = serialize();
+    });
+
+    // Initialize the hidden field with the current order (in case no drag happens)
+    input.value = serialize();
+  })();
+</script>
 
 <%- include('../partials/footer') %>

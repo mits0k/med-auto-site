@@ -208,6 +208,27 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     setIfProvided('bodyStyle',    v => v.trim());
     setIfProvided('vin',          v => v.trim());
 
+    /**
+     * NEW: Handle image reordering from a hidden input `imagesOrder`.
+     * - Expect a comma-separated list of image URLs that already exist on this car.
+     * - We keep any not-listed existing images at the end (so you can reorder a subset safely).
+     */
+    if (typeof req.body.imagesOrder === 'string') {
+      const requestedOrder = req.body.imagesOrder
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (requestedOrder.length > 0 && Array.isArray(car.images)) {
+        const currentSet = new Set(car.images.map(String));
+        // Keep only URLs that already belong to this car
+        const cleaned = requestedOrder.filter(u => currentSet.has(u));
+        // Append any images not included in the submitted order to the end (no loss)
+        const rest = car.images.filter(u => !cleaned.includes(u));
+        car.images = [...cleaned, ...rest];
+      }
+    }
+
     await car.save();
     res.redirect('/admin/dashboard');
   } catch (error) {

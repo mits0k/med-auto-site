@@ -44,6 +44,24 @@ body{
 .topbar-link:hover{opacity:.85}
 .topbar .divider{opacity:.55;margin:0 10px}
 
+/* Desktop defaults for the topbar */
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap: nowrap;           /* don't wrap on desktop */
+}
+
+.topbar-right .topbar-link{
+  white-space: nowrap;         /* keep each item on one line */
+}
+
+.addr-short{ display:none; }   /* hide "Directions" on desktop */
+.addr-long{  display:inline; } /* show full address on desktop */
+
+.hide-on-phone{ display:inline !important; } /* Instagram visible on desktop */
+
+
 /* ====== NAVBAR ====== */
 .site-header{position:sticky;top:0;z-index:50;background:#0b0b0d;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(8px)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}

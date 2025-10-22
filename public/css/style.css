@@ -406,84 +406,78 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 /* Phone */
 @media (max-width: 768px){
   .container{padding:0 14px}
-  .page{padding:26px 0}
+  .page{padding:24px 0}
 
-/* Topbar: stack + big tappable buttons */
-.topbar-inner{
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  padding: 10px 0;
-}
+  /* Topbar: compact & low height */
+  .topbar-inner{
+    flex-direction: column;      /* stacks brand on top, links below */
+    align-items: stretch;
+    gap: 6px;                    /* tighter than before */
+    padding: 8px 0;              /* slimmer */
+  }
 
-/* Two-column button grid on phones */
-.topbar-right{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  font-size: 14px;
-}
+  /* Chip row that wraps to 2–3 lines max */
+  .topbar-right{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    font-size:13px;
+  }
 
-/* Make each contact link a pill */
-.topbar-right .topbar-link{
-  display: block;
-  text-align: center;
-  background: #0c1018;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 700;
-  color: #e5e7eb;
-}
+  /* Small “chip” buttons (not huge cards) */
+  .topbar-right .topbar-link{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:8px;
+    background:#0c1018;
+    border:1px solid rgba(255,255,255,.12);
+    line-height:1.1;
+    color:#e5e7eb;
+    text-align:center;
+  }
 
-/* Hide the dot dividers on mobile */
-.topbar .divider{ display:none; }
+  /* Hide dot dividers on mobile */
+  .topbar .divider{ display:none; }
 
-/* Use short address label on mobile */
-.addr-long{ display:none; }
-.addr-short{ display:inline; }
+  /* Address label: use short "📍 Directions" only on phones */
+  .addr-long{ display:none; }
+  .addr-short{ display:inline; }
 
+  /* Optionally hide Instagram on phones to save space */
+  .hide-on-phone{ display:none !important; }
 
   /* Mobile nav */
   .nav{padding:10px 0}
   .nav-toggle{display:block}
   .nav-links{
-    display:none;           /* hidden by default on phones */
-    position:absolute;
-    top:100%;
-    left:0; right:0;
-    margin:0;
-    padding:10px 14px;
-    background:#0b0b0d;
-    border-bottom:1px solid rgba(255,255,255,.08);
-    gap:12px;
-    flex-direction:column;
+    display:none;
+    position:absolute; top:100%; left:0; right:0;
+    margin:0; padding:10px 14px;
+    background:#0b0b0d; border-bottom:1px solid rgba(255,255,255,.08);
+    gap:12px; flex-direction:column;
   }
-  .nav-links.open{display:flex}  /* toggled by JS */
+  .nav-links.open{display:flex}
   .nav a{font-size:15px}
 
-  /* Billboard text scale */
-  .billboard .bb-copy{padding:46px 0 54px}
-  .billboard .bb-copy h1{font-size:32px}
+  /* Billboard text a bit smaller so hero shows more image */
+  .billboard .bb-copy{padding:42px 0 50px}
+  .billboard .bb-copy h1{font-size:30px}
   .bb-sub{font-size:14px}
 
-  /* Cards and images scale down */
+  /* Card grid tweaks */
   .vehicle-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
   .vehicle-media img{height:160px}
 
-  /* Spotlight spacing */
   .spotlight{border-radius:18px}
   .spotlight-caption h3{font-size:16px}
 
-  /* Gallery thumbs smaller */
   .thumb-strip .thumb{height:72px}
 }
 
 /* Very small phones */
 @media (max-width: 420px){
-  /* On very small phones, single column */
-.topbar-right{ grid-template-columns: 1fr; }
-  .billboard .bb-copy h1{font-size:28px}
+  .billboard .bb-copy h1{font-size:26px}
   .nav a{font-size:14px}
   .vehicle-media img{height:150px}
 }
+

@@ -32,35 +32,23 @@
     <div class="vehicle-grid">
       <% cars.forEach(car => { %>
         <a href="/inventory/<%= car._id %>" class="vehicle-card">
-          <div class="vehicle-media">
-            <% if (car.images && car.images.length > 0) { %>
-              <img src="<%= car.images[0] %>" alt="<%= car.make %> <%= car.model %>" />
-            <% } else { %>
-              <div class="vehicle-noimg">No image</div>
-            <% } %>
+  <div class="vehicle-media">
+    <% if (car.images && car.images.length > 0) { %>
+      <img src="<%= car.images[0] %>" alt="<%= car.make %> <%= car.model %>" />
+    <% } else { %>
+      <div class="vehicle-noimg">No image</div>
+    <% } %>
+  </div>
 
-            <!-- top left watermark / small brand -->
-            <div class="vehicle-overlay-top">
-              <span class="wm">MED AUTO</span>
-            </div>
+  <div class="vehicle-caption">
+    <h3><%= car.year %> <%= car.make %> <%= car.model %></h3>
+    <% if (typeof car.mileage === 'number') { %>
+      <p class="meta"><%= car.mileage.toLocaleString() %> km</p>
+    <% } %>
+    <p class="price">$<%= car.price.toLocaleString() %></p>
+  </div>
+</a>
 
-            <!-- bottom info strip: year • mileage • price + brand dot -->
-            <div class="vehicle-overlay-bottom">
-              <div class="vinfo">
-                <span class="yb"><%= car.year %></span>
-                <% if (typeof car.mileage === 'number') { %>
-                  <span class="meta"><%= car.mileage.toLocaleString() %> kilometers</span>
-                <% } %>
-                <span class="price">$<%= car.price.toLocaleString() %></span>
-              </div>
-              <div class="branddot" title="<%= car.make %>"><%= (car.make||'')[0] || '•' %></div>
-            </div>
-          </div>
-
-          <div class="vehicle-caption">
-            <h3><%= car.make %> <%= car.model %></h3>
-          </div>
-        </a>
       <% }) %>
     </div>
 

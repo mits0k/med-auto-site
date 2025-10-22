@@ -29,7 +29,13 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'adminSecret123',
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production' // set true when behind HTTPS
+  }
 }));
+
 
 app.use((req, res, next) => {
   res.locals.session = req.session;

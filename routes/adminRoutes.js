@@ -7,13 +7,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp'); // ✅ image processing
+const bcrypt = require('bcryptjs'); // ✅ password hash check
 
 // ---------- paths ----------
 const uploadDir = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
 // ---------- Multer (memory) ----------
-// We keep files in memory so we can compress/resize with sharp before writing.
+// Keep files in memory -> we compress/resize with sharp before writing.
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter(req, file, cb) {
@@ -42,15 +43,35 @@ router.get('/', (req, res) => res.redirect('/admin/login'));
 // ---------- Auth ----------
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
+// ✅ NEW: env + bcrypt-based login
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === 'admin' && password === '1234') {
-    req.session.admin = true;
-    return res.redirect('/admin/dashboard');
+
+  const ADMIN_USER = process.env.ADMIN_USER;
+  const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH;
+
+  if (!username || !password) {
+    return res.render('admin/login', { error: 'Please enter username and password' });
   }
-  res.render('admin/login', { error: 'Invalid credentials' });
+  if (!ADMIN_USER || !ADMIN_PASS_HASH) {
+    // Safety in case env vars aren’t set
+    return res.render('admin/login', { error: 'Server login is not configured' });
+  }
+
+  if (username !== ADMIN_USER) {
+    return res.render('admin/login', { error: 'Invalid credentials' });
+  }
+
+  const ok = bcrypt.compareSync(password, ADMIN_PASS_HASH);
+  if (!ok) {
+    return res.render('admin/login', { error: 'Invalid credentials' });
+  }
+
+  req.session.admin = true;
+  return res.redirect('/admin/dashboard');
 });
 
+// (optional) simple logout
 router.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
@@ -115,8 +136,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
           const outPath = path.join(uploadDir, `${base}.webp`);
           const publicUrl = `/uploads/${path.basename(outPath)}`;
 
-          // Some mobile browsers already sent us a resized/encoded blob,
-          // but we still normalize to webp & cap the width.
           await sharp(f.buffer)
             .rotate() // auto-orient using EXIF
             .resize({ width: 1600, withoutEnlargement: true })

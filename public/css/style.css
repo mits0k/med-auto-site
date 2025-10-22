@@ -408,10 +408,41 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   .container{padding:0 14px}
   .page{padding:26px 0}
 
-  /* Topbar becomes smaller and wraps cleanly */
-  .topbar-inner{flex-direction:column; align-items:flex-start; gap:6px}
-  .topbar-right{display:flex; flex-wrap:wrap; gap:8px; font-size:13px}
-  .topbar .divider{display:none}
+/* Topbar: stack + big tappable buttons */
+.topbar-inner{
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+/* Two-column button grid on phones */
+.topbar-right{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  font-size: 14px;
+}
+
+/* Make each contact link a pill */
+.topbar-right .topbar-link{
+  display: block;
+  text-align: center;
+  background: #0c1018;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+/* Hide the dot dividers on mobile */
+.topbar .divider{ display:none; }
+
+/* Use short address label on mobile */
+.addr-long{ display:none; }
+.addr-short{ display:inline; }
+
 
   /* Mobile nav */
   .nav{padding:10px 0}
@@ -450,6 +481,8 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 
 /* Very small phones */
 @media (max-width: 420px){
+  /* On very small phones, single column */
+.topbar-right{ grid-template-columns: 1fr; }
   .billboard .bb-copy h1{font-size:28px}
   .nav a{font-size:14px}
   .vehicle-media img{height:150px}

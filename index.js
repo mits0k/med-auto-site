@@ -24,6 +24,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 /* === Views === */
 app.set('view engine', 'ejs');
 
+app.set('trust proxy', 1);
+
 /* === Sessions === */
 app.use(session({
   secret: process.env.SESSION_SECRET || 'adminSecret123',

@@ -6,21 +6,24 @@ const Appointment = require('../models/Appointment');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp'); // ✅ image processing
-const bcrypt = require('bcryptjs'); // ✅ password hash check
+const sharp = require('sharp');        // image processing
+const bcrypt = require('bcryptjs');    // password hash check
 
-// ---------- paths ----------
+// ========== Admin creds from ENV ==========
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || ''; // bcrypt hash (not the plain password)
+
+// ========== uploads dir ==========
 const uploadDir = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
-// ---------- Multer (memory) ----------
-// Keep files in memory -> we compress/resize with sharp before writing.
+// ========== Multer (memory) ==========
+// Keep files in memory -> compress/resize with sharp before writing.
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter(req, file, cb) {
     const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
     const ext = path.extname(file.originalname || '').toLowerCase();
-    // Allow HEIC/HEIF inputs (iPhone) — we’ll transcode them to webp.
     if (!allowed.includes(ext)) {
       return cb(new Error('Only image files (jpg, jpeg, png, gif, webp, heic, heif) are allowed'));
     }
@@ -28,11 +31,11 @@ const upload = multer({
   },
   limits: {
     files: 20,
-    fileSize: 25 * 1024 * 1024, // up to 25MB per file (client side will already compress)
+    fileSize: 25 * 1024 * 1024,
   },
 });
 
-// ---------- very simple admin guard ----------
+// ========== simple admin guard ==========
 function isAdmin(req, res, next) {
   if (req.session && req.session.admin) return next();
   return res.redirect('/admin/login');
@@ -40,43 +43,42 @@ function isAdmin(req, res, next) {
 
 router.get('/', (req, res) => res.redirect('/admin/login'));
 
-// ---------- Auth ----------
+// ========== Auth ==========
 router.get('/login', (req, res) => res.render('admin/login', { error: null }));
 
-// ✅ NEW: env + bcrypt-based login
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
+router.post('/login', async (req, res) => {
+  try {
+    const username = String(req.body.username || '').trim();
+    const password = String(req.body.password || '');
 
-  const ADMIN_USER = process.env.ADMIN_USER;
-  const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH;
+    if (!username || !password) {
+      return res.render('admin/login', { error: 'Please enter username and password' });
+    }
+    if (!ADMIN_PASS_HASH) {
+      return res.render('admin/login', { error: 'Server login is not configured' });
+    }
+    if (username !== ADMIN_USER) {
+      return res.render('admin/login', { error: 'Invalid credentials' });
+    }
 
-  if (!username || !password) {
-    return res.render('admin/login', { error: 'Please enter username and password' });
+    const ok = await bcrypt.compare(password, ADMIN_PASS_HASH);
+    if (!ok) {
+      return res.render('admin/login', { error: 'Invalid credentials' });
+    }
+
+    req.session.admin = true;
+    return res.redirect('/admin/dashboard');
+  } catch (e) {
+    console.error('Login error:', e);
+    return res.render('admin/login', { error: 'Login error' });
   }
-  if (!ADMIN_USER || !ADMIN_PASS_HASH) {
-    // Safety in case env vars aren’t set
-    return res.render('admin/login', { error: 'Server login is not configured' });
-  }
-
-  if (username !== ADMIN_USER) {
-    return res.render('admin/login', { error: 'Invalid credentials' });
-  }
-
-  const ok = bcrypt.compareSync(password, ADMIN_PASS_HASH);
-  if (!ok) {
-    return res.render('admin/login', { error: 'Invalid credentials' });
-  }
-
-  req.session.admin = true;
-  return res.redirect('/admin/dashboard');
 });
 
-// (optional) simple logout
 router.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
-// ---------- Dashboard ----------
+// ========== Dashboard ==========
 router.get('/dashboard', isAdmin, async (req, res) => {
   try {
     const cars = await Car.find().sort({ createdAt: -1 });
@@ -86,7 +88,7 @@ router.get('/dashboard', isAdmin, async (req, res) => {
   }
 });
 
-// ---------- Appointments ----------
+// ========== Appointments ==========
 router.get('/appointments', isAdmin, async (req, res) => {
   try {
     const appointments = await Appointment.find().sort({ date: -1 });
@@ -105,7 +107,7 @@ router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ---------- Add Car ----------
+// ========== Add Car ==========
 router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
 });
@@ -118,18 +120,11 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
-    // Process & save images:
-    // - Ensure max width 1600px (keeps detail, huge size savings)
-    // - Always output webp @ quality 80
-    // - Unique filename
     const images = [];
     if (Array.isArray(req.files)) {
-      // Limit concurrency to avoid CPU spikes on small instances
       const concurrency = 3;
-      let i = 0;
-      while (i < req.files.length) {
+      for (let i = 0; i < req.files.length; i += concurrency) {
         const batch = req.files.slice(i, i + concurrency);
-        // Process a small batch in parallel
         // eslint-disable-next-line no-await-in-loop
         await Promise.all(batch.map(async (f) => {
           const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -137,14 +132,13 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
           const publicUrl = `/uploads/${path.basename(outPath)}`;
 
           await sharp(f.buffer)
-            .rotate() // auto-orient using EXIF
+            .rotate()
             .resize({ width: 1600, withoutEnlargement: true })
             .webp({ quality: 80 })
             .toFile(outPath);
 
           images.push(publicUrl);
         }));
-        i += concurrency;
       }
     }
 
@@ -154,7 +148,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       year: year ? parseInt(year, 10) : undefined,
       price: price ? parseFloat(price) : undefined,
       description: (description || '').trim(),
-
       exteriorColor: (exteriorColor || '').trim(),
       interiorColor: (interiorColor || '').trim(),
       mileage: mileage ? parseInt(mileage, 10) : undefined,
@@ -164,7 +157,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       fuel: (fuel || '').trim(),
       bodyStyle: (bodyStyle || '').trim(),
       vin: (vin || '').trim(),
-
       images
     });
 
@@ -176,7 +168,7 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
   }
 });
 
-// ---------- Delete Car ----------
+// ========== Delete Car ==========
 router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -195,7 +187,7 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ---------- Edit Car ----------
+// ========== Edit Car ==========
 router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -242,13 +234,8 @@ router.post('/cars/:id/edit', isAdmin, async (req, res) => {
     setIfProvided('bodyStyle',    v => v.trim());
     setIfProvided('vin',          v => v.trim());
 
-    // Reorder images from hidden input
     if (typeof req.body.imagesOrder === 'string') {
-      const requestedOrder = req.body.imagesOrder
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
-
+      const requestedOrder = req.body.imagesOrder.split(',').map(s => s.trim()).filter(Boolean);
       if (requestedOrder.length > 0 && Array.isArray(car.images)) {
         const currentSet = new Set(car.images.map(String));
         const cleaned = requestedOrder.filter(u => currentSet.has(u));

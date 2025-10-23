@@ -10,9 +10,9 @@
 
   <form action="/book" method="POST" style="display:flex; flex-direction:column; gap:14px;">
     <!-- Car selection (optional) -->
-    <label class="label" for="carId">Car you’d like to see </label>
+    <label class="label" for="carId">Car you’d like to see</label>
     <select name="carId" id="carId">
-      <option value="">— Selec Vehicle —</option>
+      <option value="">— Select Vehicle —</option>
       <% if (Array.isArray(cars)) { %>
         <% cars.forEach(c => { %>
           <option value="<%= c._id %>" <%= (selectedCarId === String(c._id)) ? 'selected' : '' %>>
@@ -48,22 +48,30 @@
 
     <!-- Date + Time -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-      <input
-        type="date"
-        name="date"
-        required
-        min="<%= typeof minDate !== 'undefined' ? minDate : '' %>"
-        value="<%= typeof date !== 'undefined' ? date : '' %>"
-      />
-      <input
-        type="time"
-        name="time"
-        required
-        min="09:00"
-        max="17:30"
-        step="1800"
-        value="<%= typeof time !== 'undefined' ? time : '' %>"
-      />
+      <div>
+        <label class="label" for="dateInput">Date</label>
+        <input
+          id="dateInput"
+          type="date"
+          name="date"
+          required
+          min="<%= typeof minDate !== 'undefined' ? minDate : '' %>"
+          value="<%= typeof date !== 'undefined' ? date : '' %>"
+        />
+      </div>
+      <div>
+        <label class="label" for="timeInput">Time</label>
+        <input
+          id="timeInput"
+          type="time"
+          name="time"
+          required
+          min="09:00"
+          max="17:30"
+          step="1800"
+          value="<%= typeof time !== 'undefined' ? time : '' %>"
+        />
+      </div>
     </div>
 
     <textarea
@@ -85,6 +93,21 @@
       }, 3000);
     </script>
   <% } %>
+
+  <!-- Prevent Sundays -->
+  <script>
+    const dateInput = document.querySelector('input[name="date"]');
+    if (dateInput) {
+      dateInput.addEventListener('input', () => {
+        const picked = new Date(dateInput.value);
+        if (picked.getDay() === 0) {
+          alert("We're closed on Sundays. Please choose another day.");
+          dateInput.value = ''; // clear selection
+        }
+      });
+      dateInput.addEventListener('keydown', e => e.preventDefault());
+    }
+  </script>
 </main>
 
 <%- include('partials/footer') %>

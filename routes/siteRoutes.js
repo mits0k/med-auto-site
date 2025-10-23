@@ -71,17 +71,13 @@ router.get('/inventory/:id', async (req, res) => {
 
 /**
  * Book Appointment
- * - Provides a car dropdown (optional)
- * - Preselects from ?car=<id>
- * - Client min date + server "future only" check
- * - 09:00–17:30 business hours
  */
 router.get('/book', async (req, res) => {
   try {
     const cars = await Car.find().sort({ createdAt: -1 }).select('_id make model year').lean();
     const selectedCarId = req.query.car || '';
 
-    // today's date for the <input min>
+    // today's date for <input min>
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
     const minDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
@@ -109,14 +105,15 @@ router.post('/book', async (req, res) => {
   try {
     const { name, email, phone, date, time, message, carId } = req.body;
 
-    // re-fetch for repopulating form on error
+    // Re-fetch for re-rendering form
     const cars = await Car.find().sort({ createdAt: -1 }).select('_id make model year').lean();
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
     const minDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
+    // Basic form validation
     if (!name || !email || !phone || !date || !time) {
-      return res.status(400).render('book', {
+      return res.render('book', {
         cars, selectedCarId: carId || '', minDate,
         success: false,
         error: 'Please fill in your name, email, phone, date and time.',
@@ -124,10 +121,10 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Combine date+time (YYYY-MM-DD + HH:MM)
+    // Combine date+time
     const combined = new Date(`${date}T${time}:00`);
     if (isNaN(combined.getTime())) {
-      return res.status(400).render('book', {
+      return res.render('book', {
         cars, selectedCarId: carId || '', minDate,
         success: false,
         error: 'Invalid date or time.',
@@ -135,10 +132,20 @@ router.post('/book', async (req, res) => {
       });
     }
 
+    // 🚫 Block Sundays
+    if (combined.getDay() === 0) {
+      return res.render('book', {
+        cars, selectedCarId: carId || '', minDate,
+        success: false,
+        error: "We're closed on Sundays. Please choose another day.",
+        name, email, phone, date: '', time, message
+      });
+    }
+
     // No past bookings
     const now = new Date();
     if (combined < now) {
-      return res.status(400).render('book', {
+      return res.render('book', {
         cars, selectedCarId: carId || '', minDate,
         success: false,
         error: 'Please choose a time in the future.',
@@ -149,10 +156,10 @@ router.post('/book', async (req, res) => {
     // Business hours 09:00–17:30
     const [hStr, mStr] = time.split(':');
     const minutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-    const OPEN = 9 * 60;        // 540
-    const CLOSE = 17 * 60 + 30; // 1050
+    const OPEN = 9 * 60;
+    const CLOSE = 17 * 60 + 30;
     if (minutes < OPEN || minutes > CLOSE) {
-      return res.status(400).render('book', {
+      return res.render('book', {
         cars, selectedCarId: carId || '', minDate,
         success: false,
         error: 'Please choose a time between 9:00 AM and 5:30 PM.',
@@ -160,7 +167,7 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Build a friendly label if a car was chosen
+    // Build a car label if chosen
     let chosenCar = null;
     let carLabel = null;
     if (carId) {
@@ -168,7 +175,7 @@ router.post('/book', async (req, res) => {
       if (chosenCar) carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
     }
 
-    // Save
+    // Save appointment
     await new Appointment({
       name,
       email,

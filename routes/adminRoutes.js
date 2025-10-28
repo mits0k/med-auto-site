@@ -15,7 +15,7 @@ const Appointment = require('../models/Appointment');
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || ''; // bcrypt hash (NOT the plain password)
 
-// ===== Ensure uploads dir exists (also done in index.js; harmless to repeat) =====
+// ===== Ensure uploads dir exists =====
 const uploadDir = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -31,8 +31,8 @@ const upload = multer({
     cb(null, true);
   },
   limits: {
-    files: 20,                      // hard cap
-    fileSize: 25 * 1024 * 1024,     // 25 MB per file
+    files: 20,
+    fileSize: 25 * 1024 * 1024,
   },
 });
 
@@ -56,7 +56,6 @@ router.post('/login', async (req, res) => {
       return res.render('admin/login', { error: 'Please enter username and password' });
     }
     if (!ADMIN_PASS_HASH) {
-      // Safety: env not configured in Render
       return res.render('admin/login', { error: 'Server login is not configured' });
     }
     if (username !== ADMIN_USER) {
@@ -80,7 +79,7 @@ router.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
-// ===== Dashboard (cars) =====
+// ===== Dashboard =====
 router.get('/dashboard', isAdmin, async (req, res) => {
   try {
     const cars = await Car.find().sort({ createdAt: -1 });
@@ -112,7 +111,7 @@ router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ===== Add Car (sequential Sharp to avoid 502s) =====
+// ===== Add Car =====
 router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
 });
@@ -126,26 +125,19 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
     } = req.body;
 
     if (req.files && req.files.length > 12) {
-      // friendlier limit for small instances
       return res.status(400).send('Please upload at most 12 photos at once. Try again with a smaller batch.');
     }
 
-    console.log(`[add-car] files: ${req.files ? req.files.length : 0}`);
-
     const images = [];
-
     if (Array.isArray(req.files) && req.files.length) {
-      // Process sequentially: lower memory/CPU spikes
       for (const f of req.files) {
         const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
         const outPath = path.join(uploadDir, `${base}.webp`);
         const publicUrl = `/uploads/${path.basename(outPath)}`;
 
         try {
-          console.log(`[add-car] processing ${f.originalname} (${Math.round(f.size / 1024)} KB)`);
-
           await sharp(f.buffer)
-            .rotate()                                   // auto-orient by EXIF
+            .rotate()
             .resize({ width: 1400, withoutEnlargement: true })
             .webp({ quality: 75 })
             .toFile(outPath);
@@ -153,7 +145,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
           images.push(publicUrl);
         } catch (err) {
           console.error('[add-car] sharp failed:', err);
-          // skip this file but continue
         }
       }
     }
@@ -164,7 +155,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       year: year ? parseInt(year, 10) : undefined,
       price: price ? parseFloat(price) : undefined,
       description: (description || '').trim(),
-
       exteriorColor: (exteriorColor || '').trim(),
       interiorColor: (interiorColor || '').trim(),
       mileage: mileage ? parseInt(mileage, 10) : undefined,
@@ -174,7 +164,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       fuel: (fuel || '').trim(),
       bodyStyle: (bodyStyle || '').trim(),
       vin: (vin || '').trim(),
-
       images
     });
 
@@ -186,17 +175,16 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
   }
 });
 
-// ===== Delete Car (also removes files on disk) =====
+// ===== Delete Car =====
 router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
     if (car && Array.isArray(car.images)) {
       car.images.forEach(imgUrl => {
-        // imgUrl is like "/uploads/abc.webp" – strip leading slash for path.join
         const relative = imgUrl.startsWith('/') ? imgUrl.slice(1) : imgUrl;
         const diskPath = path.join(__dirname, '..', relative);
         if (fs.existsSync(diskPath)) {
-          try { fs.unlinkSync(diskPath); } catch (e) { /* ignore */ }
+          try { fs.unlinkSync(diskPath); } catch {}
         }
       });
     }
@@ -208,7 +196,7 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ===== Edit Car (price, details, image order) =====
+// ===== Edit Car (now supports adding more photos) =====
 router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -220,63 +208,89 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   }
 });
 
-router.post('/cars/:id/edit', isAdmin, async (req, res) => {
-  try {
-    const car = await Car.findById(req.params.id);
-    if (!car) return res.status(404).send('Car not found');
+router.post(
+  '/cars/:id/edit',
+  isAdmin,
+  upload.array('newImages', 12), // <<< accept more photos here
+  async (req, res) => {
+    try {
+      const car = await Car.findById(req.params.id);
+      if (!car) return res.status(404).send('Car not found');
 
-    // price required and positive
-    if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
-      return res.status(400).send('Price is required');
-    }
-    const parsedPrice = parseFloat(req.body.price);
-    if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).send('Price must be a positive number');
-    }
-    car.price = parsedPrice;
+      // price required and positive
+      if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
+        return res.status(400).send('Price is required');
+      }
+      const parsedPrice = parseFloat(req.body.price);
+      if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
+        return res.status(400).send('Price must be a positive number');
+      }
+      car.price = parsedPrice;
 
-    car.description = (req.body.description ?? '').trim();
+      car.description = (req.body.description ?? '').trim();
 
-    const setIfProvided = (key, transform = v => v) => {
-      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-        const val = req.body[key];
-        if (val !== '' && val !== null && val !== undefined) {
-          car[key] = transform(val);
+      const setIfProvided = (key, transform = v => v) => {
+        if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+          const val = req.body[key];
+          if (val !== '' && val !== null && val !== undefined) {
+            car[key] = transform(val);
+          }
+        }
+      };
+
+      setIfProvided('exteriorColor', v => v.trim());
+      setIfProvided('interiorColor', v => v.trim());
+      setIfProvided('mileage',      v => parseInt(v, 10));
+      setIfProvided('engine',       v => v.trim());
+      setIfProvided('transmission', v => v.trim());
+      setIfProvided('drivetrain',   v => v.trim());
+      setIfProvided('fuel',         v => v.trim());
+      setIfProvided('bodyStyle',    v => v.trim());
+      setIfProvided('vin',          v => v.trim());
+
+      // Reorder existing images (if provided)
+      if (typeof req.body.imagesOrder === 'string' && car.images && car.images.length) {
+        const requestedOrder = req.body.imagesOrder
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        if (requestedOrder.length > 0) {
+          const currentSet = new Set(car.images.map(String));
+          const cleaned = requestedOrder.filter(u => currentSet.has(u));
+          const rest = car.images.filter(u => !cleaned.includes(u));
+          car.images = [...cleaned, ...rest];
         }
       }
-    };
 
-    setIfProvided('exteriorColor', v => v.trim());
-    setIfProvided('interiorColor', v => v.trim());
-    setIfProvided('mileage',      v => parseInt(v, 10));
-    setIfProvided('engine',       v => v.trim());
-    setIfProvided('transmission', v => v.trim());
-    setIfProvided('drivetrain',   v => v.trim());
-    setIfProvided('fuel',         v => v.trim());
-    setIfProvided('bodyStyle',    v => v.trim());
-    setIfProvided('vin',          v => v.trim());
+      // ===== NEW: process any newly uploaded images and append =====
+      if (Array.isArray(req.files) && req.files.length) {
+        for (const f of req.files) {
+          const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          const outPath = path.join(uploadDir, `${base}.webp`);
+          const publicUrl = `/uploads/${path.basename(outPath)}`;
 
-    // Reorder images from hidden input
-    if (typeof req.body.imagesOrder === 'string') {
-      const requestedOrder = req.body.imagesOrder
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
+          try {
+            await sharp(f.buffer)
+              .rotate()
+              .resize({ width: 1400, withoutEnlargement: true })
+              .webp({ quality: 75 })
+              .toFile(outPath);
 
-      if (requestedOrder.length > 0 && Array.isArray(car.images)) {
-        const currentSet = new Set(car.images.map(String));
-        const cleaned = requestedOrder.filter(u => currentSet.has(u));
-        const rest = car.images.filter(u => !cleaned.includes(u));
-        car.images = [...cleaned, ...rest];
+            car.images.push(publicUrl);
+          } catch (err) {
+            console.error('[edit-car] sharp failed:', err);
+          }
+        }
       }
-    }
 
-    await car.save();
-    res.redirect('/admin/dashboard');
-  } catch (error) {
-    console.error('Error updating car:', error);
-    res.status(500).send('Error updating car');
+      await car.save();
+      res.redirect('/admin/dashboard');
+    } catch (error) {
+      console.error('Error updating car:', error);
+      res.status(500).send('Error updating car');
+    }
   }
-});
+);
 
 module.exports = router;

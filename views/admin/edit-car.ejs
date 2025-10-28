@@ -7,7 +7,8 @@
     <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
   <% } %>
 
-  <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form">
+  <!-- IMPORTANT: enctype for file upload -->
+  <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form" enctype="multipart/form-data">
     <!-- Readonly identity -->
     <div class="form-row">
       <div>
@@ -121,9 +122,9 @@
       <textarea name="description" rows="5"><%= car.description || '' %></textarea>
     </div>
 
-    <!-- ===== Image Reordering (Drag & Drop) ===== -->
+    <!-- ===== Existing Images (Drag to reorder) ===== -->
     <div class="stack-m">
-      <strong>Images (drag to reorder)</strong>
+      <strong>Existing Images (drag to reorder)</strong>
 
       <% if (car.images && car.images.length > 0) { %>
         <ul id="dndList" class="dnd-list" aria-label="Reorder images">
@@ -139,9 +140,17 @@
         <p>No images</p>
       <% } %>
 
-      <!-- Hidden input to carry the new order to the server -->
       <input type="hidden" id="imagesOrderInput" name="imagesOrder" value="" />
-      <small style="color:var(--muted);">Tip: the first image becomes the main photo shown on the site.</small>
+      <small style="color:var(--muted);">Tip: the first image is the main photo on the site.</small>
+    </div>
+
+    <!-- ===== NEW: Add More Photos ===== -->
+    <div class="stack-m">
+      <label class="label" for="newImages">Attach more photos</label>
+      <input id="newImages" type="file" name="newImages" accept="image/*" multiple />
+      <small style="color:var(--muted);display:block;margin-top:6px;">
+        You can add more photos here (we auto-compress to WebP, max 1400px).
+      </small>
     </div>
 
     <!-- Actions -->
@@ -153,7 +162,6 @@
 </section>
 
 <style>
-  /* Minimal styles for drag-and-drop list */
   .dnd-list{
     list-style:none; margin:0; padding:0;
     display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;
@@ -202,7 +210,6 @@
       dragEl = target;
       target.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      // For Firefox
       e.dataTransfer.setData('text/plain', target.dataset.src);
     }
 
@@ -242,12 +249,10 @@
     list.addEventListener('drop', onDrop);
     list.addEventListener('dragend', onDragEnd);
 
-    // When submitting, write the order into the hidden input
     form.addEventListener('submit', () => {
       input.value = serialize();
     });
 
-    // Initialize the hidden field with the current order (in case no drag happens)
     input.value = serialize();
   })();
 </script>

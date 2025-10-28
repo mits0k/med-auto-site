@@ -31,8 +31,8 @@ const upload = multer({
     cb(null, true);
   },
   limits: {
-    files: 20,
-    fileSize: 25 * 1024 * 1024,
+    files: 20,                       // you can still select many; we’ll restrict below
+    fileSize: 25 * 1024 * 1024,      // 25MB per file max
   },
 });
 
@@ -111,6 +111,54 @@ router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
+// ===== Helper: process one image buffer fast =====
+async function processAndSaveImage(fileBuffer, mimetype) {
+  const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  const outPath = path.join(uploadDir, `${base}.webp`);
+  const publicUrl = `/uploads/${path.basename(outPath)}`;
+
+  try {
+    // If it's already a small-ish webp, skip recompression
+    const meta = await sharp(fileBuffer).metadata();
+    const isSmallWebp =
+      (mimetype === 'image/webp' || (meta.format || '').toLowerCase() === 'webp') &&
+      fileBuffer.length <= 800 * 1024 &&                    // <= 800 KB
+      (meta.width || 0) <= 1280;
+
+    if (isSmallWebp) {
+      await fs.promises.writeFile(outPath, fileBuffer);
+      return publicUrl;
+    }
+
+    // Fast-ish settings: width 1280, quality 72, effort 3
+    await sharp(fileBuffer)
+      .rotate()
+      .resize({ width: 1280, withoutEnlargement: true })
+      .webp({ quality: 72, effort: 3 })
+      .toFile(outPath);
+
+    return publicUrl;
+  } catch (err) {
+    console.error('[image process] sharp failed:', err);
+    return null;
+  }
+}
+
+// ===== Helper: process files in small batches =====
+async function processFilesInBatches(files, batchSize = 2) {
+  const urls = [];
+  for (let i = 0; i < files.length; i += batchSize) {
+    const batch = files.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(f => processAndSaveImage(f.buffer, f.mimetype))
+    );
+    for (const url of results) {
+      if (url) urls.push(url);
+    }
+  }
+  return urls;
+}
+
 // ===== Add Car =====
 router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
@@ -124,29 +172,14 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
+    // gentle cap to keep things snappy
     if (req.files && req.files.length > 12) {
       return res.status(400).send('Please upload at most 12 photos at once. Try again with a smaller batch.');
     }
 
-    const images = [];
+    let images = [];
     if (Array.isArray(req.files) && req.files.length) {
-      for (const f of req.files) {
-        const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const outPath = path.join(uploadDir, `${base}.webp`);
-        const publicUrl = `/uploads/${path.basename(outPath)}`;
-
-        try {
-          await sharp(f.buffer)
-            .rotate()
-            .resize({ width: 1400, withoutEnlargement: true })
-            .webp({ quality: 75 })
-            .toFile(outPath);
-
-          images.push(publicUrl);
-        } catch (err) {
-          console.error('[add-car] sharp failed:', err);
-        }
-      }
+      images = await processFilesInBatches(req.files, 2);
     }
 
     const newCar = new Car({
@@ -196,7 +229,7 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ===== Edit Car (now supports adding more photos) =====
+// ===== Edit Car (supports adding more photos) =====
 router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -211,7 +244,7 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
 router.post(
   '/cars/:id/edit',
   isAdmin,
-  upload.array('newImages', 12), // <<< accept more photos here
+  upload.array('newImages', 12), // accept additional photos here
   async (req, res) => {
     try {
       const car = await Car.findById(req.params.id);
@@ -263,25 +296,10 @@ router.post(
         }
       }
 
-      // ===== NEW: process any newly uploaded images and append =====
+      // Append any newly uploaded images (fast pipeline + batching)
       if (Array.isArray(req.files) && req.files.length) {
-        for (const f of req.files) {
-          const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          const outPath = path.join(uploadDir, `${base}.webp`);
-          const publicUrl = `/uploads/${path.basename(outPath)}`;
-
-          try {
-            await sharp(f.buffer)
-              .rotate()
-              .resize({ width: 1400, withoutEnlargement: true })
-              .webp({ quality: 75 })
-              .toFile(outPath);
-
-            car.images.push(publicUrl);
-          } catch (err) {
-            console.error('[edit-car] sharp failed:', err);
-          }
-        }
+        const newUrls = await processFilesInBatches(req.files, 2);
+        car.images.push(...newUrls);
       }
 
       await car.save();

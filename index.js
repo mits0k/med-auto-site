@@ -22,6 +22,7 @@ if (!fs.existsSync(uploadsPath)) {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public')); // serves /css, /js, /images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/sitemap.xml', express.static(path.join(__dirname, 'sitemap.xml')));
 
 /* === Views === */
 app.set('view engine', 'ejs');

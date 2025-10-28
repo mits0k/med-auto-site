@@ -1,12 +1,14 @@
-// index.js
+require('dotenv').config();                // <<< load .env FIRST
+
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
-const fs = require('fs'); // <-- add this
+const fs = require('fs');
+
 const siteRoutes = require('./routes/siteRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-require('dotenv').config();
+
 
 const app = express();
 

@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 // Inventory (filters + paging)
 router.get('/inventory', async (req, res) => {
   try {
-    const perPage = 10;
+    const perPage = 12;
     const page = parseInt(req.query.page) || 1;
 
     const { make, year, sort } = req.query;

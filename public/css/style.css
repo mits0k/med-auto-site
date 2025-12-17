@@ -61,7 +61,6 @@ body{
 
 .hide-on-phone{ display:inline !important; } /* Instagram visible on desktop */
 
-
 /* ====== NAVBAR ====== */
 .site-header{position:sticky;top:0;z-index:50;background:#0b0b0d;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(8px)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
@@ -116,7 +115,7 @@ body{
 .billboard::before{
   content:"";
   position:absolute;inset:0;
-  background: var(--billboard) 70% center/cover no-repeat;
+  background: var(--billboard) center/cover no-repeat;
   filter:grayscale(.05) contrast(1.05) brightness(.9);
   z-index:0;
 }
@@ -126,39 +125,13 @@ body{
   background:radial-gradient(80% 60% at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,.45) 60%, rgba(0,0,0,.75) 100%);
   z-index:1;
 }
-.billboard-inner{
-  min-height:54vh;
-  display:flex;
-  align-items:flex-start;
-  justify-content:flex-start;
-  padding-top:34px;
-}
-
 .billboard .bb-copy{
   position:relative;
   z-index:2;
-
-  /* smaller + less blocking */
-  max-width: 360px;
-
-  background: rgba(11, 13, 18, 0.40);
-  border: 1px solid rgba(255,255,255,.12);
-  backdrop-filter: blur(6px);
-  border-radius: 16px;
-
-  padding: 14px 16px;
-  color:#fff;
-
-  /* push it into the empty top-left area */
-  margin-top: 18px;
+  padding:80px 0 90px; color:#fff; max-width:720px;
 }
-
-
 .billboard .bb-copy .eyebrow{display:inline-block;margin-bottom:6px;opacity:.9;letter-spacing:.06em;text-transform:uppercase}
-.billboard .bb-copy .btn{
-  padding:10px 14px;
-  font-size:14px;
-}
+.billboard .bb-copy h1{font-size:48px;line-height:1.05;margin:0 0 10px}
 .bb-sub{color:#eaeefb;opacity:.9;margin:0 0 16px}
 
 /* ====== SECTIONS ====== */
@@ -228,7 +201,6 @@ body{
   transform:translateY(-1px);
 }
 
-
 /* Caption under the image */
 .vehicle-caption{
   padding:10px 12px 14px;
@@ -256,7 +228,6 @@ body{
 }
 
 .pager{text-align:center;margin-top:18px}
-
 
 /* ====== FORMS ====== */
 .form-card, .booking-page{
@@ -293,6 +264,27 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 .car-header{margin-bottom:8px}
 .car-title{margin:0;text-align:center}
 .car-price{display:inline-block;font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Admin edit-car: image delete button */
+.img-del{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:3;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.60);
+  color:#fff;
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.img-del:hover{
+  opacity:.9;
+  transform:translateY(-1px);
+}
+
 
 /* Old grid (kept for legacy) */
 .photo-grid{
@@ -701,3 +693,9 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
     font-size: 17px;
   }
 }
+
+
+
+
+
+

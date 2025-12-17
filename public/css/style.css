@@ -116,7 +116,7 @@ body{
 .billboard::before{
   content:"";
   position:absolute;inset:0;
-  background: var(--billboard) center/cover no-repeat;
+  background: var(--billboard) 70% center/cover no-repeat;
   filter:grayscale(.05) contrast(1.05) brightness(.9);
   z-index:0;
 }
@@ -133,25 +133,32 @@ body{
   justify-content:flex-start;
   padding-top:34px;
 }
+
 .billboard .bb-copy{
   position:relative;
   z-index:2;
 
-  /* smaller so it doesn’t cover the car */
-  max-width:420px;
+  /* smaller + less blocking */
+  max-width: 360px;
 
-  /* glass card look */
-  background: rgba(11, 13, 18, 0.55);
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(8px);
-  border-radius: 18px;
+  background: rgba(11, 13, 18, 0.40);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
 
-  padding: 18px 20px;
+  padding: 14px 16px;
   color:#fff;
+
+  /* push it into the empty top-left area */
+  margin-top: 18px;
 }
 
+
 .billboard .bb-copy .eyebrow{display:inline-block;margin-bottom:6px;opacity:.9;letter-spacing:.06em;text-transform:uppercase}
-.billboard .bb-copy h1{font-size:48px;line-height:1.05;margin:0 0 10px}
+.billboard .bb-copy .btn{
+  padding:10px 14px;
+  font-size:14px;
+}
 .bb-sub{color:#eaeefb;opacity:.9;margin:0 0 16px}
 
 /* ====== SECTIONS ====== */

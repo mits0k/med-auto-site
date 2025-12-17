@@ -182,7 +182,26 @@ body{
   color:var(--muted);
 }
 
-/* ✂️ removed image darkening & all on-image overlays */
+/* Admin edit-car: image delete button */
+.img-del{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:3;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.60);
+  color:#fff;
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.img-del:hover{
+  opacity:.9;
+  transform:translateY(-1px);
+}
+
 
 /* Caption under the image */
 .vehicle-caption{

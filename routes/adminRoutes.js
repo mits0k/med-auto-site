@@ -31,8 +31,8 @@ const upload = multer({
     cb(null, true);
   },
   limits: {
-    files: 20,                       // you can still select many; we’ll restrict below
-    fileSize: 25 * 1024 * 1024,      // 25MB per file max
+    files: 20,
+    fileSize: 25 * 1024 * 1024,
   },
 });
 
@@ -122,7 +122,7 @@ async function processAndSaveImage(fileBuffer, mimetype) {
     const meta = await sharp(fileBuffer).metadata();
     const isSmallWebp =
       (mimetype === 'image/webp' || (meta.format || '').toLowerCase() === 'webp') &&
-      fileBuffer.length <= 800 * 1024 &&                    // <= 800 KB
+      fileBuffer.length <= 800 * 1024 &&
       (meta.width || 0) <= 1280;
 
     if (isSmallWebp) {
@@ -130,7 +130,6 @@ async function processAndSaveImage(fileBuffer, mimetype) {
       return publicUrl;
     }
 
-    // Fast-ish settings: width 1280, quality 72, effort 3
     await sharp(fileBuffer)
       .rotate()
       .resize({ width: 1280, withoutEnlargement: true })
@@ -172,7 +171,6 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
-    // gentle cap to keep things snappy
     if (req.files && req.files.length > 12) {
       return res.status(400).send('Please upload at most 12 photos at once. Try again with a smaller batch.');
     }
@@ -244,13 +242,12 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
 router.post(
   '/cars/:id/edit',
   isAdmin,
-  upload.array('newImages', 12), // accept additional photos here
+  upload.array('newImages', 12),
   async (req, res) => {
     try {
       const car = await Car.findById(req.params.id);
       if (!car) return res.status(404).send('Car not found');
 
-      // price required and positive
       if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
         return res.status(400).send('Price is required');
       }
@@ -273,13 +270,13 @@ router.post(
 
       setIfProvided('exteriorColor', v => v.trim());
       setIfProvided('interiorColor', v => v.trim());
-      setIfProvided('mileage',      v => parseInt(v, 10));
-      setIfProvided('engine',       v => v.trim());
+      setIfProvided('mileage', v => parseInt(v, 10));
+      setIfProvided('engine', v => v.trim());
       setIfProvided('transmission', v => v.trim());
-      setIfProvided('drivetrain',   v => v.trim());
-      setIfProvided('fuel',         v => v.trim());
-      setIfProvided('bodyStyle',    v => v.trim());
-      setIfProvided('vin',          v => v.trim());
+      setIfProvided('drivetrain', v => v.trim());
+      setIfProvided('fuel', v => v.trim());
+      setIfProvided('bodyStyle', v => v.trim());
+      setIfProvided('vin', v => v.trim());
 
       // Reorder existing images (if provided)
       if (typeof req.body.imagesOrder === 'string' && car.images && car.images.length) {
@@ -296,7 +293,7 @@ router.post(
         }
       }
 
-      // Append any newly uploaded images (fast pipeline + batching)
+      // Append any newly uploaded images
       if (Array.isArray(req.files) && req.files.length) {
         const newUrls = await processFilesInBatches(req.files, 2);
         car.images.push(...newUrls);
@@ -310,5 +307,40 @@ router.post(
     }
   }
 );
+
+// ✅ NEW: Delete ONE image from a car
+router.post('/cars/:id/images/delete', isAdmin, async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    if (!car) return res.status(404).send('Car not found');
+
+    const img = String(req.body.img || '').trim();
+    if (!img) return res.status(400).send('Missing image');
+
+    const idx = (car.images || []).findIndex(u => String(u) === img);
+    if (idx === -1) return res.redirect(`/admin/cars/${car._id}/edit`);
+
+    // remove from DB
+    car.images.splice(idx, 1);
+    await car.save();
+
+    // delete from disk (only allow /uploads)
+    const relative = img.startsWith('/') ? img.slice(1) : img;
+
+    if (relative.startsWith('uploads/')) {
+      const diskPath = path.resolve(__dirname, '..', relative);
+      const safeUploadDir = path.resolve(uploadDir);
+
+      if (diskPath.startsWith(safeUploadDir) && fs.existsSync(diskPath)) {
+        try { fs.unlinkSync(diskPath); } catch {}
+      }
+    }
+
+    return res.redirect(`/admin/cars/${car._id}/edit`);
+  } catch (e) {
+    console.error('Error deleting image:', e);
+    return res.status(500).send('Error deleting image');
+  }
+});
 
 module.exports = router;

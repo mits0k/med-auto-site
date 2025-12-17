@@ -7,9 +7,7 @@
     <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
   <% } %>
 
-  <!-- IMPORTANT: enctype for file upload -->
   <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form" enctype="multipart/form-data">
-    <!-- Readonly identity -->
     <div class="form-row">
       <div>
         <label class="label">Make</label>
@@ -32,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Colors -->
     <div class="form-row">
       <div>
         <label class="label">Exterior Color</label>
@@ -54,19 +51,17 @@
       </div>
     </div>
 
-    <!-- Mileage / Engine -->
     <div class="form-row">
       <div>
         <label class="label">Mileage (km)</label>
         <input type="number" name="mileage" value="<%= typeof car.mileage === 'number' ? car.mileage : '' %>" />
       </div>
       <div>
-      <label class="label">Engine</label>
+        <label class="label">Engine</label>
         <input type="text" name="engine" value="<%= car.engine || '' %>" />
       </div>
     </div>
 
-    <!-- Transmission / Drivetrain -->
     <div class="form-row">
       <div>
         <label class="label">Transmission</label>
@@ -88,7 +83,6 @@
       </div>
     </div>
 
-    <!-- Fuel / Body Style -->
     <div class="form-row">
       <div>
         <label class="label">Fuel</label>
@@ -110,19 +104,16 @@
       </div>
     </div>
 
-    <!-- VIN -->
     <div>
       <label class="label">VIN</label>
       <input type="text" name="vin" value="<%= car.vin || '' %>" />
     </div>
 
-    <!-- Description -->
     <div>
       <label class="label">Short Description</label>
       <textarea name="description" rows="5"><%= car.description || '' %></textarea>
     </div>
 
-    <!-- ===== Existing Images (Drag to reorder) ===== -->
     <div class="stack-m">
       <strong>Existing Images (drag to reorder)</strong>
 
@@ -131,6 +122,16 @@
           <% car.images.forEach((img, i) => { %>
             <li class="dnd-item" draggable="true" data-src="<%= img %>">
               <div class="dnd-handle" title="Drag to reorder">⋮⋮</div>
+
+              <!-- ✅ Delete button -->
+              <button
+                type="button"
+                class="img-del"
+                data-img="<%= img %>"
+                title="Delete photo"
+                aria-label="Delete photo"
+              >✕</button>
+
               <img src="<%= img %>" alt="car image <%= i+1 %>" />
               <span class="dnd-label"><%= i+1 %></span>
             </li>
@@ -144,7 +145,6 @@
       <small style="color:var(--muted);">Tip: the first image is the main photo on the site.</small>
     </div>
 
-    <!-- ===== NEW: Add More Photos ===== -->
     <div class="stack-m">
       <label class="label" for="newImages">Attach more photos</label>
       <input id="newImages" type="file" name="newImages" accept="image/*" multiple />
@@ -153,11 +153,15 @@
       </small>
     </div>
 
-    <!-- Actions -->
     <div class="row">
       <button type="submit" class="btn btn-primary">Save Changes</button>
       <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
     </div>
+  </form>
+
+  <!-- ✅ Hidden delete form -->
+  <form id="deleteImageForm" method="POST" action="/admin/cars/<%= car._id %>/images/delete" style="display:none;">
+    <input type="hidden" name="img" id="deleteImageValue" value="">
   </form>
 </section>
 
@@ -186,12 +190,30 @@
 </style>
 
 <script>
-  // ===== Drag & Drop Reordering for existing images =====
+  // ===== Drag & Drop Reordering + Delete for existing images =====
   (function(){
     const list = document.getElementById('dndList');
     const input = document.getElementById('imagesOrderInput');
     const form = document.getElementById('editCarForm');
     if (!list) return;
+
+    // ✅ Delete hooks
+    const deleteForm = document.getElementById('deleteImageForm');
+    const deleteValue = document.getElementById('deleteImageValue');
+
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('.img-del');
+      if (!btn) return;
+
+      const img = btn.dataset.img;
+      if (!img) return;
+
+      const ok = confirm('Delete this photo? This cannot be undone.');
+      if (!ok) return;
+
+      deleteValue.value = img;
+      deleteForm.submit();
+    });
 
     let dragEl = null;
 
@@ -221,11 +243,8 @@
       const rect = over.getBoundingClientRect();
       const before = (e.clientY - rect.top) < rect.height / 2;
       over.classList.add('drop-target');
-      if (before) {
-        list.insertBefore(dragEl, over);
-      } else {
-        list.insertBefore(dragEl, over.nextSibling);
-      }
+      if (before) list.insertBefore(dragEl, over);
+      else list.insertBefore(dragEl, over.nextSibling);
     }
 
     function onDragLeave(e){
@@ -293,7 +312,6 @@
     }
 
     form.addEventListener('submit', async (e) => {
-      // If user didn’t add new images, let default submit go through
       if (!newInput.files || newInput.files.length === 0) return;
 
       e.preventDefault();
@@ -302,10 +320,8 @@
 
       try {
         const fd = new FormData();
-        // Copy all fields except the raw file input
         new FormData(form).forEach((v, k) => { if (k !== 'newImages') fd.append(k, v); });
 
-        // Compress new files
         const files = Array.from(newInput.files);
         for (const f of files) {
           const small = await compressImage(f, 1400, 0.8);

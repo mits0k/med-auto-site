@@ -229,6 +229,62 @@ body{
 
 .pager{text-align:center;margin-top:18px}
 
+/* ====== PAGINATION (Inventory) ====== */
+.pager{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  margin-top:22px;
+  flex-wrap:wrap;
+}
+
+.pagination-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:42px;
+  height:38px;
+  padding:0 14px;
+  border-radius:999px;
+  text-decoration:none;
+  font-weight:700;
+  font-size:14px;
+
+  color: var(--muted);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+
+  transition: transform .15s ease, background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.pagination-btn:hover{
+  transform: translateY(-1px);
+  color: var(--text);
+  border-color: rgba(155,92,246,.45);
+  background: rgba(155,92,246,.12);
+  box-shadow: 0 10px 22px rgba(0,0,0,.35);
+}
+
+.pagination-btn.active{
+  color:#fff;
+  border: none;
+  background: linear-gradient(135deg,var(--brand),var(--brand-2));
+  box-shadow: 0 10px 26px rgba(79,140,255,.30);
+  pointer-events:none;
+}
+
+.pagination-btn:focus{
+  outline:none;
+  box-shadow: 0 0 0 4px rgba(79,140,255,.18);
+}
+
+.pagination-btn:first-child,
+.pagination-btn:last-child{
+  font-weight:800;
+}
+
+
 /* ====== FORMS ====== */
 .form-card, .booking-page{
   max-width: 640px; margin: 20px auto; padding: 24px;

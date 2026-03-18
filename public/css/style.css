@@ -294,6 +294,14 @@ body{
   right:6px;
   z-index:3;
 }
+.dnd-item.drag-over{
+  outline:2px solid rgba(255,255,255,.35);
+  outline-offset:2px;
+}
+
+.dnd-item.dragging{
+  opacity:.6;
+}
 
 .pager{text-align:center;margin-top:18px}
 

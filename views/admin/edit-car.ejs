@@ -141,10 +141,6 @@
   <%- JSON.stringify(car.images || []) %>
 </script>
 
-<script id="existingImagesData" type="application/json">
-  <%- JSON.stringify(car.images || []) %>
-</script>
-
 <script>
 (function () {
   const form = document.getElementById('editCarForm');
@@ -206,7 +202,7 @@
         } else {
           const fileIndex = newFiles.findIndex(f => f.tempId === item.id);
           if (fileIndex !== -1) {
-            URL.revokeObjectURL(items.find(x => x.id === item.id)?.src || '');
+            URL.revokeObjectURL(item.src);
             newFiles.splice(fileIndex, 1);
           }
         }
@@ -231,18 +227,27 @@
       li.addEventListener('dragend', () => {
         dragId = null;
         li.classList.remove('dragging');
+        document.querySelectorAll('.dnd-item').forEach(el => el.classList.remove('drag-over'));
       });
 
       li.addEventListener('dragover', (e) => {
         e.preventDefault();
+        li.classList.add('drag-over');
+      });
+
+      li.addEventListener('dragleave', () => {
+        li.classList.remove('drag-over');
       });
 
       li.addEventListener('drop', (e) => {
         e.preventDefault();
+        li.classList.remove('drag-over');
+
         if (!dragId || dragId === item.id) return;
 
         const fromIndex = items.findIndex(x => x.id === dragId);
         const toIndex = items.findIndex(x => x.id === item.id);
+
         if (fromIndex === -1 || toIndex === -1) return;
 
         const moved = items.splice(fromIndex, 1)[0];

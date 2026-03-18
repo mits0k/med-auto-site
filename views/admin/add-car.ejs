@@ -8,7 +8,6 @@
   <% } %>
 
   <form id="addCarForm" action="/admin/add-car" method="POST" enctype="multipart/form-data" class="form">
-    <!-- Make / Model -->
     <div class="form-row">
       <div>
         <label class="label">Make</label>
@@ -20,7 +19,6 @@
       </div>
     </div>
 
-    <!-- Year / Price -->
     <div class="form-row">
       <div>
         <label class="label">Year</label>
@@ -32,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Colors -->
     <div class="form-row">
       <div>
         <label class="label">Exterior Color</label>
@@ -70,7 +67,6 @@
       </div>
     </div>
 
-    <!-- Mileage / Engine -->
     <div class="form-row">
       <div>
         <label class="label">Mileage (km)</label>
@@ -82,7 +78,6 @@
       </div>
     </div>
 
-    <!-- Transmission / Drivetrain -->
     <div class="form-row">
       <div>
         <label class="label">Transmission</label>
@@ -107,7 +102,6 @@
       </div>
     </div>
 
-    <!-- Fuel / Body Style -->
     <div class="form-row">
       <div>
         <label class="label">Fuel</label>
@@ -140,28 +134,30 @@
       </div>
     </div>
 
-    <!-- VIN -->
     <div>
       <label class="label">VIN</label>
       <input type="text" name="vin" placeholder="Optional" />
     </div>
 
-    <!-- Description -->
     <div>
       <label class="label">Short Description</label>
       <textarea name="description" placeholder="Add a short blurb (the specs cover the rest)"></textarea>
     </div>
 
-    <!-- Images -->
     <div>
       <label class="label">Upload Car Images</label>
       <input id="imagesInput" type="file" name="images" accept="image/*" multiple required />
       <small style="color:var(--muted);display:block;margin-top:6px;">
-        Tip: we’ll auto-compress to WebP (max 1600px) so uploads are fast.
+        You can upload up to 30 photos. They will appear below right away.
       </small>
     </div>
 
-    <!-- Actions -->
+    <div class="stack-m">
+      <strong>Selected Images (drag to reorder)</strong>
+      <ul id="previewList" class="dnd-list" aria-label="Selected images"></ul>
+      <small style="color:var(--muted);">Tip: the first image will be the main photo on the site.</small>
+    </div>
+
     <div class="row">
       <button id="submitBtn" type="submit" class="btn btn-primary">Add Car</button>
       <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
@@ -170,24 +166,29 @@
 </section>
 
 <script>
-  (function(){
+  (function () {
     const form = document.getElementById('addCarForm');
     const fileInput = document.getElementById('imagesInput');
+    const previewList = document.getElementById('previewList');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Helper: read a File -> HTMLImageElement
-    function fileToImage(file){
+    let selectedFiles = [];
+    let dragEl = null;
+
+    function fileToImage(file) {
       return new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file);
         const img = new Image();
-        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(img);
+        };
         img.onerror = reject;
         img.src = url;
       });
     }
 
-    // Compress to maxWidth=1600 (keep aspect), prefer webp, fallback jpeg
-    async function compressImage(file, maxWidth = 1600, quality = 0.8){
+    async function compressImage(file, maxWidth = 1600, quality = 0.8) {
       const img = await fileToImage(file);
       const canvas = document.createElement('canvas');
       const scale = Math.min(1, maxWidth / img.width);
@@ -196,19 +197,110 @@
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // Try WebP first
       let blob = await new Promise(res => canvas.toBlob(res, 'image/webp', quality));
-      // Safari on some versions can return null for webp
-      if (!blob) {
-        blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
-      }
+      if (!blob) blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
       const ext = blob.type.includes('webp') ? 'webp' : 'jpg';
-      return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, { type: blob.type, lastModified: Date.now() });
+
+      return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, {
+        type: blob.type,
+        lastModified: Date.now()
+      });
     }
 
+    function renderPreviews() {
+      previewList.innerHTML = '';
+
+      selectedFiles.forEach((file, index) => {
+        const li = document.createElement('li');
+        li.className = 'dnd-item';
+        li.draggable = true;
+        li.dataset.index = String(index);
+
+        const handle = document.createElement('div');
+        handle.className = 'dnd-handle';
+        handle.textContent = '⋮⋮';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'img-del';
+        removeBtn.textContent = '✕';
+        removeBtn.title = 'Remove photo';
+
+        removeBtn.addEventListener('click', () => {
+          selectedFiles.splice(index, 1);
+          renderPreviews();
+        });
+
+        const img = document.createElement('img');
+        img.alt = `selected image ${index + 1}`;
+        img.src = URL.createObjectURL(file);
+
+        const label = document.createElement('span');
+        label.className = 'dnd-label';
+        label.textContent = String(index + 1);
+
+        li.appendChild(handle);
+        li.appendChild(removeBtn);
+        li.appendChild(img);
+        li.appendChild(label);
+        previewList.appendChild(li);
+      });
+
+      bindDnD();
+    }
+
+    function bindDnD() {
+      const items = Array.from(previewList.querySelectorAll('.dnd-item'));
+
+      items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          dragEl = item;
+          item.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const over = item;
+          if (!dragEl || over === dragEl) return;
+
+          const from = Number(dragEl.dataset.index);
+          const to = Number(over.dataset.index);
+
+          const rect = over.getBoundingClientRect();
+          const before = (e.clientY - rect.top) < rect.height / 2;
+
+          const moved = selectedFiles.splice(from, 1)[0];
+          selectedFiles.splice(before ? to : to + 1, 0, moved);
+
+          renderPreviews();
+        });
+
+        item.addEventListener('dragend', () => {
+          dragEl = null;
+        });
+      });
+    }
+
+    fileInput.addEventListener('change', () => {
+      const incoming = Array.from(fileInput.files || []);
+      selectedFiles.push(...incoming);
+
+      if (selectedFiles.length > 30) {
+        alert('You can upload up to 30 photos at once.');
+        selectedFiles = selectedFiles.slice(0, 30);
+      }
+
+      renderPreviews();
+      fileInput.value = '';
+    });
+
     form.addEventListener('submit', async (e) => {
-      // If no files, let normal submit happen
-      if (!fileInput.files || fileInput.files.length === 0) return;
+      if (selectedFiles.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one image.');
+        return;
+      }
 
       e.preventDefault();
       submitBtn.disabled = true;
@@ -217,26 +309,22 @@
       try {
         const fd = new FormData();
 
-        // copy all non-file fields from the form
         new FormData(form).forEach((value, key) => {
           if (key !== 'images') fd.append(key, value);
         });
 
-        // compress files one by one (or small batches)
-        const files = Array.from(fileInput.files);
-        for (const f of files) {
+        for (const f of selectedFiles) {
           const small = await compressImage(f, 1600, 0.8);
           fd.append('images', small, small.name);
         }
 
-        // post to the same endpoint
         const resp = await fetch(form.action, {
           method: 'POST',
           body: fd
         });
 
         if (resp.redirected) {
-          window.location.href = resp.url; // typical case (redirect to dashboard)
+          window.location.href = resp.url;
         } else if (resp.ok) {
           window.location.reload();
         } else {

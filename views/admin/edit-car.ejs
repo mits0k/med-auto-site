@@ -115,33 +115,10 @@
     </div>
 
     <div class="stack-m">
-      <strong>Existing Images (drag to reorder)</strong>
-
-      <% if (car.images && car.images.length > 0) { %>
-        <ul id="dndList" class="dnd-list" aria-label="Reorder images">
-          <% car.images.forEach((img, i) => { %>
-            <li class="dnd-item" draggable="true" data-src="<%= img %>">
-              <div class="dnd-handle" title="Drag to reorder">⋮⋮</div>
-
-              <!-- ✅ Delete button -->
-              <button
-                type="button"
-                class="img-del"
-                data-img="<%= img %>"
-                title="Delete photo"
-                aria-label="Delete photo"
-              >✕</button>
-
-              <img src="<%= img %>" alt="car image <%= i+1 %>" />
-              <span class="dnd-label"><%= i+1 %></span>
-            </li>
-          <% }) %>
-        </ul>
-      <% } else { %>
-        <p>No images</p>
-      <% } %>
-
+      <strong>All Images (drag to reorder)</strong>
+      <ul id="dndList" class="dnd-list" aria-label="Reorder images"></ul>
       <input type="hidden" id="imagesOrderInput" name="imagesOrder" value="" />
+      <input type="hidden" id="deletedImagesInput" name="deletedImages" value="" />
       <small style="color:var(--muted);">Tip: the first image is the main photo on the site.</small>
     </div>
 
@@ -149,7 +126,7 @@
       <label class="label" for="newImages">Attach more photos</label>
       <input id="newImages" type="file" name="newImages" accept="image/*" multiple />
       <small style="color:var(--muted);display:block;margin-top:6px;">
-        You can add more photos here (we auto-compress to WebP, max 1400px).
+        You can add up to 30 total uploads. New photos appear right away.
       </small>
     </div>
 
@@ -157,11 +134,6 @@
       <button type="submit" class="btn btn-primary">Save Changes</button>
       <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
     </div>
-  </form>
-
-  <!-- ✅ Hidden delete form -->
-  <form id="deleteImageForm" method="POST" action="/admin/cars/<%= car._id %>/images/delete" style="display:none;">
-    <input type="hidden" name="img" id="deleteImageValue" value="">
   </form>
 </section>
 
@@ -181,114 +153,145 @@
     padding:4px 6px; font-weight:700; cursor:grab; user-select:none; z-index:2;
   }
   .dnd-item.dragging{ opacity:.6; border-color: var(--brand) }
-  .dnd-item.drop-target{ outline:2px dashed var(--brand); outline-offset:-6px }
   .dnd-label{
     position:absolute; bottom:8px; right:8px; font-size:12px; font-weight:800;
     background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.15);
     color:#e5e7eb; padding:2px 6px; border-radius:999px;
   }
+  .img-kind{
+    position:absolute;
+    bottom:8px;
+    left:8px;
+    font-size:11px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:999px;
+    background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.15);
+    color:#fff;
+  }
 </style>
 
-<script>
-  // ===== Drag & Drop Reordering + Delete for existing images =====
-  (function(){
-    const list = document.getElementById('dndList');
-    const input = document.getElementById('imagesOrderInput');
-    const form = document.getElementById('editCarForm');
-    if (!list) return;
-
-    // ✅ Delete hooks
-    const deleteForm = document.getElementById('deleteImageForm');
-    const deleteValue = document.getElementById('deleteImageValue');
-
-    list.addEventListener('click', (e) => {
-      const btn = e.target.closest('.img-del');
-      if (!btn) return;
-
-      const img = btn.dataset.img;
-      if (!img) return;
-
-      const ok = confirm('Delete this photo? This cannot be undone.');
-      if (!ok) return;
-
-      deleteValue.value = img;
-      deleteForm.submit();
-    });
-
-    let dragEl = null;
-
-    const getItems = () => Array.from(list.querySelectorAll('.dnd-item'));
-    const serialize = () => getItems().map(li => li.dataset.src).join(',');
-
-    function updateLabels(){
-      getItems().forEach((li, idx) => {
-        const label = li.querySelector('.dnd-label');
-        if (label) label.textContent = String(idx + 1);
-      });
-    }
-
-    function onDragStart(e){
-      const target = e.target.closest('.dnd-item');
-      if (!target) return;
-      dragEl = target;
-      target.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', target.dataset.src);
-    }
-
-    function onDragOver(e){
-      e.preventDefault();
-      const over = e.target.closest('.dnd-item');
-      if (!over || over === dragEl) return;
-      const rect = over.getBoundingClientRect();
-      const before = (e.clientY - rect.top) < rect.height / 2;
-      over.classList.add('drop-target');
-      if (before) list.insertBefore(dragEl, over);
-      else list.insertBefore(dragEl, over.nextSibling);
-    }
-
-    function onDragLeave(e){
-      const li = e.target.closest('.dnd-item');
-      if (li) li.classList.remove('drop-target');
-    }
-
-    function onDrop(e){
-      e.preventDefault();
-      getItems().forEach(li => li.classList.remove('drop-target'));
-    }
-
-    function onDragEnd(){
-      if (dragEl) dragEl.classList.remove('dragging');
-      dragEl = null;
-      updateLabels();
-    }
-
-    list.addEventListener('dragstart', onDragStart);
-    list.addEventListener('dragover', onDragOver);
-    list.addEventListener('dragleave', onDragLeave);
-    list.addEventListener('drop', onDrop);
-    list.addEventListener('dragend', onDragEnd);
-
-    form.addEventListener('submit', () => {
-      input.value = serialize();
-    });
-
-    input.value = serialize();
-  })();
+<script id="existingImagesData" type="application/json">
+  <%- JSON.stringify(car.images || []) %>
 </script>
 
 <script>
-  // ===== Client-side compression for NEW images on Edit =====
   (function(){
     const form = document.getElementById('editCarForm');
+    const list = document.getElementById('dndList');
     const newInput = document.getElementById('newImages');
-    if (!form || !newInput) return;
+    const imagesOrderInput = document.getElementById('imagesOrderInput');
+    const deletedImagesInput = document.getElementById('deletedImagesInput');
+
+    const existingImages = JSON.parse(
+      document.getElementById('existingImagesData').textContent || '[]'
+    );
+
+    let items = existingImages.map(img => ({
+      id: img,
+      src: img,
+      type: 'existing'
+    }));
+
+    let deletedExistingImages = [];
+    let newFiles = [];
+    let dragId = null;
+
+    function syncHiddenInputs() {
+      imagesOrderInput.value = items.map(item => item.id).join(',');
+      deletedImagesInput.value = deletedExistingImages.join(',');
+    }
+
+    function render() {
+      list.innerHTML = '';
+
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'dnd-item';
+        li.draggable = true;
+        li.dataset.id = item.id;
+
+        const handle = document.createElement('div');
+        handle.className = 'dnd-handle';
+        handle.textContent = '⋮⋮';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'img-del';
+        removeBtn.textContent = '✕';
+        removeBtn.title = 'Delete photo';
+
+        removeBtn.addEventListener('click', () => {
+          if (item.type === 'existing') {
+            deletedExistingImages.push(item.src);
+          } else if (item.type === 'new') {
+            const fileIndex = newFiles.findIndex(f => f.tempId === item.id);
+            if (fileIndex !== -1) newFiles.splice(fileIndex, 1);
+          }
+
+          items = items.filter(x => x.id !== item.id);
+          render();
+        });
+
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = `car image ${index + 1}`;
+
+        const label = document.createElement('span');
+        label.className = 'dnd-label';
+        label.textContent = String(index + 1);
+
+        const kind = document.createElement('span');
+        kind.className = 'img-kind';
+        kind.textContent = item.type === 'existing' ? 'saved' : 'new';
+
+        li.appendChild(handle);
+        li.appendChild(removeBtn);
+        li.appendChild(img);
+        li.appendChild(label);
+        li.appendChild(kind);
+
+        li.addEventListener('dragstart', () => {
+          dragId = item.id;
+          li.classList.add('dragging');
+        });
+
+        li.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (!dragId || dragId === item.id) return;
+
+          const fromIndex = items.findIndex(x => x.id === dragId);
+          const toIndex = items.findIndex(x => x.id === item.id);
+          if (fromIndex === -1 || toIndex === -1) return;
+
+          const rect = li.getBoundingClientRect();
+          const before = (e.clientY - rect.top) < rect.height / 2;
+
+          const moved = items.splice(fromIndex, 1)[0];
+          items.splice(before ? toIndex : toIndex + 1, 0, moved);
+
+          render();
+        });
+
+        li.addEventListener('dragend', () => {
+          dragId = null;
+        });
+
+        list.appendChild(li);
+      });
+
+      syncHiddenInputs();
+    }
 
     function fileToImage(file){
       return new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file);
         const img = new Image();
-        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(img);
+        };
         img.onerror = reject;
         img.src = url;
       });
@@ -306,44 +309,81 @@
       let blob = await new Promise(res => canvas.toBlob(res, 'image/webp', quality));
       if (!blob) blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.85));
       const ext = blob.type.includes('webp') ? 'webp' : 'jpg';
+
       return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, {
-        type: blob.type, lastModified: Date.now()
+        type: blob.type,
+        lastModified: Date.now()
       });
     }
 
-    form.addEventListener('submit', async (e) => {
-      if (!newInput.files || newInput.files.length === 0) return;
+    newInput.addEventListener('change', () => {
+      const incoming = Array.from(newInput.files || []);
 
+      for (const file of incoming) {
+        const tempId = `new_${newFiles.length}`;
+        const previewUrl = URL.createObjectURL(file);
+
+        newFiles.push({ tempId, file });
+        items.push({
+          id: tempId,
+          src: previewUrl,
+          type: 'new'
+        });
+      }
+
+      render();
+      newInput.value = '';
+    });
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving…';
+      }
 
       try {
-        const fd = new FormData();
-        new FormData(form).forEach((v, k) => { if (k !== 'newImages') fd.append(k, v); });
+        syncHiddenInputs();
 
-        const files = Array.from(newInput.files);
-        for (const f of files) {
-          const small = await compressImage(f, 1400, 0.8);
-          fd.append('newImages', small, small.name);
+        const fd = new FormData();
+        new FormData(form).forEach((v, k) => {
+          if (k !== 'newImages') fd.append(k, v);
+        });
+
+        for (const item of newFiles) {
+          const compressed = await compressImage(item.file, 1400, 0.8);
+          fd.append('newImages', compressed, compressed.name);
         }
 
-        const resp = await fetch(form.action, { method: 'POST', body: fd });
+        const resp = await fetch(form.action, {
+          method: 'POST',
+          body: fd
+        });
+
         if (resp.redirected) {
           window.location.href = resp.url;
         } else if (resp.ok) {
           window.location.reload();
         } else {
-          alert('Save failed: ' + (await resp.text()));
-          if (submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Save Changes'; }
+          alert('Save failed: ' + await resp.text());
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+          }
         }
       } catch (err) {
         console.error(err);
         alert('Save failed. See console for details.');
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Save Changes'; }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+        }
       }
     });
+
+    render();
   })();
 </script>
 

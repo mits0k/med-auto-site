@@ -226,24 +226,73 @@ body{
   border-radius:8px;
   box-shadow:0 4px 10px rgba(79,140,255,.3);
 }
+.dnd-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 140px));
+  gap:12px;
+}
+
+.dnd-item{
+  position:relative;
+  width:140px;
+}
+
 .dnd-item img{
-  width:100%;
-  height:110px;
+  width:140px;
+  height:100px;
   object-fit:cover;
   border-radius:8px;
+  display:block;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.dnd-handle{
+  position:absolute;
+  top:6px;
+  left:6px;
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  border-radius:6px;
+  padding:2px 6px;
+  font-size:12px;
+  cursor:grab;
+  z-index:2;
+}
+
+.dnd-label{
+  position:absolute;
+  bottom:6px;
+  left:6px;
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  border-radius:999px;
+  padding:2px 6px;
+  font-size:11px;
+  font-weight:700;
+  z-index:2;
 }
 
 .img-kind{
   position:absolute;
-  bottom:8px;
-  left:8px;
-  font-size:11px;
-  font-weight:700;
-  padding:2px 6px;
-  border-radius:999px;
-  background:rgba(0,0,0,.55);
-  border:1px solid rgba(255,255,255,.15);
+  bottom:6px;
+  right:6px;
+  background:rgba(0,0,0,.65);
   color:#fff;
+  border-radius:999px;
+  padding:2px 6px;
+  font-size:10px;
+  font-weight:700;
+  z-index:2;
+}
+
+.dnd-item .img-del{
+  position:absolute;
+  top:6px;
+  right:6px;
+  z-index:3;
 }
 
 .pager{text-align:center;margin-top:18px}

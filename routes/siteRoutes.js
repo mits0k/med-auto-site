@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Inventory (filters + paging)
+// Available cars first, sold cars last
 router.get('/inventory', async (req, res) => {
   try {
     const perPage = 12;
@@ -23,16 +24,28 @@ router.get('/inventory', async (req, res) => {
 
     const { make, year, sort } = req.query;
     const filter = {};
-    if (make && make !== 'all') filter.make = make;
-    if (year && year !== 'all') filter.year = parseInt(year);
 
-    let sortOption = {};
-    if (sort === 'price-asc') sortOption.price = 1;
-    if (sort === 'price-desc') sortOption.price = -1;
-    if (sort === 'year-asc') sortOption.year = 1;
-    if (sort === 'year-desc') sortOption.year = -1;
+    if (make && make !== 'all') filter.make = make;
+    if (year && year !== 'all') filter.year = parseInt(year, 10);
+
+    // Always keep available cars first and sold cars last
+    let sortOption = { sold: 1 };
+
+    if (sort === 'price-asc') {
+      sortOption.price = 1;
+    } else if (sort === 'price-desc') {
+      sortOption.price = -1;
+    } else if (sort === 'year-asc') {
+      sortOption.year = 1;
+    } else if (sort === 'year-desc') {
+      sortOption.year = -1;
+    } else {
+      // Default inside available/sold groups = newest first
+      sortOption.createdAt = -1;
+    }
 
     const totalCars = await Car.countDocuments(filter);
+
     const cars = await Car.find(filter)
       .sort(sortOption)
       .skip((page - 1) * perPage)
@@ -74,7 +87,11 @@ router.get('/inventory/:id', async (req, res) => {
  */
 router.get('/book', async (req, res) => {
   try {
-    const cars = await Car.find().sort({ createdAt: -1 }).select('_id make model year').lean();
+    const cars = await Car.find()
+      .sort({ sold: 1, createdAt: -1 })
+      .select('_id make model year')
+      .lean();
+
     const selectedCarId = req.query.car || '';
 
     // today's date for <input min>
@@ -106,7 +123,11 @@ router.post('/book', async (req, res) => {
     const { name, email, phone, date, time, message, carId } = req.body;
 
     // Re-fetch for re-rendering form
-    const cars = await Car.find().sort({ createdAt: -1 }).select('_id make model year').lean();
+    const cars = await Car.find()
+      .sort({ sold: 1, createdAt: -1 })
+      .select('_id make model year')
+      .lean();
+
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
     const minDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
@@ -114,10 +135,17 @@ router.post('/book', async (req, res) => {
     // Basic form validation
     if (!name || !email || !phone || !date || !time) {
       return res.render('book', {
-        cars, selectedCarId: carId || '', minDate,
+        cars,
+        selectedCarId: carId || '',
+        minDate,
         success: false,
         error: 'Please fill in your name, email, phone, date and time.',
-        name, email, phone, date, time, message
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message
       });
     }
 
@@ -125,20 +153,34 @@ router.post('/book', async (req, res) => {
     const combined = new Date(`${date}T${time}:00`);
     if (isNaN(combined.getTime())) {
       return res.render('book', {
-        cars, selectedCarId: carId || '', minDate,
+        cars,
+        selectedCarId: carId || '',
+        minDate,
         success: false,
         error: 'Invalid date or time.',
-        name, email, phone, date, time, message
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message
       });
     }
 
-    // 🚫 Block Sundays
+    // Block Sundays
     if (combined.getDay() === 0) {
       return res.render('book', {
-        cars, selectedCarId: carId || '', minDate,
+        cars,
+        selectedCarId: carId || '',
+        minDate,
         success: false,
         error: "We're closed on Sundays. Please choose another day.",
-        name, email, phone, date: '', time, message
+        name,
+        email,
+        phone,
+        date: '',
+        time,
+        message
       });
     }
 
@@ -146,10 +188,17 @@ router.post('/book', async (req, res) => {
     const now = new Date();
     if (combined < now) {
       return res.render('book', {
-        cars, selectedCarId: carId || '', minDate,
+        cars,
+        selectedCarId: carId || '',
+        minDate,
         success: false,
         error: 'Please choose a time in the future.',
-        name, email, phone, date, time, message
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message
       });
     }
 
@@ -158,21 +207,35 @@ router.post('/book', async (req, res) => {
     const minutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
     const OPEN = 9 * 60;
     const CLOSE = 17 * 60 + 30;
+
     if (minutes < OPEN || minutes > CLOSE) {
       return res.render('book', {
-        cars, selectedCarId: carId || '', minDate,
+        cars,
+        selectedCarId: carId || '',
+        minDate,
         success: false,
         error: 'Please choose a time between 9:00 AM and 5:30 PM.',
-        name, email, phone, date, time, message
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message
       });
     }
 
     // Build a car label if chosen
     let chosenCar = null;
     let carLabel = null;
+
     if (carId) {
-      chosenCar = await Car.findById(carId).select('_id make model year').lean();
-      if (chosenCar) carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
+      chosenCar = await Car.findById(carId)
+        .select('_id make model year')
+        .lean();
+
+      if (chosenCar) {
+        carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
+      }
     }
 
     // Save appointment

@@ -32,23 +32,36 @@
     <div class="vehicle-grid">
       <% cars.forEach(car => { %>
         <a href="/inventory/<%= car._id %>" class="vehicle-card">
-  <div class="vehicle-media">
-    <% if (car.images && car.images.length > 0) { %>
-      <img src="<%= car.images[0] %>" alt="<%= car.make %> <%= car.model %>" />
-    <% } else { %>
-      <div class="vehicle-noimg">No image</div>
-    <% } %>
-  </div>
+          <div class="vehicle-media">
+            <% if (car.images && car.images.length > 0) { %>
+              <img
+                src="<%= car.images[0] %>"
+                alt="<%= car.make %> <%= car.model %>"
+                class="<%= car.sold ? 'is-sold-image' : '' %>"
+              />
+            <% } else { %>
+              <div class="vehicle-noimg">No image</div>
+            <% } %>
 
-  <div class="vehicle-caption">
-    <h3><%= car.year %> <%= car.make %> <%= car.model %></h3>
-    <% if (typeof car.mileage === 'number') { %>
-      <p class="meta"><%= car.mileage.toLocaleString() %> km</p>
-    <% } %>
-    <p class="price">$<%= car.price.toLocaleString() %></p>
-  </div>
-</a>
+            <% if (car.sold) { %>
+              <div class="sold-badge">SOLD</div>
+            <% } %>
+          </div>
 
+          <div class="vehicle-caption">
+            <h3><%= car.year %> <%= car.make %> <%= car.model %></h3>
+
+            <% if (typeof car.mileage === 'number') { %>
+              <p class="meta"><%= car.mileage.toLocaleString() %> km</p>
+            <% } %>
+
+            <% if (car.sold) { %>
+              <p class="price sold-price">Sold</p>
+            <% } else { %>
+              <p class="price">$<%= car.price.toLocaleString() %></p>
+            <% } %>
+          </div>
+        </a>
       <% }) %>
     </div>
 
@@ -56,9 +69,11 @@
       <% if (currentPage > 1) { %>
         <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Prev</a>
       <% } %>
+
       <% for (let i = 1; i <= totalPages; i++) { %>
         <a href="?page=<%= i %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
       <% } %>
+
       <% if (currentPage < totalPages) { %>
         <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Next</a>
       <% } %>

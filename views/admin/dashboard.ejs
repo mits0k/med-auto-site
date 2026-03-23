@@ -17,7 +17,8 @@
           <th>Model</th>
           <th>Year</th>
           <th>Price</th>
-          <th style="width:220px">Actions</th>
+          <th>Status</th>
+          <th style="width:320px">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -26,15 +27,33 @@
             <td>
               <% if (car.images && car.images.length > 0) { %>
                 <img src="<%= car.images[0] %>" alt="<%= car.make %>" style="width:110px;height:66px;object-fit:cover;border-radius:6px;" />
-              <% } else { %>No image<% } %>
+              <% } else { %>
+                No image
+              <% } %>
             </td>
             <td><%= car.make %></td>
             <td><%= car.model %></td>
             <td><%= car.year %></td>
             <td>$<%= car.price.toLocaleString() %></td>
             <td>
+              <% if (car.sold) { %>
+                <span class="status-badge status-sold">Sold</span>
+              <% } else { %>
+                <span class="status-badge status-available">Available</span>
+              <% } %>
+            </td>
+            <td>
               <div class="row">
                 <a href="/admin/cars/<%= car._id %>/edit" class="btn btn-secondary">Edit</a>
+
+                <form action="/admin/cars/<%= car._id %>/toggle-sold" method="POST">
+                  <% if (car.sold) { %>
+                    <button type="submit" class="btn btn-warning">Mark Available</button>
+                  <% } else { %>
+                    <button type="submit" class="btn btn-info">Mark Sold</button>
+                  <% } %>
+                </form>
+
                 <form action="/admin/cars/<%= car._id %>/delete" method="POST"
                       onsubmit="return confirm('Delete this car?');">
                   <button type="submit" class="btn btn-danger">Delete</button>

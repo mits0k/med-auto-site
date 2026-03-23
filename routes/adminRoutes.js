@@ -30,9 +30,9 @@ const upload = multer({
     cb(null, true);
   },
   limits: {
-    files: 20,
-    fileSize: 25 * 1024 * 1024,
-  },
+  files: 30,
+  fileSize: 25 * 1024 * 1024,
+},
 });
 
 // ===== Very simple admin guard =====
@@ -161,7 +161,7 @@ router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
 });
 
-router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) => {
+rrouter.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) => {
   try {
     const {
       make, model, year, price, description,
@@ -169,8 +169,8 @@ router.post('/add-car', isAdmin, upload.array('images', 20), async (req, res) =>
       engine, transmission, drivetrain, fuel, bodyStyle, vin
     } = req.body;
 
-    if (req.files && req.files.length > 12) {
-      return res.status(400).send('Please upload at most 12 photos at once. Try again with a smaller batch.');
+    if (req.files && req.files.length > 30) {
+      return res.status(400).send('Please upload at most 30 photos at once. Try again with a smaller batch.');
     }
 
     let images = [];
@@ -257,7 +257,7 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
 router.post(
   '/cars/:id/edit',
   isAdmin,
-  upload.array('newImages', 12),
+  upload.array('newImages', 30),
   async (req, res) => {
     try {
       const car = await Car.findById(req.params.id);

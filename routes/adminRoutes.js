@@ -161,7 +161,7 @@ router.get('/add-car', isAdmin, (req, res) => {
   res.render('admin/add-car', { error: null });
 });
 
-rrouter.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) => {
+router.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) => {
   try {
     const {
       make, model, year, price, description,

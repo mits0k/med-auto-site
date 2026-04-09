@@ -30,9 +30,9 @@ const upload = multer({
     cb(null, true);
   },
   limits: {
-  files: 30,
-  fileSize: 25 * 1024 * 1024,
-},
+    files: 30,
+    fileSize: 25 * 1024 * 1024,
+  },
 });
 
 // ===== Very simple admin guard =====
@@ -242,7 +242,7 @@ router.post('/cars/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
-// ===== Edit Car (supports adding more photos) =====
+// ===== Edit Car (supports adding more photos + deleting existing photos) =====
 router.get('/cars/:id/edit', isAdmin, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
@@ -266,12 +266,13 @@ router.post(
       if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
         return res.status(400).send('Price is required');
       }
+
       const parsedPrice = parseFloat(req.body.price);
       if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
         return res.status(400).send('Price must be a positive number');
       }
-      car.price = parsedPrice;
 
+      car.price = parsedPrice;
       car.description = (req.body.description ?? '').trim();
 
       const setIfProvided = (key, transform = v => v) => {
@@ -293,6 +294,32 @@ router.post(
       setIfProvided('bodyStyle', v => v.trim());
       setIfProvided('vin', v => v.trim());
 
+      // ===== DELETE removed existing images =====
+      if (typeof req.body.deletedImages === 'string' && req.body.deletedImages.trim()) {
+        const deletedImages = req.body.deletedImages
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+
+        if (deletedImages.length > 0) {
+          car.images = (car.images || []).filter(img => !deletedImages.includes(String(img)));
+
+          deletedImages.forEach(imgUrl => {
+            const relative = imgUrl.startsWith('/') ? imgUrl.slice(1) : imgUrl;
+
+            if (relative.startsWith('uploads/')) {
+              const diskPath = path.resolve(__dirname, '..', relative);
+              const safeUploadDir = path.resolve(uploadDir);
+
+              if (diskPath.startsWith(safeUploadDir) && fs.existsSync(diskPath)) {
+                try { fs.unlinkSync(diskPath); } catch {}
+              }
+            }
+          });
+        }
+      }
+
+      // ===== Reorder remaining images =====
       if (typeof req.body.imagesOrder === 'string' && car.images && car.images.length) {
         const requestedOrder = req.body.imagesOrder
           .split(',')
@@ -307,6 +334,7 @@ router.post(
         }
       }
 
+      // ===== Add new uploaded images =====
       if (Array.isArray(req.files) && req.files.length) {
         const newUrls = await processFilesInBatches(req.files, 2);
         car.images.push(...newUrls);

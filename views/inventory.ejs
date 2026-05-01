@@ -25,7 +25,16 @@
       <option value="year-desc"  <%= selectedSort === 'year-desc'  ? 'selected' : '' %>>Year: Newest</option>
     </select>
 
+    <input type="hidden" name="showSold" value="<%= showSold %>" />
+
     <button type="submit" class="btn btn-secondary">Apply</button>
+
+    <a
+      href="/inventory?make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold === 'true' ? 'false' : 'true' %>"
+      class="btn <%= showSold === 'true' ? 'btn-warning' : 'btn-muted' %>"
+    >
+      <%= showSold === 'true' ? 'Hide Sold Cars' : 'Show Sold Cars' %>
+    </a>
   </form>
 
   <% if (cars.length > 0) { %>
@@ -67,15 +76,15 @@
 
     <div class="pager">
       <% if (currentPage > 1) { %>
-        <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Prev</a>
+        <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn">Prev</a>
       <% } %>
 
       <% for (let i = 1; i <= totalPages; i++) { %>
-        <a href="?page=<%= i %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+        <a href="?page=<%= i %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
       <% } %>
 
       <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>" class="pagination-btn">Next</a>
+        <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn">Next</a>
       <% } %>
     </div>
   <% } else { %>

@@ -16,17 +16,23 @@ router.get('/', async (req, res) => {
 });
 
 // Inventory (filters + paging)
-// Available cars first, sold cars last
+// By default: hide sold cars
+// When showSold=true: show available + sold cars
 router.get('/inventory', async (req, res) => {
   try {
     const perPage = 12;
     const page = parseInt(req.query.page) || 1;
 
-    const { make, year, sort } = req.query;
+    const { make, year, sort, showSold } = req.query;
     const filter = {};
 
     if (make && make !== 'all') filter.make = make;
     if (year && year !== 'all') filter.year = parseInt(year, 10);
+
+    // Hide sold cars unless button is turned on
+    if (showSold !== 'true') {
+      filter.sold = false;
+    }
 
     // Always keep available cars first and sold cars last
     let sortOption = { sold: 1 };
@@ -40,7 +46,6 @@ router.get('/inventory', async (req, res) => {
     } else if (sort === 'year-desc') {
       sortOption.year = -1;
     } else {
-      // Default inside available/sold groups = newest first
       sortOption.createdAt = -1;
     }
 
@@ -64,6 +69,7 @@ router.get('/inventory', async (req, res) => {
       selectedMake: make || 'all',
       selectedYear: year || 'all',
       selectedSort: sort || '',
+      showSold: showSold === 'true' ? 'true' : 'false',
     });
   } catch (err) {
     console.error(err);
@@ -94,7 +100,6 @@ router.get('/book', async (req, res) => {
 
     const selectedCarId = req.query.car || '';
 
-    // today's date for <input min>
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
     const minDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
@@ -122,7 +127,6 @@ router.post('/book', async (req, res) => {
   try {
     const { name, email, phone, date, time, message, carId } = req.body;
 
-    // Re-fetch for re-rendering form
     const cars = await Car.find()
       .sort({ sold: 1, createdAt: -1 })
       .select('_id make model year')
@@ -132,7 +136,6 @@ router.post('/book', async (req, res) => {
     const pad = n => (n < 10 ? '0' + n : '' + n);
     const minDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
-    // Basic form validation
     if (!name || !email || !phone || !date || !time) {
       return res.render('book', {
         cars,
@@ -149,7 +152,6 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Combine date+time
     const combined = new Date(`${date}T${time}:00`);
     if (isNaN(combined.getTime())) {
       return res.render('book', {
@@ -167,7 +169,6 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Block Sundays
     if (combined.getDay() === 0) {
       return res.render('book', {
         cars,
@@ -184,7 +185,6 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // No past bookings
     const now = new Date();
     if (combined < now) {
       return res.render('book', {
@@ -202,7 +202,6 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Business hours 09:00–17:30
     const [hStr, mStr] = time.split(':');
     const minutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
     const OPEN = 9 * 60;
@@ -224,7 +223,6 @@ router.post('/book', async (req, res) => {
       });
     }
 
-    // Build a car label if chosen
     let chosenCar = null;
     let carLabel = null;
 
@@ -238,7 +236,6 @@ router.post('/book', async (req, res) => {
       }
     }
 
-    // Save appointment
     await new Appointment({
       name,
       email,

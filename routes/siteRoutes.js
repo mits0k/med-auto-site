@@ -31,8 +31,8 @@ router.get('/inventory', async (req, res) => {
 
     // Hide sold cars unless button is turned on
     if (showSold !== 'true') {
-      filter.sold = false;
-    }
+  filter.sold = { $ne: true };
+}
 
     // Always keep available cars first and sold cars last
     let sortOption = { sold: 1 };

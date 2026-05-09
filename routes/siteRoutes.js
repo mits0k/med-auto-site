@@ -29,8 +29,11 @@ router.get('/inventory', async (req, res) => {
     if (make && make !== 'all') filter.make = make;
     if (year && year !== 'all') filter.year = parseInt(year, 10);
 
-    // Hide sold cars unless button is turned on
-    if (showSold !== 'true') {
+    // Default: show only available cars
+// When Show Sold Cars is clicked: show only sold cars
+if (showSold === 'true') {
+  filter.sold = true;
+} else {
   filter.sold = { $ne: true };
 }
 

@@ -885,7 +885,140 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   }
 }
 
+/* === EXTRA SMALL PHONE CLEANUP === */
+@media (max-width: 430px) {
+  .container {
+    padding: 0 10px;
+  }
 
+  .page {
+    padding: 16px 0;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .topbar-right {
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .topbar-right .topbar-link {
+    font-size: 11px;
+    padding: 4px 7px;
+  }
+
+  .nav {
+    padding: 8px 0;
+  }
+
+  .nav-toggle {
+    padding: 6px 10px;
+    font-size: 18px;
+  }
+
+  .billboard {
+    min-height: 42vh;
+  }
+
+  .billboard .bb-copy {
+    padding: 28px 0 34px;
+  }
+
+  .billboard .bb-copy h1 {
+    font-size: 22px;
+  }
+
+  .bb-sub {
+    font-size: 12px;
+  }
+
+  .row {
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .vehicle-card {
+    border-radius: 12px;
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    height: 185px;
+  }
+
+  .vehicle-caption {
+    padding: 9px 10px 12px;
+  }
+
+  .vehicle-caption h3 {
+    font-size: 14px;
+  }
+
+  .vehicle-caption .meta {
+    font-size: 12px;
+  }
+
+  .price {
+    font-size: 13px;
+  }
+
+  form.row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  form.row select,
+  form.row .btn {
+    width: 100%;
+  }
+
+  .spotlight-caption {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .form-card,
+  .booking-page {
+    margin: 10px;
+    padding: 16px;
+  }
+
+  .gallery-main {
+    border-radius: 12px;
+  }
+
+  .thumb-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .thumb-strip .thumb {
+    height: 62px;
+  }
+
+  .spec-grid li {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .site-footer {
+    padding: 18px 0;
+    font-size: 12px;
+  }
+}
 
 
 

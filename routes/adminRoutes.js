@@ -81,7 +81,7 @@ router.post('/logout', (req, res) => {
 // ===== Dashboard =====
 router.get('/dashboard', isAdmin, async (req, res) => {
   try {
-    const cars = await Car.find().sort({ createdAt: -1 });
+    const cars = await Car.find().sort({ sold: 1, createdAt: -1 });
     res.render('admin/dashboard', { cars });
   } catch (e) {
     console.error(e);

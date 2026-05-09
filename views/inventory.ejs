@@ -64,9 +64,7 @@
               <p class="meta"><%= car.mileage.toLocaleString() %> km</p>
             <% } %>
 
-            <% if (car.sold) { %>
-              <p class="price sold-price">Sold</p>
-            <% } else { %>
+            <% if (!car.sold) { %>
               <p class="price">$<%= car.price.toLocaleString() %></p>
             <% } %>
           </div>

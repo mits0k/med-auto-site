@@ -30,12 +30,12 @@ router.get('/inventory', async (req, res) => {
     if (year && year !== 'all') filter.year = parseInt(year, 10);
 
     // Default: show only available cars
-// When Show Sold Cars is clicked: show only sold cars
-if (showSold === 'true') {
-  filter.sold = true;
-} else {
-  filter.sold = { $ne: true };
-}
+    // When Show Sold Cars is clicked: show only sold cars
+    if (showSold === 'true') {
+      filter.sold = true;
+    } else {
+      filter.sold = { $ne: true };
+    }
 
     // Always keep available cars first and sold cars last
     let sortOption = { sold: 1 };
@@ -207,7 +207,7 @@ router.post('/book', async (req, res) => {
 
     const [hStr, mStr] = time.split(':');
     const minutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
-    const OPEN = 9 * 60;
+    const OPEN = 10 * 60;
     const CLOSE = 17 * 60 + 30;
 
     if (minutes < OPEN || minutes > CLOSE) {
@@ -216,7 +216,23 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Please choose a time between 9:00 AM and 5:30 PM.',
+        error: 'Please choose a time between 10:00 AM and 5:30 PM.',
+        name,
+        email,
+        phone,
+        date,
+        time,
+        message
+      });
+    }
+
+    if (minutes % 15 !== 0) {
+      return res.render('book', {
+        cars,
+        selectedCarId: carId || '',
+        minDate,
+        success: false,
+        error: 'Please choose one of the available appointment times.',
         name,
         email,
         phone,

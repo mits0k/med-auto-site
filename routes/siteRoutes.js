@@ -96,10 +96,10 @@ router.get('/inventory/:id', async (req, res) => {
  */
 router.get('/book', async (req, res) => {
   try {
-    const cars = await Car.find()
-      .sort({ sold: 1, createdAt: -1 })
-      .select('_id make model year')
-      .lean();
+   const cars = await Car.find({ sold: { $ne: true } })
+  .sort({ createdAt: -1 })
+  .select('_id make model year')
+  .lean();
 
     const selectedCarId = req.query.car || '';
 
@@ -130,10 +130,10 @@ router.post('/book', async (req, res) => {
   try {
     const { name, email, phone, date, time, message, carId } = req.body;
 
-    const cars = await Car.find()
-      .sort({ sold: 1, createdAt: -1 })
-      .select('_id make model year')
-      .lean();
+    const cars = await Car.find({ sold: { $ne: true } })
+  .sort({ createdAt: -1 })
+  .select('_id make model year')
+  .lean();
 
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
@@ -246,14 +246,17 @@ router.post('/book', async (req, res) => {
     let carLabel = null;
 
     if (carId) {
-      chosenCar = await Car.findById(carId)
-        .select('_id make model year')
-        .lean();
+  chosenCar = await Car.findOne({
+    _id: carId,
+    sold: { $ne: true }
+  })
+    .select('_id make model year')
+    .lean();
 
-      if (chosenCar) {
-        carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
-      }
-    }
+  if (chosenCar) {
+    carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
+  }
+}
 
     await new Appointment({
       name,

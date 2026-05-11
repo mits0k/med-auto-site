@@ -60,8 +60,10 @@ router.get('/inventory', async (req, res) => {
       .limit(perPage);
 
     const totalPages = Math.ceil(totalCars / perPage);
-    const makes = await Car.distinct('make');
-    const years = await Car.distinct('year');
+    const availableFilter = { sold: { $ne: true } };
+
+const makes = await Car.distinct('make', availableFilter);
+const years = await Car.distinct('year', availableFilter);
 
     res.render('inventory', {
       cars,

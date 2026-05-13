@@ -1179,3 +1179,29 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
     max-width: 150px;
   }
 }
+
+/* ===== TRADE-IN FILLED INPUTS ===== */
+.trade-page input.has-value,
+.trade-page textarea.has-value,
+.trade-page select.has-value {
+  background: #e8f0fe;
+  color: #0b0d12;
+  border-color: rgba(255,255,255,.35);
+}
+
+.trade-page input.has-value::placeholder,
+.trade-page textarea.has-value::placeholder {
+  color: #4b5563;
+}
+
+/* ===== TRADE-IN PHOTO WARNING ===== */
+.trade-upload-warning {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 61, 113, 0.12);
+  border: 1px solid rgba(255, 61, 113, 0.28);
+  color: #ff8fb0;
+  font-weight: 600;
+  line-height: 1.4;
+}

@@ -19,74 +19,23 @@
     </div>
   <% } %>
 
-  <form action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
+  <form id="tradeInForm" action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
     <h3 style="margin:0;">Your Information</h3>
 
-    <input
-      type="text"
-      name="name"
-      placeholder="Your Name"
-      required
-      value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>"
-    />
-
-    <input
-      type="email"
-      name="email"
-      placeholder="Your Email"
-      value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
-    />
-
-    <input
-      type="tel"
-      name="phone"
-      placeholder="Phone Number"
-      required
-      value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>"
-    />
+    <input type="text" name="name" placeholder="Your Name" required value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>" />
+    <input type="email" name="email" placeholder="Your Email" value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>" />
+    <input type="tel" name="phone" placeholder="Phone Number" required value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>" />
 
     <h3 style="margin:8px 0 0;">Vehicle Information</h3>
 
     <div class="form-row">
-      <input
-        type="number"
-        name="year"
-        placeholder="Year"
-        required
-        value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>"
-      />
-
-      <input
-        type="text"
-        name="make"
-        placeholder="Make"
-        required
-        value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>"
-      />
+      <input type="number" name="year" placeholder="Year" required value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>" />
+      <input type="text" name="make" placeholder="Make" required value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>" />
     </div>
 
-    <input
-      type="text"
-      name="model"
-      placeholder="Model"
-      required
-      value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>"
-    />
-
-    <input
-      type="number"
-      name="mileage"
-      placeholder="Mileage (km)"
-      required
-      value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>"
-    />
-
-    <input
-      type="text"
-      name="vin"
-      placeholder="VIN (optional)"
-      value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>"
-    />
+    <input type="text" name="model" placeholder="Model" required value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>" />
+    <input type="number" name="mileage" placeholder="Mileage (km)" required value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>" />
+    <input type="text" name="vin" placeholder="VIN (optional)" value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>" />
 
     <select name="condition">
       <option value="">Vehicle Condition</option>
@@ -96,30 +45,152 @@
       <option value="Needs Work" <%= typeof formData !== 'undefined' && formData.condition === 'Needs Work' ? 'selected' : '' %>>Needs Work</option>
     </select>
 
-    <input
-      type="number"
-      name="askingPrice"
-      placeholder="Asking Price (optional)"
-      value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>"
-    />
+    <input type="number" name="askingPrice" placeholder="Asking Price (optional)" value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>" />
 
     <div>
       <label class="label">Upload Photos (optional)</label>
-      <input type="file" name="images" accept="image/*" multiple />
+      <input id="tradeImages" type="file" name="images" accept="image/*" multiple />
       <small style="color:var(--muted); display:block; margin-top:6px;">
-        You can upload photos of the exterior, interior, odometer, and any damage.
+        Upload up to 10 photos. Photos will be compressed before sending.
       </small>
     </div>
 
-    <textarea
-      name="message"
-      placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."
-    ><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
+    <textarea name="message" placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
 
-    <button type="submit" class="btn btn-primary btn-block">
+    <button id="tradeSubmitBtn" type="submit" class="btn btn-primary btn-block">
       Submit Vehicle
     </button>
   </form>
+
+  <script>
+    const form = document.getElementById('tradeInForm');
+    const fileInput = document.getElementById('tradeImages');
+    const submitBtn = document.getElementById('tradeSubmitBtn');
+
+    function updateFilledFields() {
+      document.querySelectorAll('.trade-page input, .trade-page textarea, .trade-page select').forEach(el => {
+        if (el.value && el.value.trim() !== '') {
+          el.classList.add('has-value');
+        } else {
+          el.classList.remove('has-value');
+        }
+      });
+    }
+
+    document.querySelectorAll('.trade-page input, .trade-page textarea, .trade-page select').forEach(el => {
+      el.addEventListener('input', updateFilledFields);
+      el.addEventListener('change', updateFilledFields);
+    });
+
+    updateFilledFields();
+
+    const existingWarning = document.createElement('div');
+
+existingWarning.className = 'trade-upload-warning';
+existingWarning.style.display = 'none';
+
+fileInput.parentNode.appendChild(existingWarning);
+
+fileInput.addEventListener('change', () => {
+
+  if (fileInput.files.length > 10) {
+
+    existingWarning.style.display = 'block';
+
+    existingWarning.innerHTML =
+      'You can upload a maximum of 10 photos. Please remove a few images and try again.';
+
+    fileInput.value = '';
+
+  } else {
+
+    existingWarning.style.display = 'none';
+
+  }
+
+});
+
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(img);
+        };
+
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    async function compressImage(file, maxWidth = 1200, quality = 0.72) {
+      const img = await fileToImage(file);
+
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, maxWidth / img.width);
+
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise(resolve => {
+        canvas.toBlob(resolve, 'image/webp', quality);
+      });
+
+      return new File(
+        [blob],
+        file.name.replace(/\.[^.]+$/, '') + '.webp',
+        {
+          type: 'image/webp',
+          lastModified: Date.now()
+        }
+      );
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const files = Array.from(fileInput.files || []);
+
+      if (files.length > 10) {
+        alert('Please upload a maximum of 10 photos.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const fd = new FormData(form);
+        fd.delete('images');
+
+        for (const file of files) {
+          const compressed = await compressImage(file);
+          fd.append('images', compressed, compressed.name);
+        }
+
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: fd
+        });
+
+        const html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+
+      } catch (err) {
+        console.error(err);
+        alert('Something went wrong submitting the form. Please try again with fewer photos.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Vehicle';
+      }
+    });
+  </script>
 
   <% if (typeof success !== 'undefined' && success) { %>
     <script>

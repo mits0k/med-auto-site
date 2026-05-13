@@ -1307,7 +1307,7 @@ select {
   font-size: 16px;
 }
 
-/* Remove number arrows/spinners for cleaner mobile forms */
+/* Remove number arrows/spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -1315,7 +1315,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 input[type="number"] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Cleaner spacing on tablets */

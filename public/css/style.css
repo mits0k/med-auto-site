@@ -1803,3 +1803,57 @@ input[type="number"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* === FIX TRADE-IN FORM ON SMALL IPHONES / INSTAGRAM BROWSER === */
+.trade-page,
+.form-card.trade-page {
+  width: min(640px, calc(100% - 24px));
+  max-width: 640px;
+  margin: 14px auto;
+  overflow: hidden;
+}
+
+.trade-page .form,
+.trade-page .form-row,
+.trade-page input,
+.trade-page select,
+.trade-page textarea,
+.trade-page button {
+  max-width: 100%;
+}
+
+.trade-page .form-row {
+  grid-template-columns: 1fr;
+}
+
+.trade-page input,
+.trade-page select,
+.trade-page textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 430px) {
+  .form-card.trade-page {
+    width: calc(100% - 20px);
+    margin: 10px auto;
+    padding: 18px;
+  }
+
+  .trade-page h1 {
+    font-size: 28px;
+    line-height: 1.1;
+  }
+
+  .trade-page p {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .trade-page input,
+  .trade-page select,
+  .trade-page textarea {
+    font-size: 16px;
+    padding: 13px 14px;
+  }
+}

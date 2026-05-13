@@ -3,7 +3,9 @@ const express = require('express');
 const router = express.Router();
 const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
+const { Resend } = require('resend');
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Home
 router.get('/', async (req, res) => {
   try {
@@ -260,15 +262,37 @@ router.post('/book', async (req, res) => {
   }
 }
 
-    await new Appointment({
-      name,
-      email,
-      phone,
-      date: combined,
-      message: (message || '').trim(),
-      car: chosenCar ? chosenCar._id : undefined,
-      carLabel: carLabel || undefined
-    }).save();
+    const appointment = await new Appointment({
+  name,
+  email,
+  phone,
+  date: combined,
+  message: (message || '').trim(),
+  car: chosenCar ? chosenCar._id : undefined,
+  carLabel: carLabel || undefined
+}).save();
+
+try {
+  await resend.emails.send({
+    from: 'MED AUTO <onboarding@resend.dev>',
+    to: process.env.BOOKING_EMAIL_TO,
+    subject: 'New Appointment Booking - MED AUTO',
+    text: `
+New appointment booking:
+
+Name: ${name}
+Email: ${email}
+Phone: ${phone}
+Car: ${carLabel || 'No car selected'}
+Date & Time: ${combined.toLocaleString()}
+Message: ${message || 'No message'}
+    `
+  });
+
+  console.log('Booking email sent');
+} catch (emailError) {
+  console.error('Email notification failed:', emailError);
+}
 
     res.render('book', {
       cars,

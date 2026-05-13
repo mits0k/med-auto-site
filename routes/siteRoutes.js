@@ -52,7 +52,7 @@ async function processAndSaveTradeImage(fileBuffer) {
       withoutEnlargement: true
     })
     .webp({
-      quality: 72,
+      quality: 58,
       effort: 3
     })
     .toFile(outPath);

@@ -125,7 +125,7 @@ fileInput.addEventListener('change', () => {
       });
     }
 
-    async function compressImage(file, maxWidth = 1200, quality = 0.72) {
+    async function compressImage(file, maxWidth = 1000, quality = 0.58) {
       const img = await fileToImage(file);
 
       const canvas = document.createElement('canvas');

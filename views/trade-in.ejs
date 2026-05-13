@@ -50,9 +50,12 @@
     <div>
       <label class="label">Upload Photos (optional)</label>
       <input id="tradeImages" type="file" name="images" accept="image/*" multiple />
+
       <small style="color:var(--muted); display:block; margin-top:6px;">
-        Upload up to 10 photos. Photos will be compressed before sending.
+        Upload up to 10 photos. You can remove or drag photos to reorder them.
       </small>
+
+      <div id="tradePreviewGrid" class="trade-preview-grid"></div>
     </div>
 
     <textarea name="message" placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
@@ -66,9 +69,108 @@
     const form = document.getElementById('tradeInForm');
     const fileInput = document.getElementById('tradeImages');
     const submitBtn = document.getElementById('tradeSubmitBtn');
+    const previewGrid = document.getElementById('tradePreviewGrid');
+
+    let selectedFiles = [];
+    let draggedIndex = null;
+
+    const uploadWarning = document.createElement('div');
+    uploadWarning.className = 'trade-upload-warning';
+    uploadWarning.style.display = 'none';
+    fileInput.parentNode.appendChild(uploadWarning);
+
+    function syncFileInput() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      fileInput.files = dt.files;
+    }
+
+    function showUploadWarning(message) {
+      uploadWarning.style.display = 'block';
+      uploadWarning.textContent = message;
+    }
+
+    function hideUploadWarning() {
+      uploadWarning.style.display = 'none';
+      uploadWarning.textContent = '';
+    }
+
+    function renderTradePreviews() {
+      previewGrid.innerHTML = '';
+
+      selectedFiles.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+
+        const card = document.createElement('div');
+        card.className = 'trade-preview-card';
+        card.draggable = true;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+          <img src="${url}" alt="Preview ${index + 1}">
+          <button type="button" class="trade-remove-btn" data-index="${index}">×</button>
+          <div class="trade-preview-number">${index + 1}</div>
+        `;
+
+        card.addEventListener('dragstart', () => {
+          draggedIndex = index;
+          card.classList.add('dragging');
+        });
+
+        card.addEventListener('dragend', () => {
+          draggedIndex = null;
+          card.classList.remove('dragging');
+        });
+
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+
+          const dropIndex = Number(card.dataset.index);
+
+          if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+          const movedFile = selectedFiles.splice(draggedIndex, 1)[0];
+          selectedFiles.splice(dropIndex, 0, movedFile);
+
+          syncFileInput();
+          renderTradePreviews();
+        });
+
+        card.querySelector('.trade-remove-btn').addEventListener('click', () => {
+          selectedFiles.splice(index, 1);
+          syncFileInput();
+          renderTradePreviews();
+          hideUploadWarning();
+        });
+
+        previewGrid.appendChild(card);
+      });
+    }
+
+    fileInput.addEventListener('change', () => {
+      selectedFiles = Array.from(fileInput.files || []);
+
+      if (selectedFiles.length > 10) {
+        selectedFiles = [];
+        fileInput.value = '';
+        previewGrid.innerHTML = '';
+
+        showUploadWarning('You can upload a maximum of 10 photos. Please remove a few images and try again.');
+        return;
+      }
+
+      hideUploadWarning();
+      renderTradePreviews();
+    });
 
     function updateFilledFields() {
       document.querySelectorAll('.trade-page input, .trade-page textarea, .trade-page select').forEach(el => {
+        if (el.type === 'file') return;
+
         if (el.value && el.value.trim() !== '') {
           el.classList.add('has-value');
         } else {
@@ -83,32 +185,6 @@
     });
 
     updateFilledFields();
-
-    const existingWarning = document.createElement('div');
-
-existingWarning.className = 'trade-upload-warning';
-existingWarning.style.display = 'none';
-
-fileInput.parentNode.appendChild(existingWarning);
-
-fileInput.addEventListener('change', () => {
-
-  if (fileInput.files.length > 10) {
-
-    existingWarning.style.display = 'block';
-
-    existingWarning.innerHTML =
-      'You can upload a maximum of 10 photos. Please remove a few images and try again.';
-
-    fileInput.value = '';
-
-  } else {
-
-    existingWarning.style.display = 'none';
-
-  }
-
-});
 
     function fileToImage(file) {
       return new Promise((resolve, reject) => {
@@ -154,10 +230,8 @@ fileInput.addEventListener('change', () => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const files = Array.from(fileInput.files || []);
-
-      if (files.length > 10) {
-        alert('Please upload a maximum of 10 photos.');
+      if (selectedFiles.length > 10) {
+        showUploadWarning('You can upload a maximum of 10 photos. Please remove a few images and try again.');
         return;
       }
 
@@ -168,7 +242,7 @@ fileInput.addEventListener('change', () => {
         const fd = new FormData(form);
         fd.delete('images');
 
-        for (const file of files) {
+        for (const file of selectedFiles) {
           const compressed = await compressImage(file);
           fd.append('images', compressed, compressed.name);
         }
@@ -179,13 +253,16 @@ fileInput.addEventListener('change', () => {
         });
 
         const html = await response.text();
+
         document.open();
         document.write(html);
         document.close();
 
       } catch (err) {
         console.error(err);
+
         alert('Something went wrong submitting the form. Please try again with fewer photos.');
+
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Vehicle';
       }

@@ -49,8 +49,11 @@
 
     <div class="form-row">
       <input
-        type="number"
-        name="year"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  maxlength="4"
+  name="year"
         placeholder="Year"
         required
         value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>"

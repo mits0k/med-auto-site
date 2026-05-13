@@ -685,7 +685,7 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
     padding: 8px 0;              /* slimmer */
   }
 
-  /* Chip row that wraps to 2–3 lines max */
+  /* Chip row that wraps to 2â€“3 lines max */
   .topbar-right{
     display:flex;
     flex-wrap:wrap;
@@ -693,7 +693,7 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
     font-size:13px;
   }
 
-  /* Small “chip” buttons (not huge cards) */
+  /* Small â€œchipâ€ buttons (not huge cards) */
   .topbar-right .topbar-link{
     display:inline-block;
     padding:6px 10px;
@@ -708,7 +708,7 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   /* Hide dot dividers on mobile */
   .topbar .divider{ display:none; }
 
-  /* Address label: use short "📍 Directions" only on phones */
+  /* Address label: use short "ðŸ“ Directions" only on phones */
   .addr-long{ display:none; }
   .addr-short{ display:inline; }
 
@@ -1265,4 +1265,541 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 .trade-preview-card.drag-over {
   outline: 3px solid var(--brand);
   outline-offset: 3px;
+}
+
+
+/* =========================================================
+   FINAL RESPONSIVE CLEANUP â€” iPhone / iPad / Mobile
+   Keep this at the VERY BOTTOM so it overrides older rules.
+   ========================================================= */
+
+/* Prevent tiny horizontal scrolling from wide elements */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* iPhone zoom prevention: keep inputs at least 16px */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  font-size: 16px;
+}
+
+/* Remove number arrows/spinners for cleaner mobile forms */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Cleaner spacing on tablets */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .form-card,
+  .booking-page {
+    width: min(680px, calc(100% - 32px));
+    margin: 18px auto;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    height: 190px;
+  }
+
+  .spotlight {
+    width: 100%;
+  }
+
+  .spotlight-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* iPads / small tablets */
+@media (max-width: 900px) {
+  .features {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .billboard {
+    min-height: 46vh;
+  }
+
+  .billboard .bb-copy {
+    padding: 54px 0 60px;
+  }
+
+  .billboard .bb-copy h1 {
+    font-size: 34px;
+  }
+}
+
+/* Phones */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .page {
+    padding: 20px 0;
+  }
+
+  h1 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .topbar-inner {
+    align-items: stretch;
+  }
+
+  .topbar-left {
+    display: flex;
+    justify-content: center;
+  }
+
+  .topbar-right {
+    justify-content: center;
+  }
+
+  .topbar-right .topbar-link {
+    flex: 0 1 auto;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+  }
+
+  .nav {
+    justify-content: flex-end;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px 14px;
+    background: #0b0b0d;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 16px 30px rgba(0,0,0,.35);
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 10px 6px;
+    font-size: 15px;
+  }
+
+  .billboard {
+    min-height: 40vh;
+  }
+
+  .billboard .bb-copy {
+    padding: 34px 0 42px;
+  }
+
+  .billboard .bb-copy h1 {
+    font-size: 28px;
+  }
+
+  .bb-sub {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .row,
+  .row-right {
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  .form-card,
+  .booking-page {
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .form {
+    gap: 13px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  input[type="password"],
+  textarea,
+  select {
+    padding: 12px 13px;
+    border-radius: 10px;
+  }
+
+  textarea {
+    min-height: 105px;
+  }
+
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    height: 190px;
+  }
+
+  .vehicle-caption h3 {
+    font-size: 15px;
+  }
+
+  .pager {
+    gap: 8px;
+  }
+
+  .pagination-btn {
+    min-width: 38px;
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .spotlight-media {
+    aspect-ratio: 16 / 10;
+  }
+
+  .spotlight-caption {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gallery-main {
+    aspect-ratio: 4 / 3;
+  }
+
+  .thumb-strip {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: visible;
+  }
+
+  .thumb-strip .thumb {
+    height: 68px;
+  }
+
+  .spec-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lightbox-img {
+    max-width: 94%;
+    max-height: 76%;
+  }
+
+  .close {
+    top: 12px;
+    right: 20px;
+    font-size: 34px;
+  }
+
+  .lightbox-controls {
+    padding: 0 14px;
+  }
+
+  .lightbox-controls span {
+    font-size: 42px;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  td[style*="white-space:normal"],
+  td[style*="white-space: normal"] {
+    white-space: normal !important;
+    min-width: 220px;
+  }
+
+  .row .btn,
+  .row-right .btn {
+    text-align: center;
+  }
+
+  .trade-preview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .trade-preview-card {
+    border-radius: 10px;
+  }
+
+  .trade-remove-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+
+  .trade-photo-grid {
+    grid-template-columns: repeat(2, 78px);
+    gap: 8px;
+    max-width: 170px;
+  }
+
+  .dnd-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dnd-item,
+  .dnd-item img {
+    width: 100%;
+  }
+
+  .dnd-item img {
+    height: 110px;
+  }
+}
+
+/* Regular iPhones */
+@media (max-width: 430px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .page {
+    padding: 16px 0;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .topbar-right {
+    gap: 5px;
+  }
+
+  .topbar-right .topbar-link {
+    font-size: 11px;
+    padding: 5px 7px;
+  }
+
+  .nav {
+    padding: 8px 0;
+  }
+
+  .nav-toggle {
+    padding: 7px 10px;
+    font-size: 18px;
+  }
+
+  .billboard {
+    min-height: 36vh;
+  }
+
+  .billboard .bb-copy {
+    padding: 28px 0 34px;
+  }
+
+  .billboard .bb-copy h1 {
+    font-size: 24px;
+  }
+
+  .bb-sub {
+    font-size: 12.5px;
+  }
+
+  .btn {
+    width: auto;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .form-card,
+  .booking-page {
+    width: calc(100% - 20px);
+    padding: 16px;
+    margin: 10px auto;
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    height: 185px;
+  }
+
+  .vehicle-card {
+    border-radius: 12px;
+  }
+
+  .spotlight {
+    border-radius: 14px;
+  }
+
+  .spotlight-price {
+    font-size: 13px;
+    padding: 6px 9px;
+  }
+
+  .thumb-strip {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .thumb-strip .thumb {
+    height: 62px;
+  }
+
+  .spec-grid li {
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .spec-grid li strong {
+    text-align: right;
+  }
+
+  .site-footer {
+    padding: 18px 0;
+    font-size: 12px;
+  }
+
+  .trade-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .trade-photo-grid {
+    grid-template-columns: repeat(2, 70px);
+    max-width: 150px;
+  }
+
+  th,
+  td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .row .btn,
+  .row-right .btn {
+    min-width: unset;
+    flex: 1 1 100%;
+  }
+}
+
+/* Very small iPhones like SE */
+@media (max-width: 375px) {
+  .container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .form-card,
+  .booking-page {
+    width: calc(100% - 16px);
+    padding: 14px;
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    height: 170px;
+  }
+
+  .topbar-right .topbar-link {
+    font-size: 10.5px;
+    padding: 5px 6px;
+  }
+
+  .trade-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

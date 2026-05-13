@@ -10,15 +10,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
- <!-- Favicon / App Icons -->
-<link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=2">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=2">
-<link rel="apple-touch-icon" sizes="180x180" href="/images/favicon-180.png?v=2">
-<link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-512.png?v=2">
-<link rel="shortcut icon" href="/images/favicon-32.png?v=2">
-
-
-
+  <!-- Favicon / App Icons -->
+  <link rel="icon" type="image/svg+xml" href="/images/favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon-180.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-512.png?v=2">
+  <link rel="shortcut icon" href="/images/favicon-32.png?v=2">
 
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -28,7 +25,6 @@
   <div class="topbar">
     <div class="container topbar-inner">
       <div class="topbar-left">
-        <!-- MED AUTO wordmark (clickable) -->
         <a href="/" class="wordmark" aria-label="MED AUTO Home">
           <span class="wm-initials">MA</span>
           <span class="wm-text">
@@ -37,26 +33,25 @@
           </span>
         </a>
       </div>
-    <div class="topbar-right">
-  <a class="topbar-link" href="tel:+15144634503"><strong>Tom: (514) 463-4503</strong></a>
-  <span class="divider">•</span>
-  <a class="topbar-link" href="tel:+15147751722"><strong>Dimitri: (514) 775-1722</strong></a>
-  <span class="divider">•</span>
-  <a class="topbar-link hide-on-phone" href="https://instagram.com/medauto_mtl" target="_blank" rel="noopener">@MEDAUTO_MTL</a>
-  <span class="divider">•</span>
-  <a class="topbar-link" href="https://maps.google.com/?q=2046+Avenue+Chartier,+Dorval,+QC+H9P+1H2" target="_blank" rel="noopener">
-    <span class="addr-long">2046 Avenue Chartier, Dorval, QC H9P 1H2</span>
-    <span class="addr-short">Directions</span>
-  </a>
-</div>
 
+      <div class="topbar-right">
+        <a class="topbar-link" href="tel:+15144634503"><strong>Tom: (514) 463-4503</strong></a>
+        <span class="divider">•</span>
+        <a class="topbar-link" href="tel:+15147751722"><strong>Dimitri: (514) 775-1722</strong></a>
+        <span class="divider">•</span>
+        <a class="topbar-link hide-on-phone" href="https://instagram.com/medauto_mtl" target="_blank" rel="noopener">@MEDAUTO_MTL</a>
+        <span class="divider">•</span>
+        <a class="topbar-link" href="https://maps.google.com/?q=2046+Avenue+Chartier,+Dorval,+QC+H9P+1H2" target="_blank" rel="noopener">
+          <span class="addr-long">2046 Avenue Chartier, Dorval, QC H9P 1H2</span>
+          <span class="addr-short">Directions</span>
+        </a>
+      </div>
     </div>
   </div>
 
   <!-- Main nav -->
   <header class="site-header">
     <nav class="nav container">
-      <!-- Mobile toggle -->
       <button class="nav-toggle" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation">
         ☰
       </button>
@@ -64,8 +59,10 @@
       <ul id="primary-nav" class="nav-links">
         <li><a href="/">Home</a></li>
         <li><a href="/inventory">Inventory</a></li>
+        <li><a href="/trade-in">Sell Your Car</a></li>
         <li><a href="/book">Booking</a></li>
         <li><a href="/contact">Contact</a></li>
+
         <% if (typeof session !== 'undefined' && session.admin) { %>
           <li><a href="/admin/dashboard">Admin</a></li>
         <% } %>

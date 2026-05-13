@@ -1,0 +1,134 @@
+<%- include('partials/header') %>
+
+<main class="form-card trade-page">
+  <h1 class="form-title">Sell or Trade Your Car</h1>
+
+  <p style="color:var(--muted); margin-top:-6px;">
+    Fill out the form below and we’ll get back to you with more information.
+  </p>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="success-popup" style="background:#ff3d71;">
+      ⚠️ <%= error %>
+    </div>
+  <% } %>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="success-popup" id="successPopup">
+      Request sent successfully! We’ll get back to you soon.
+    </div>
+  <% } %>
+
+  <form action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
+    <h3 style="margin:0;">Your Information</h3>
+
+    <input
+      type="text"
+      name="name"
+      placeholder="Your Name"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>"
+    />
+
+    <input
+      type="email"
+      name="email"
+      placeholder="Your Email"
+      value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
+    />
+
+    <input
+      type="tel"
+      name="phone"
+      placeholder="Phone Number"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>"
+    />
+
+    <h3 style="margin:8px 0 0;">Vehicle Information</h3>
+
+    <div class="form-row">
+      <input
+        type="number"
+        name="year"
+        placeholder="Year"
+        required
+        value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>"
+      />
+
+      <input
+        type="text"
+        name="make"
+        placeholder="Make"
+        required
+        value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>"
+      />
+    </div>
+
+    <input
+      type="text"
+      name="model"
+      placeholder="Model"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>"
+    />
+
+    <input
+      type="number"
+      name="mileage"
+      placeholder="Mileage (km)"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>"
+    />
+
+    <input
+      type="text"
+      name="vin"
+      placeholder="VIN (optional)"
+      value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>"
+    />
+
+    <select name="condition">
+      <option value="">Vehicle Condition</option>
+      <option value="Excellent" <%= typeof formData !== 'undefined' && formData.condition === 'Excellent' ? 'selected' : '' %>>Excellent</option>
+      <option value="Good" <%= typeof formData !== 'undefined' && formData.condition === 'Good' ? 'selected' : '' %>>Good</option>
+      <option value="Fair" <%= typeof formData !== 'undefined' && formData.condition === 'Fair' ? 'selected' : '' %>>Fair</option>
+      <option value="Needs Work" <%= typeof formData !== 'undefined' && formData.condition === 'Needs Work' ? 'selected' : '' %>>Needs Work</option>
+    </select>
+
+    <input
+      type="number"
+      name="askingPrice"
+      placeholder="Asking Price (optional)"
+      value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>"
+    />
+
+    <div>
+      <label class="label">Upload Photos (optional)</label>
+      <input type="file" name="images" accept="image/*" multiple />
+      <small style="color:var(--muted); display:block; margin-top:6px;">
+        You can upload photos of the exterior, interior, odometer, and any damage.
+      </small>
+    </div>
+
+    <textarea
+      name="message"
+      placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."
+    ><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
+
+    <button type="submit" class="btn btn-primary btn-block">
+      Submit Vehicle
+    </button>
+  </form>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <script>
+      setTimeout(() => {
+        const popup = document.getElementById('successPopup');
+        if (popup) popup.style.display = 'none';
+      }, 3500);
+    </script>
+  <% } %>
+</main>
+
+<%- include('partials/footer') %>

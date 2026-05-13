@@ -1092,4 +1092,90 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   }
 }
 
+/* ===== TRADE-IN PAGE ===== */
+.trade-page h3 {
+  color: var(--text);
+}
 
+.success-popup {
+  background: linear-gradient(135deg, var(--ok), #19b87f);
+  color: #0b0d12;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  margin: 12px 0;
+}
+
+/* ===== TRADE-IN ADMIN STATUS BADGES ===== */
+.status-new {
+  background: rgba(79, 140, 255, 0.16);
+  color: #9fc0ff;
+  border: 1px solid rgba(79, 140, 255, 0.35);
+}
+
+.status-contacted {
+  background: rgba(255, 191, 71, 0.18);
+  color: #ffd47d;
+  border: 1px solid rgba(255, 191, 71, 0.35);
+}
+
+/* ===== TRADE-IN ADMIN PHOTOS ===== */
+.trade-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 10px;
+  max-width: 280px;
+}
+
+.trade-photo-grid a {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: #0c1018;
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+.trade-photo-grid a:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79,140,255,.45);
+}
+
+.trade-photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .trade-photo-grid {
+    grid-template-columns: repeat(2, 90px);
+    max-width: 200px;
+  }
+}
+
+/* Phones */
+@media (max-width: 768px) {
+  .trade-photo-grid {
+    grid-template-columns: repeat(2, 78px);
+    gap: 8px;
+    max-width: 170px;
+  }
+
+  .trade-photo-grid a {
+    border-radius: 8px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 430px) {
+  .trade-photo-grid {
+    grid-template-columns: repeat(2, 70px);
+    gap: 6px;
+    max-width: 150px;
+  }
+}

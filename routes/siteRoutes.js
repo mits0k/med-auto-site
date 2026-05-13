@@ -1,11 +1,65 @@
 // routes/siteRoutes.js
 const express = require('express');
 const router = express.Router();
+
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const sharp = require('sharp');
+
 const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
-const { Resend } = require('resend');
+const TradeIn = require('../models/TradeIn');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend = null;
+
+if (process.env.RESEND_API_KEY) {
+  const { Resend } = require('resend');
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
+
+// Upload setup for trade-in photos
+const uploadDir = path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter(req, file, cb) {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+    const ext = path.extname(file.originalname || '').toLowerCase();
+
+    if (!allowed.includes(ext)) {
+      return cb(new Error('Only image files are allowed'));
+    }
+
+    cb(null, true);
+  },
+  limits: {
+    files: 10,
+    fileSize: 20 * 1024 * 1024
+  }
+});
+
+async function processAndSaveTradeImage(fileBuffer) {
+  const base = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  const outPath = path.join(uploadDir, `${base}.webp`);
+  const publicUrl = `/uploads/${path.basename(outPath)}`;
+
+  await sharp(fileBuffer)
+    .rotate()
+    .resize({
+      width: 1280,
+      withoutEnlargement: true
+    })
+    .webp({
+      quality: 72,
+      effort: 3
+    })
+    .toFile(outPath);
+
+  return publicUrl;
+}
+
 // Home
 router.get('/', async (req, res) => {
   try {
@@ -17,9 +71,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Inventory (filters + paging)
-// By default: hide sold cars
-// When showSold=true: show available + sold cars
+// Inventory
 router.get('/inventory', async (req, res) => {
   try {
     const perPage = 12;
@@ -31,15 +83,12 @@ router.get('/inventory', async (req, res) => {
     if (make && make !== 'all') filter.make = make;
     if (year && year !== 'all') filter.year = parseInt(year, 10);
 
-    // Default: show only available cars
-    // When Show Sold Cars is clicked: show only sold cars
     if (showSold === 'true') {
       filter.sold = true;
     } else {
       filter.sold = { $ne: true };
     }
 
-    // Always keep available cars first and sold cars last
     let sortOption = { sold: 1 };
 
     if (sort === 'price-asc') {
@@ -64,8 +113,8 @@ router.get('/inventory', async (req, res) => {
     const totalPages = Math.ceil(totalCars / perPage);
     const availableFilter = { sold: { $ne: true } };
 
-const makes = await Car.distinct('make', availableFilter);
-const years = await Car.distinct('year', availableFilter);
+    const makes = await Car.distinct('make', availableFilter);
+    const years = await Car.distinct('year', availableFilter);
 
     res.render('inventory', {
       cars,
@@ -95,15 +144,13 @@ router.get('/inventory/:id', async (req, res) => {
   }
 });
 
-/**
- * Book Appointment
- */
+// Book Appointment
 router.get('/book', async (req, res) => {
   try {
-   const cars = await Car.find({ sold: { $ne: true } })
-  .sort({ createdAt: -1 })
-  .select('_id make model year')
-  .lean();
+    const cars = await Car.find({ sold: { $ne: true } })
+      .sort({ createdAt: -1 })
+      .select('_id make model year')
+      .lean();
 
     const selectedCarId = req.query.car || '';
 
@@ -135,9 +182,9 @@ router.post('/book', async (req, res) => {
     const { name, email, phone, date, time, message, carId } = req.body;
 
     const cars = await Car.find({ sold: { $ne: true } })
-  .sort({ createdAt: -1 })
-  .select('_id make model year')
-  .lean();
+      .sort({ createdAt: -1 })
+      .select('_id make model year')
+      .lean();
 
     const today = new Date();
     const pad = n => (n < 10 ? '0' + n : '' + n);
@@ -160,6 +207,7 @@ router.post('/book', async (req, res) => {
     }
 
     const combined = new Date(`${date}T${time}:00`);
+
     if (isNaN(combined.getTime())) {
       return res.render('book', {
         cars,
@@ -193,6 +241,7 @@ router.post('/book', async (req, res) => {
     }
 
     const now = new Date();
+
     if (combined < now) {
       return res.render('book', {
         cars,
@@ -250,34 +299,35 @@ router.post('/book', async (req, res) => {
     let carLabel = null;
 
     if (carId) {
-  chosenCar = await Car.findOne({
-    _id: carId,
-    sold: { $ne: true }
-  })
-    .select('_id make model year')
-    .lean();
+      chosenCar = await Car.findOne({
+        _id: carId,
+        sold: { $ne: true }
+      })
+        .select('_id make model year')
+        .lean();
 
-  if (chosenCar) {
-    carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
-  }
-}
+      if (chosenCar) {
+        carLabel = `${chosenCar.year} ${chosenCar.make} ${chosenCar.model}`;
+      }
+    }
 
-    const appointment = await new Appointment({
-  name,
-  email,
-  phone,
-  date: combined,
-  message: (message || '').trim(),
-  car: chosenCar ? chosenCar._id : undefined,
-  carLabel: carLabel || undefined
-}).save();
+    await new Appointment({
+      name,
+      email,
+      phone,
+      date: combined,
+      message: (message || '').trim(),
+      car: chosenCar ? chosenCar._id : undefined,
+      carLabel: carLabel || undefined
+    }).save();
 
-try {
-  await resend.emails.send({
-    from: 'MED AUTO <onboarding@resend.dev>',
-    to: process.env.BOOKING_EMAIL_TO,
-    subject: 'New Appointment Booking - MED AUTO',
-    text: `
+    try {
+      if (resend && process.env.BOOKING_EMAIL_TO) {
+        await resend.emails.send({
+          from: 'MED AUTO <onboarding@resend.dev>',
+          to: process.env.BOOKING_EMAIL_TO,
+          subject: 'New Appointment Booking - MED AUTO',
+          text: `
 New appointment booking:
 
 Name: ${name}
@@ -286,13 +336,14 @@ Phone: ${phone}
 Car: ${carLabel || 'No car selected'}
 Date & Time: ${combined.toLocaleString()}
 Message: ${message || 'No message'}
-    `
-  });
+          `
+        });
 
-  console.log('Booking email sent');
-} catch (emailError) {
-  console.error('Email notification failed:', emailError);
-}
+        console.log('Booking email sent');
+      }
+    } catch (emailError) {
+      console.error('Email notification failed:', emailError);
+    }
 
     res.render('book', {
       cars,
@@ -316,6 +367,123 @@ Message: ${message || 'No message'}
       success: false,
       error: 'Error booking appointment. Please try again.',
       ...req.body
+    });
+  }
+});
+
+// Trade-In Page
+router.get('/trade-in', (req, res) => {
+  res.render('trade-in', {
+    success: false,
+    error: null,
+    formData: {}
+  });
+});
+
+router.post('/trade-in', upload.array('images', 10), async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      phone,
+      year,
+      make,
+      model,
+      mileage,
+      vin,
+      condition,
+      askingPrice,
+      message
+    } = req.body;
+
+    const formData = req.body;
+
+    if (!name || !phone || !year || !make || !model || !mileage) {
+      return res.render('trade-in', {
+        success: false,
+        error: 'Please fill in all required fields.',
+        formData
+      });
+    }
+
+    let images = [];
+
+    if (Array.isArray(req.files) && req.files.length > 0) {
+      images = await Promise.all(
+        req.files.map(file => processAndSaveTradeImage(file.buffer))
+      );
+    }
+
+    await new TradeIn({
+      name: String(name).trim(),
+      email: String(email || '').trim(),
+      phone: String(phone).trim(),
+      year: parseInt(year, 10),
+      make: String(make).trim(),
+      model: String(model).trim(),
+      mileage: parseInt(mileage, 10),
+      vin: String(vin || '').trim(),
+      condition: String(condition || '').trim(),
+      askingPrice: askingPrice ? parseFloat(askingPrice) : undefined,
+      message: String(message || '').trim(),
+      images
+    }).save();
+
+    try {
+      if (resend && process.env.BOOKING_EMAIL_TO) {
+        await resend.emails.send({
+          from: 'MED AUTO <onboarding@resend.dev>',
+          to: process.env.BOOKING_EMAIL_TO,
+          subject: 'New Trade-In Request - MED AUTO',
+          text: `
+New trade-in request:
+
+Customer:
+${name}
+${phone}
+${email || 'No email'}
+
+Vehicle:
+${year} ${make} ${model}
+
+Mileage:
+${mileage} km
+
+VIN:
+${vin || 'N/A'}
+
+Condition:
+${condition || 'N/A'}
+
+Asking Price:
+${askingPrice || 'N/A'}
+
+Photos:
+${images.length ? images.join('\n') : 'No photos uploaded'}
+
+Message:
+${message || 'No message'}
+          `
+        });
+
+        console.log('Trade-in email sent');
+      }
+    } catch (emailErr) {
+      console.error('Trade-in email failed:', emailErr);
+    }
+
+    res.render('trade-in', {
+      success: true,
+      error: null,
+      formData: {}
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.render('trade-in', {
+      success: false,
+      error: 'Something went wrong. Please try again.',
+      formData: req.body || {}
     });
   }
 });

@@ -133,13 +133,18 @@
     <div>
       <label class="label">Upload Photos (optional)</label>
 
-      <input
-        id="tradeImages"
-        type="file"
-        name="images"
-        accept="image/*"
-        multiple
-      />
+      <label for="tradeImages" class="custom-upload-btn">
+  Choose Photos
+</label>
+
+<input
+  id="tradeImages"
+  type="file"
+  name="images"
+  accept="image/*"
+  multiple
+  hidden
+/>
 
       <small style="color:var(--muted); display:block; margin-top:6px;">
         Upload up to 10 photos. You can drag photos to reorder them.

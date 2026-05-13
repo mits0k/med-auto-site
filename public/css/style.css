@@ -1857,3 +1857,22 @@ input[type="number"] {
     padding: 13px 14px;
   }
 }
+/* Custom upload button */
+.custom-upload-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px 16px;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(79,140,255,.28);
+  transition:transform .15s ease, opacity .2s ease;
+}
+
+.custom-upload-btn:hover{
+  transform:translateY(-1px);
+  opacity:.95;
+}

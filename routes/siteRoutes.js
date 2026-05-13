@@ -459,7 +459,7 @@ Asking Price:
 ${askingPrice || 'N/A'}
 
 Photos:
-${images.length ? images.join('\n') : 'No photos uploaded'}
+${images.length ? `${images.length} photo(s) uploaded. Check the admin dashboard.` : 'No photos uploaded'}
 
 Message:
 ${message || 'No message'}

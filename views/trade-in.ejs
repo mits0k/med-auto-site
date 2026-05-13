@@ -22,45 +22,139 @@
   <form id="tradeInForm" action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
     <h3 style="margin:0;">Your Information</h3>
 
-    <input type="text" name="name" placeholder="Your Name" required value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>" />
-    <input type="email" name="email" placeholder="Your Email" value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>" />
-    <input type="tel" name="phone" placeholder="Phone Number" required value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>" />
+    <input
+      type="text"
+      name="name"
+      placeholder="Your Name"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>"
+    />
+
+    <input
+      type="email"
+      name="email"
+      placeholder="Your Email"
+      value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
+    />
+
+    <input
+      type="tel"
+      name="phone"
+      placeholder="Phone Number"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>"
+    />
 
     <h3 style="margin:8px 0 0;">Vehicle Information</h3>
 
     <div class="form-row">
-      <input type="number" name="year" placeholder="Year" required value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>" />
-      <input type="text" name="make" placeholder="Make" required value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>" />
+      <input
+        type="number"
+        name="year"
+        placeholder="Year"
+        required
+        value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>"
+      />
+
+      <input
+        type="text"
+        name="make"
+        placeholder="Make"
+        required
+        value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>"
+      />
     </div>
 
-    <input type="text" name="model" placeholder="Model" required value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>" />
-    <input type="number" name="mileage" placeholder="Mileage (km)" required value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>" />
-    <input type="text" name="vin" placeholder="VIN (optional)" value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>" />
+    <input
+      type="text"
+      name="model"
+      placeholder="Model"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>"
+    />
+
+    <input
+      type="number"
+      name="mileage"
+      placeholder="Mileage (km)"
+      required
+      value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>"
+    />
+
+    <input
+      type="text"
+      name="vin"
+      placeholder="VIN (optional)"
+      value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>"
+    />
 
     <select name="condition">
       <option value="">Vehicle Condition</option>
-      <option value="Excellent" <%= typeof formData !== 'undefined' && formData.condition === 'Excellent' ? 'selected' : '' %>>Excellent</option>
-      <option value="Good" <%= typeof formData !== 'undefined' && formData.condition === 'Good' ? 'selected' : '' %>>Good</option>
-      <option value="Fair" <%= typeof formData !== 'undefined' && formData.condition === 'Fair' ? 'selected' : '' %>>Fair</option>
-      <option value="Needs Work" <%= typeof formData !== 'undefined' && formData.condition === 'Needs Work' ? 'selected' : '' %>>Needs Work</option>
+
+      <option
+        value="Excellent"
+        <%= typeof formData !== 'undefined' && formData.condition === 'Excellent' ? 'selected' : '' %>
+      >
+        Excellent
+      </option>
+
+      <option
+        value="Good"
+        <%= typeof formData !== 'undefined' && formData.condition === 'Good' ? 'selected' : '' %>
+      >
+        Good
+      </option>
+
+      <option
+        value="Fair"
+        <%= typeof formData !== 'undefined' && formData.condition === 'Fair' ? 'selected' : '' %>
+      >
+        Fair
+      </option>
+
+      <option
+        value="Needs Work"
+        <%= typeof formData !== 'undefined' && formData.condition === 'Needs Work' ? 'selected' : '' %>
+      >
+        Needs Work
+      </option>
     </select>
 
-    <input type="number" name="askingPrice" placeholder="Asking Price (optional)" value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>" />
+    <input
+      type="number"
+      name="askingPrice"
+      placeholder="Asking Price (optional)"
+      value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>"
+    />
 
     <div>
       <label class="label">Upload Photos (optional)</label>
-      <input id="tradeImages" type="file" name="images" accept="image/*" multiple />
+
+      <input
+        id="tradeImages"
+        type="file"
+        name="images"
+        accept="image/*"
+        multiple
+      />
 
       <small style="color:var(--muted); display:block; margin-top:6px;">
-        Upload up to 10 photos. You can remove or drag photos to reorder them.
+        Upload up to 10 photos. You can drag photos to reorder them.
       </small>
 
       <div id="tradePreviewGrid" class="trade-preview-grid"></div>
     </div>
 
-    <textarea name="message" placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
+    <textarea
+      name="message"
+      placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."
+    ><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
 
-    <button id="tradeSubmitBtn" type="submit" class="btn btn-primary btn-block">
+    <button
+      id="tradeSubmitBtn"
+      type="submit"
+      class="btn btn-primary btn-block"
+    >
       Submit Vehicle
     </button>
   </form>
@@ -75,111 +169,183 @@
     let draggedIndex = null;
 
     const uploadWarning = document.createElement('div');
+
     uploadWarning.className = 'trade-upload-warning';
     uploadWarning.style.display = 'none';
+
     fileInput.parentNode.appendChild(uploadWarning);
 
     function syncFileInput() {
+
       const dt = new DataTransfer();
-      selectedFiles.forEach(file => dt.items.add(file));
+
+      selectedFiles.forEach(file => {
+        dt.items.add(file);
+      });
+
       fileInput.files = dt.files;
     }
 
     function showUploadWarning(message) {
+
       uploadWarning.style.display = 'block';
       uploadWarning.textContent = message;
     }
 
     function hideUploadWarning() {
+
       uploadWarning.style.display = 'none';
       uploadWarning.textContent = '';
     }
 
     function renderTradePreviews() {
+
       previewGrid.innerHTML = '';
 
       selectedFiles.forEach((file, index) => {
+
         const url = URL.createObjectURL(file);
 
         const card = document.createElement('div');
+
         card.className = 'trade-preview-card';
         card.draggable = true;
         card.dataset.index = index;
 
         card.innerHTML = `
           <img src="${url}" alt="Preview ${index + 1}">
-          <button type="button" class="trade-remove-btn" data-index="${index}">×</button>
-          <div class="trade-preview-number">${index + 1}</div>
+
+          <button
+            type="button"
+            class="trade-remove-btn"
+            data-index="${index}"
+          >
+            ×
+          </button>
+
+          <div class="trade-preview-number">
+            ${index + 1}
+          </div>
         `;
 
         card.addEventListener('dragstart', () => {
+
           draggedIndex = index;
+
           card.classList.add('dragging');
         });
 
         card.addEventListener('dragend', () => {
+
           draggedIndex = null;
+
           card.classList.remove('dragging');
+
+          document.querySelectorAll('.trade-preview-card')
+            .forEach(c => c.classList.remove('drag-over'));
         });
 
         card.addEventListener('dragover', (e) => {
+
           e.preventDefault();
+
+          document.querySelectorAll('.trade-preview-card')
+            .forEach(c => c.classList.remove('drag-over'));
+
+          card.classList.add('drag-over');
+        });
+
+        card.addEventListener('dragleave', () => {
+
+          card.classList.remove('drag-over');
         });
 
         card.addEventListener('drop', (e) => {
+
           e.preventDefault();
+
+          document.querySelectorAll('.trade-preview-card')
+            .forEach(c => c.classList.remove('drag-over'));
 
           const dropIndex = Number(card.dataset.index);
 
-          if (draggedIndex === null || draggedIndex === dropIndex) return;
+          if (
+            draggedIndex === null ||
+            draggedIndex === dropIndex
+          ) return;
 
-          const movedFile = selectedFiles.splice(draggedIndex, 1)[0];
+          const movedFile =
+            selectedFiles.splice(draggedIndex, 1)[0];
+
           selectedFiles.splice(dropIndex, 0, movedFile);
 
           syncFileInput();
           renderTradePreviews();
         });
 
-        card.querySelector('.trade-remove-btn').addEventListener('click', () => {
-          selectedFiles.splice(index, 1);
-          syncFileInput();
-          renderTradePreviews();
-          hideUploadWarning();
-        });
+        card.querySelector('.trade-remove-btn')
+          .addEventListener('click', () => {
+
+            selectedFiles.splice(index, 1);
+
+            syncFileInput();
+            renderTradePreviews();
+
+            hideUploadWarning();
+          });
 
         previewGrid.appendChild(card);
       });
     }
 
     fileInput.addEventListener('change', () => {
+
       selectedFiles = Array.from(fileInput.files || []);
 
       if (selectedFiles.length > 10) {
+
         selectedFiles = [];
+
         fileInput.value = '';
+
         previewGrid.innerHTML = '';
 
-        showUploadWarning('You can upload a maximum of 10 photos. Please remove a few images and try again.');
+        showUploadWarning(
+          'You can upload a maximum of 10 photos. Please remove a few images and try again.'
+        );
+
         return;
       }
 
       hideUploadWarning();
+
       renderTradePreviews();
     });
 
     function updateFilledFields() {
-      document.querySelectorAll('.trade-page input, .trade-page textarea, .trade-page select').forEach(el => {
+
+      document.querySelectorAll(
+        '.trade-page input, .trade-page textarea, .trade-page select'
+      ).forEach(el => {
+
         if (el.type === 'file') return;
 
         if (el.value && el.value.trim() !== '') {
+
           el.classList.add('has-value');
+
         } else {
+
           el.classList.remove('has-value');
+
         }
       });
     }
 
-    document.querySelectorAll('.trade-page input, .trade-page textarea, .trade-page select').forEach(el => {
+    document.querySelectorAll(
+      '.trade-page input, .trade-page textarea, .trade-page select'
+    ).forEach(el => {
+
       el.addEventListener('input', updateFilledFields);
       el.addEventListener('change', updateFilledFields);
     });
@@ -187,34 +353,61 @@
     updateFilledFields();
 
     function fileToImage(file) {
+
       return new Promise((resolve, reject) => {
+
         const url = URL.createObjectURL(file);
+
         const img = new Image();
 
         img.onload = () => {
+
           URL.revokeObjectURL(url);
+
           resolve(img);
         };
 
         img.onerror = reject;
+
         img.src = url;
       });
     }
 
-    async function compressImage(file, maxWidth = 1000, quality = 0.58) {
+    async function compressImage(
+      file,
+      maxWidth = 1000,
+      quality = 0.58
+    ) {
+
       const img = await fileToImage(file);
 
       const canvas = document.createElement('canvas');
-      const scale = Math.min(1, maxWidth / img.width);
+
+      const scale = Math.min(
+        1,
+        maxWidth / img.width
+      );
 
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
 
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
       const blob = await new Promise(resolve => {
-        canvas.toBlob(resolve, 'image/webp', quality);
+
+        canvas.toBlob(
+          resolve,
+          'image/webp',
+          quality
+        );
       });
 
       return new File(
@@ -228,29 +421,47 @@
     }
 
     form.addEventListener('submit', async (e) => {
+
       e.preventDefault();
 
       if (selectedFiles.length > 10) {
-        showUploadWarning('You can upload a maximum of 10 photos. Please remove a few images and try again.');
+
+        showUploadWarning(
+          'You can upload a maximum of 10 photos. Please remove a few images and try again.'
+        );
+
         return;
       }
 
       submitBtn.disabled = true;
+
       submitBtn.textContent = 'Submitting...';
 
       try {
+
         const fd = new FormData(form);
+
         fd.delete('images');
 
         for (const file of selectedFiles) {
-          const compressed = await compressImage(file);
-          fd.append('images', compressed, compressed.name);
+
+          const compressed =
+            await compressImage(file);
+
+          fd.append(
+            'images',
+            compressed,
+            compressed.name
+          );
         }
 
-        const response = await fetch(form.action, {
-          method: 'POST',
-          body: fd
-        });
+        const response = await fetch(
+          form.action,
+          {
+            method: 'POST',
+            body: fd
+          }
+        );
 
         const html = await response.text();
 
@@ -259,11 +470,15 @@
         document.close();
 
       } catch (err) {
+
         console.error(err);
 
-        alert('Something went wrong submitting the form. Please try again with fewer photos.');
+        alert(
+          'Something went wrong submitting the form. Please try again.'
+        );
 
         submitBtn.disabled = false;
+
         submitBtn.textContent = 'Submit Vehicle';
       }
     });
@@ -272,8 +487,12 @@
   <% if (typeof success !== 'undefined' && success) { %>
     <script>
       setTimeout(() => {
-        const popup = document.getElementById('successPopup');
+
+        const popup =
+          document.getElementById('successPopup');
+
         if (popup) popup.style.display = 'none';
+
       }, 3500);
     </script>
   <% } %>

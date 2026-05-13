@@ -1256,3 +1256,13 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   border-radius: 999px;
   font-weight: 700;
 }
+
+.trade-preview-card.dragging {
+  opacity: 0.45;
+  transform: scale(0.96);
+}
+
+.trade-preview-card.drag-over {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}

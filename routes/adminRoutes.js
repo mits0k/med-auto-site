@@ -348,6 +348,126 @@ router.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) =>
   }
 });
 
+// ===== EDIT CAR PAGE =====
+router.get('/cars/:id/edit', isAdmin, async (req, res) => {
+  try {
+
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    res.render('admin/edit-car', {
+      car,
+      error: null
+    });
+
+  } catch (e) {
+
+    console.error(e);
+    res.status(500).send('Error loading edit page');
+
+  }
+});
+
+// ===== SAVE EDITED CAR =====
+router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req, res) => {
+  try {
+
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    const {
+      price,
+      description,
+      exteriorColor,
+      interiorColor,
+      mileage,
+      engine,
+      transmission,
+      drivetrain,
+      fuel,
+      bodyStyle,
+      vin,
+      imagesOrder,
+      deletedImages
+    } = req.body;
+
+    // Delete removed images
+    if (deletedImages) {
+
+      const deletedList = deletedImages
+        .split(',')
+        .filter(Boolean);
+
+      deletedList.forEach(imgUrl => {
+
+        const relative =
+          imgUrl.startsWith('/')
+            ? imgUrl.slice(1)
+            : imgUrl;
+
+        const diskPath = path.join(__dirname, '..', relative);
+
+        if (fs.existsSync(diskPath)) {
+          try {
+            fs.unlinkSync(diskPath);
+          } catch {}
+        }
+      });
+
+      car.images = car.images.filter(
+        img => !deletedList.includes(img)
+      );
+    }
+
+    // Reorder existing images
+    if (imagesOrder) {
+
+      const ordered = imagesOrder
+        .split(',')
+        .filter(Boolean);
+
+      car.images = ordered;
+    }
+
+    // Add new uploaded images
+    if (Array.isArray(req.files) && req.files.length > 0) {
+
+      const newImages = await processFilesInBatches(req.files, 2);
+
+      car.images.push(...newImages);
+    }
+
+    // Update fields
+    car.price = price;
+    car.description = description;
+    car.exteriorColor = exteriorColor;
+    car.interiorColor = interiorColor;
+    car.mileage = mileage;
+    car.engine = engine;
+    car.transmission = transmission;
+    car.drivetrain = drivetrain;
+    car.fuel = fuel;
+    car.bodyStyle = bodyStyle;
+    car.vin = vin;
+
+    await car.save();
+
+    res.redirect('/admin/dashboard');
+
+  } catch (e) {
+
+    console.error(e);
+    res.status(500).send('Error saving edited car');
+
+  }
+});
+
 // ===== TOGGLE SOLD =====
 router.post('/cars/:id/toggle-sold', isAdmin, async (req, res) => {
   try {

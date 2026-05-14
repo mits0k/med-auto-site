@@ -9,15 +9,26 @@
 
   <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form" enctype="multipart/form-data">
     <div class="form-row">
-      <div>
-        <label class="label">Make</label>
-        <input type="text" value="<%= car.make %>" readonly disabled />
-      </div>
-      <div>
-        <label class="label">Model</label>
-        <input type="text" value="<%= car.model %>" readonly disabled />
-      </div>
-    </div>
+  <div>
+    <label class="label">Make</label>
+    <input
+      type="text"
+      name="make"
+      value="<%= car.make %>"
+      required
+    />
+  </div>
+
+  <div>
+    <label class="label">Model</label>
+    <input
+      type="text"
+      name="model"
+      value="<%= car.model %>"
+      required
+    />
+  </div>
+</div>
 
     <div class="form-row">
       <div>

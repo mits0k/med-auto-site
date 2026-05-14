@@ -382,20 +382,22 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     }
 
     const {
-      price,
-      description,
-      exteriorColor,
-      interiorColor,
-      mileage,
-      engine,
-      transmission,
-      drivetrain,
-      fuel,
-      bodyStyle,
-      vin,
-      imagesOrder,
-      deletedImages
-    } = req.body;
+    make,
+    model,
+    price,
+    description,
+    exteriorColor,
+    interiorColor,
+    mileage,
+    engine,
+    transmission,
+    drivetrain,
+    fuel,
+    bodyStyle,
+    vin,
+    imagesOrder,
+    deletedImages
+} = req.body;
 
     // Delete removed images
     if (deletedImages) {
@@ -444,6 +446,8 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     }
 
     // Update fields
+    car.make = make;
+    car.model = model;
     car.price = price;
     car.description = description;
     car.exteriorColor = exteriorColor;

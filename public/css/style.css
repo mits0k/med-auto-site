@@ -2206,9 +2206,9 @@ input[type="number"] {
   }
 
   .billboard .hero-actions .btn {
-    padding: 9px 12px;
-    font-size: 14px;
-  }
+  padding: 8px 12px;
+  font-size: 13px;
+}
 }
 
 /* iPhone */
@@ -2218,9 +2218,9 @@ input[type="number"] {
   }
 
   .billboard .bb-copy {
-    padding-top: 24px;
-    padding-bottom: 240px;
-  }
+  padding-top: 18px;
+  padding-bottom: 300px;
+}
 
   .bb-sub {
     margin-bottom: 12px;

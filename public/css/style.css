@@ -2158,7 +2158,7 @@ input[type="number"] {
   }
 }
 
-/* === HOMEPAGE HERO BUTTONS CLEANER MOBILE/TABLET === */
+/* === HOMEPAGE HERO MOBILE FIX - SHOW CAR BACKGROUND === */
 
 .billboard .hero-actions {
   display: grid;
@@ -2171,85 +2171,58 @@ input[type="number"] {
 .billboard .hero-actions .btn {
   width: 100%;
   text-align: center;
-
-  /* SAME COLOR FOR ALL */
   background: linear-gradient(135deg,var(--panel),var(--panel-2));
   border: 1px solid rgba(255,255,255,.14);
   color: #fff;
   box-shadow: none;
 }
 
-/* TABLETS */
-@media (max-width: 900px) {
+/* Desktop stays clean */
+@media (min-width: 901px) {
+  .billboard .hero-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 
+/* iPad + phone */
+@media (max-width: 900px) {
   .billboard {
-    min-height: 52vh;
+    min-height: 62vh;
+    background-position: center bottom;
+  }
+
+  .billboard::before {
+    background-position: center bottom;
   }
 
   .billboard .bb-copy {
-    padding-top: 36px;
-    padding-bottom: 36px;
+    padding-top: 30px;
+    padding-bottom: 210px;
   }
 
   .billboard .hero-actions {
     grid-template-columns: 1fr;
-    gap: 10px;
-    max-width: 100%;
-  }
-
-  .billboard .hero-actions .btn {
-    padding: 11px 14px;
-    font-size: 15px;
-  }
-}
-
-/* PHONES */
-@media (max-width: 768px) {
-
-  .billboard {
-    min-height: 58vh;
-  }
-
-  .billboard .bb-copy {
-    padding-top: 28px;
-    padding-bottom: 28px;
-  }
-
-  .billboard .bb-copy h1 {
-    margin-bottom: 8px;
-  }
-
-  .bb-sub {
-    margin-bottom: 14px;
-    font-size: 14px;
-    line-height: 1.45;
-  }
-
-  .billboard .hero-actions {
     gap: 8px;
   }
 
   .billboard .hero-actions .btn {
-    padding: 10px 12px;
+    padding: 9px 12px;
     font-size: 14px;
-    border-radius: 10px;
   }
 }
 
-/* SMALLER IPHONES */
+/* iPhone */
 @media (max-width: 430px) {
-
   .billboard {
-    min-height: 62vh;
+    min-height: 68vh;
   }
 
   .billboard .bb-copy {
-    padding-top: 22px;
-    padding-bottom: 22px;
+    padding-top: 24px;
+    padding-bottom: 240px;
   }
 
-  .billboard .hero-actions .btn {
-    padding: 9px 12px;
-    font-size: 13px;
+  .bb-sub {
+    margin-bottom: 12px;
   }
 }

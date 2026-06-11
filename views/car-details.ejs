@@ -3,11 +3,26 @@
 <main class="container stack-l">
   <!-- Title & price -->
   <header class="car-header">
-    <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
-    <div style="text-align:center;margin-top:-6px;">
-      <span class="car-price">$<%= car.price.toLocaleString() %></span>
-    </div>
-  </header>
+  <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
+
+  <div style="text-align:center;margin-top:-6px;">
+
+    <% if (car.price && car.price > 0) { %>
+
+      <span class="car-price">
+        $<%= car.price.toLocaleString() %>
+      </span>
+
+    <% } else { %>
+
+      <span class="car-price">
+        Coming Soon
+      </span>
+
+    <% } %>
+
+  </div>
+</header>
 
   <!-- Gallery -->
   <% if (car.images && car.images.length) { %>

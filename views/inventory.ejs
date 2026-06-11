@@ -29,10 +29,14 @@
 
     <button type="submit" class="btn btn-secondary">Apply</button>
 
-    <a
-      href="/inventory?make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold === 'true' ? 'false' : 'true' %>"
-      class="btn <%= showSold === 'true' ? 'btn-primary' : 'btn-muted' %>"
-    >
+<a href="/inventory" class="btn btn-muted">
+  Reset Filters
+</a>
+
+<a
+  href="/inventory?make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold === 'true' ? 'false' : 'true' %>"
+  class="btn <%= showSold === 'true' ? 'btn-primary' : 'btn-muted' %>"
+>
       <%= showSold === 'true' ? 'Hide Sold Cars' : 'Show Sold Cars' %>
     </a>
   </form>

@@ -2229,3 +2229,15 @@ input[type="number"] {
     margin-bottom: 12px;
   }
 }
+@media (max-width: 768px) {
+  .inventory-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .inventory-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}

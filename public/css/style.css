@@ -2241,3 +2241,22 @@ input[type="number"] {
     text-align: center;
   }
 }
+
+/* === iPad portrait inventory image fix === */
+@media (min-width: 700px) and (max-width: 900px) {
+  .vehicle-media {
+    height: 260px;
+    background: #0b0d12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .vehicle-media img,
+  .vehicle-noimg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+}

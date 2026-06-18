@@ -5,43 +5,53 @@
   const heroBg = '/images/porsche-banner.jpeg';
 %>
 
-<!-- Full-bleed billboard with Porsche background -->
-<section class="billboard" style="--billboard:url(<%= heroBg %>)">
+<section class="billboard home-hero" style="--billboard:url(<%= heroBg %>)">
   <div class="billboard-inner container">
     <div class="bb-copy">
-      <span class="eyebrow">Welcome to</span>
-      <h1>MED AUTO</h1>
-      <p class="bb-sub">Curated pre-owned vehicles. Transparent pricing. Easy bookings.</p>
+      <span class="eyebrow">Pre-owned vehicles in Montreal</span>
+      <h1>Your next car,<br>without the runaround.</h1>
+      <p class="bb-sub">Straightforward pricing, carefully selected vehicles, and a buying experience built around you.</p>
       <div class="hero-actions">
-        <a class="btn btn-secondary" href="/inventory">View Inventory</a>
-        <a class="btn btn-primary" href="/book">Book Appointment</a>
-        <a class="btn btn-secondary" href="/trade-in">Sell Your Car</a>
+        <a class="btn btn-primary" href="/inventory">Browse inventory</a>
+        <a class="btn btn-secondary" href="/book">Book a visit</a>
+        <a class="hero-text-link" href="/trade-in">Selling your car? <span>Get started</span></a>
       </div>
+    </div>
   </div>
 </section>
 
-<!-- Quick value props -->
 <section class="container section">
-  <h2 class="section-title">Why MED AUTO?</h2>
+  <div class="section-heading">
+    <span class="section-eyebrow">Why MED AUTO</span>
+    <h2 class="section-title">A simpler way to buy pre-owned.</h2>
+  </div>
   <div class="features">
     <div class="feature">
-      <h3>Inspected</h3>
+      <span class="feature-number">01</span>
+      <h3>Carefully selected</h3>
       <p>Each car is checked for mechanical and cosmetic quality.</p>
     </div>
     <div class="feature">
-      <h3>Transparent</h3>
+      <span class="feature-number">02</span>
+      <h3>Clear from the start</h3>
       <p>No games. Clear pricing and straightforward deals.</p>
     </div>
     <div class="feature">
-      <h3>Quick Booking</h3>
-      <p>Pick a test-drive time in minutes.</p>
+      <span class="feature-number">03</span>
+      <h3>Personal service</h3>
+      <p>Speak directly with our team and book a test drive in minutes.</p>
     </div>
   </div>
 </section>
 
-<!-- Latest Arrival (Spotlight) -->
 <section class="container section">
-  <h2 class="section-title">Latest Arrival</h2>
+  <div class="section-heading section-heading-row">
+    <div>
+      <span class="section-eyebrow">Just arrived</span>
+      <h2 class="section-title">Latest vehicle</h2>
+    </div>
+    <a class="section-link" href="/inventory">View all inventory</a>
+  </div>
 
   <% if (typeof featuredCar !== 'undefined' && featuredCar) { %>
     <a href="/inventory/<%= featuredCar._id %>" class="spotlight">
@@ -50,7 +60,7 @@
           <img src="<%= featuredCar.images[0] %>" alt="<%= featuredCar.make %> <%= featuredCar.model %>" />
         <% } %>
 
-        <span class="spotlight-badge">MED AUTO</span>
+        <span class="spotlight-badge">New arrival</span>
         <span class="spotlight-chip"><%= featuredCar.year %></span>
 
         <% if (typeof featuredCar.price === 'number') { %>
@@ -66,14 +76,18 @@
       </div>
     </a>
   <% } else { %>
-    <p style="text-align:center;color:var(--muted)">Add a car in Admin to showcase it here.</p>
+    <p class="empty-state">Add a car in Admin to showcase it here.</p>
   <% } %>
 </section>
 
 <section class="cta-strip">
   <div class="container">
-    <h2>Ready to see a car?</h2>
-    <a href="/book" class="btn btn-on-dark">Book Now</a>
+    <div>
+      <span class="section-eyebrow">Visit us in Dorval</span>
+      <h2>See something you like?</h2>
+      <p>Book a private viewing or test drive with our team.</p>
+    </div>
+    <a href="/book" class="btn btn-primary">Book a visit</a>
   </div>
 </section>
 

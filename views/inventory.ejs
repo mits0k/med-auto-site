@@ -1,36 +1,40 @@
 <%- include('partials/header') %>
-<main class="container stack-l inventory-page">
-  <h1>Inventory</h1>
+<section class="container stack-l inventory-page">
+  <header class="page-heading">
+    <span class="section-eyebrow">Available vehicles</span>
+    <h1>Inventory</h1>
+    <p>Browse our current selection of pre-owned vehicles.</p>
+  </header>
 
-  <form method="GET" action="/inventory" class="row">
-    <select name="make">
+  <form method="GET" action="/inventory" class="inventory-filters">
+    <label><span>Make</span><select name="make">
       <option value="all" <%= selectedMake === 'all' ? 'selected' : '' %>>All Makes</option>
       <% makes.forEach(m => { %>
         <option value="<%= m %>" <%= selectedMake === m ? 'selected' : '' %>><%= m %></option>
       <% }) %>
-    </select>
+    </select></label>
 
-    <select name="year">
+    <label><span>Year</span><select name="year">
       <option value="all" <%= selectedYear === 'all' ? 'selected' : '' %>>All Years</option>
       <% years.sort((a,b)=>b-a).forEach(y => { %>
         <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
       <% }) %>
-    </select>
+    </select></label>
 
-    <select name="sort">
+    <label><span>Sort</span><select name="sort">
       <option value="">Sort By</option>
       <option value="price-asc"  <%= selectedSort === 'price-asc'  ? 'selected' : '' %>>Price: Low to High</option>
       <option value="price-desc" <%= selectedSort === 'price-desc' ? 'selected' : '' %>>Price: High to Low</option>
       <option value="year-asc"   <%= selectedSort === 'year-asc'   ? 'selected' : '' %>>Year: Oldest</option>
       <option value="year-desc"  <%= selectedSort === 'year-desc'  ? 'selected' : '' %>>Year: Newest</option>
-    </select>
+    </select></label>
 
     <input type="hidden" name="showSold" value="<%= showSold %>" />
 
-    <button type="submit" class="btn btn-secondary">Apply</button>
+    <button type="submit" class="btn btn-primary">Apply filters</button>
 
-<a href="/inventory" class="btn btn-muted">
-  Reset Filters
+<a href="/inventory" class="btn btn-muted inventory-reset">
+  Reset
 </a>
 
 <a
@@ -71,6 +75,7 @@
             <% if (!car.sold && car.price && car.price > 0) { %>
               <p class="price">$<%= car.price.toLocaleString() %></p>
             <% } %>
+            <span class="vehicle-card-link">View details</span>
           </div>
         </a>
       <% }) %>
@@ -92,5 +97,5 @@
   <% } else { %>
     <p>No cars match your filter.</p>
   <% } %>
-</main>
+</section>
 <%- include('partials/footer') %>

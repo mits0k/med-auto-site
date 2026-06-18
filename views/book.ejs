@@ -1,14 +1,17 @@
 <%- include('partials/header') %>
 
-<main class="booking-page">
-  <h1>Book an Appointment</h1>
-  <p style="margin-top:-6px;color:#a8b3c7;">Business hours: 10:00 AM – 5:30 PM</p>
+<section class="booking-page">
+  <header class="form-page-heading">
+    <span class="section-eyebrow">Plan your visit</span>
+    <h1>Book an appointment</h1>
+    <p>Choose a vehicle and a time that works for you. Business hours are 10:00 AM to 5:30 PM.</p>
+  </header>
 
   <% if (typeof error !== 'undefined' && error) { %>
-    <div class="success-popup" style="background:#ff3d71;">⚠️ <%= error %></div>
+    <div class="form-alert form-alert-error"><%= error %></div>
   <% } %>
 
-  <form action="/book" method="POST" style="display:flex; flex-direction:column; gap:14px;">
+  <form action="/book" method="POST" class="professional-form">
     <!-- Car selection (optional) -->
     <label class="label" for="carId">Car you’d like to see</label>
     <select name="carId" id="carId">
@@ -47,7 +50,7 @@
     />
 
     <!-- Date + Time -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+    <div class="booking-date-row">
       <div>
         <label class="label" for="dateInput">Date</label>
         <input
@@ -114,7 +117,7 @@
       placeholder="Additional Info (optional)"
     ><%= typeof message !== 'undefined' ? message : '' %></textarea>
 
-    <button type="submit" class="btn btn-primary" style="width:100%;">Book Appointment</button>
+    <button type="submit" class="btn btn-primary btn-block">Book appointment</button>
   </form>
 
   <% if (success) { %>
@@ -143,6 +146,6 @@
       dateInput.addEventListener('keydown', e => e.preventDefault());
     }
   </script>
-</main>
+</section>
 
 <%- include('partials/footer') %>

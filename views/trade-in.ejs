@@ -1,15 +1,15 @@
 <%- include('partials/header') %>
 
-<main class="form-card trade-page">
-  <h1 class="form-title">Sell or Trade Your Car</h1>
-
-  <p style="color:var(--muted); margin-top:-6px;">
-    Fill out the form below and we’ll get back to you with more information.
-  </p>
+<section class="form-card trade-page">
+  <header class="form-page-heading">
+    <span class="section-eyebrow">Vehicle acquisition</span>
+    <h1 class="form-title">Sell or trade your car</h1>
+    <p>Share a few details and our team will get back to you with a straightforward evaluation.</p>
+  </header>
 
   <% if (typeof error !== 'undefined' && error) { %>
-    <div class="success-popup" style="background:#ff3d71;">
-      ⚠️ <%= error %>
+    <div class="form-alert form-alert-error">
+      <%= error %>
     </div>
   <% } %>
 
@@ -20,7 +20,7 @@
   <% } %>
 
   <form id="tradeInForm" action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
-    <h3 style="margin:0;">Your Information</h3>
+    <h3 class="form-section-heading">Your information</h3>
 
     <input
       type="text"
@@ -45,7 +45,7 @@
       value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>"
     />
 
-    <h3 style="margin:8px 0 0;">Vehicle Information</h3>
+    <h3 class="form-section-heading form-section-heading-spaced">Vehicle information</h3>
 
     <div class="form-row">
       <input
@@ -146,7 +146,7 @@
   hidden
 />
 
-      <small style="color:var(--muted); display:block; margin-top:6px;">
+      <small class="form-helper">
         Upload up to 10 photos. You can drag photos to reorder them.
       </small>
 
@@ -504,6 +504,6 @@
       }, 3500);
     </script>
   <% } %>
-</main>
+</section>
 
 <%- include('partials/footer') %>

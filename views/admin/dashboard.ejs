@@ -68,8 +68,12 @@
             <td><%= car.year %></td>
 
             <td>
-              $<%= car.price.toLocaleString() %>
-            </td>
+  <% if (typeof car.price === 'number' && car.price > 0) { %>
+    $<%= car.price.toLocaleString() %>
+  <% } else { %>
+    Coming Soon
+  <% } %>
+</td>
 
             <td>
 

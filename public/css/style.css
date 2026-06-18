@@ -65,7 +65,7 @@ body{
 .hide-on-phone{ display:inline !important; } /* Instagram visible on desktop */
 
 /* ====== NAVBAR ====== */
-.site-header{position:sticky;top:0;z-index:50;background:#0b0b0d;border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(8px)}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(11,11,13,.96);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(12px)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;text-decoration:none;color:var(--text);letter-spacing:.3px}
 .brand-mark{font-size:22px}
@@ -73,18 +73,30 @@ body{
 /* Mobile toggle (hidden on desktop) */
 .nav-toggle{
   display:none;
-  background:transparent;
+  align-items:center;
+  gap:9px;
+  min-height:42px;
+  background:#141823;
   border:1px solid rgba(255,255,255,.2);
   color:#e5e7eb;
-  font-size:20px;
-  padding:8px 12px;
-  border-radius:8px;
+  font:600 14px/1 "Poppins",sans-serif;
+  padding:9px 13px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background .2s,border-color .2s;
 }
+.nav-toggle:hover,.nav-toggle:focus-visible{background:#1b2130;border-color:rgba(79,140,255,.7);outline:none}
+.nav-toggle-icon{display:grid;gap:4px;width:18px}
+.nav-toggle-icon span{display:block;width:18px;height:2px;border-radius:2px;background:currentColor;transition:transform .2s,opacity .2s}
+.nav-toggle.open .nav-toggle-icon span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.nav-toggle.open .nav-toggle-icon span:nth-child(2){opacity:0}
+.nav-toggle.open .nav-toggle-icon span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
 
 /* Default nav links layout (desktop) */
 .nav-links{display:flex;gap:22px;list-style:none;margin:0;padding:0}
 .nav a{color:var(--muted);text-decoration:none;font-weight:500;transition:all .2s}
 .nav a:hover{color:var(--text)}
+.nav a[aria-current="page"]{color:#fff}
 .nav a.pill{padding:8px 14px;border:1px solid rgba(255,255,255,.1);border-radius:999px}
 
 /* ====== BUTTONS ====== */
@@ -672,6 +684,45 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   .billboard .bb-copy h1{font-size:40px}
 }
 
+/* Compact navigation for tablets and phones */
+@media (max-width: 900px){
+  .topbar-inner{gap:18px}
+  .topbar-right{gap:7px;font-size:12px}
+  .topbar-right .topbar-link{padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:#0f1218}
+  .topbar .divider,.hide-on-phone{display:none !important}
+  .addr-long{display:none}
+  .addr-short{display:inline}
+
+  .nav{position:relative;justify-content:flex-end;padding:9px 0}
+  .nav-toggle{display:flex}
+  .nav-links{
+    display:flex;
+    position:absolute;
+    top:calc(100% + 1px);
+    left:14px;
+    right:14px;
+    z-index:60;
+    flex-direction:column;
+    gap:4px;
+    margin:0;
+    padding:8px;
+    background:#10131a;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:0 0 14px 14px;
+    box-shadow:0 18px 35px rgba(0,0,0,.45);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-8px);
+    pointer-events:none;
+    transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  }
+  .nav-links.open{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+  .nav-links li{width:100%}
+  .nav-links a{display:block;width:100%;padding:12px 14px;border-radius:8px;font-size:15px}
+  .nav-links a:hover,.nav-links a:focus-visible{background:#181d29;color:#fff;outline:none}
+  .nav-links a[aria-current="page"]{background:rgba(79,140,255,.14);color:#fff;box-shadow:inset 3px 0 0 var(--brand)}
+}
+
 /* Phone */
 @media (max-width: 768px){
   .container{padding:0 14px}
@@ -715,19 +766,6 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   /* Optionally hide Instagram on phones to save space */
   .hide-on-phone{ display:none !important; }
 
-  /* Mobile nav */
-  .nav{padding:10px 0}
-  .nav-toggle{display:block}
-  .nav-links{
-    display:none;
-    position:absolute; top:100%; left:0; right:0;
-    margin:0; padding:10px 14px;
-    background:#0b0b0d; border-bottom:1px solid rgba(255,255,255,.08);
-    gap:12px; flex-direction:column;
-  }
-  .nav-links.open{display:flex}
-  .nav a{font-size:15px}
-
   /* Billboard text a bit smaller so hero shows more image */
   .billboard .bb-copy{padding:42px 0 50px}
   .billboard .bb-copy h1{font-size:30px}
@@ -741,6 +779,15 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   .spotlight-caption h3{font-size:16px}
 
   .thumb-strip .thumb{height:72px}
+}
+
+@media (max-width: 600px){
+  .topbar-inner{align-items:stretch;gap:7px;padding:8px 0}
+  .topbar-left{display:flex;justify-content:center}
+  .topbar-right{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .topbar-right .topbar-link{display:flex;align-items:center;justify-content:center;min-height:34px;padding:5px 7px;white-space:normal}
+  .topbar-right .topbar-link:last-child{grid-column:1 / -1}
+  .nav-links{left:10px;right:10px}
 }
 
 /* Very small phones */

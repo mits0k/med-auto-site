@@ -3,17 +3,40 @@ document.addEventListener("DOMContentLoaded", function () {
   const navToggle = document.querySelector(".nav-toggle");
   const navLinks = document.getElementById("primary-nav");
   if (navToggle && navLinks) {
+    const closeNav = () => {
+      navLinks.classList.remove("open");
+      navToggle.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", "false");
+      navToggle.setAttribute("aria-label", "Open navigation menu");
+    };
+
     navToggle.addEventListener("click", () => {
       const isOpen = navLinks.classList.toggle("open");
+      navToggle.classList.toggle("open", isOpen);
       navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      navToggle.setAttribute("aria-label", isOpen ? "Close navigation menu" : "Open navigation menu");
     });
 
-    // Close menu when clicking a link (nice UX)
     navLinks.querySelectorAll("a").forEach(a => {
-      a.addEventListener("click", () => {
-        navLinks.classList.remove("open");
-        navToggle.setAttribute("aria-expanded", "false");
-      });
+      const linkPath = new URL(a.href, window.location.origin).pathname.replace(/\/$/, "") || "/";
+      const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
+      if (linkPath === currentPath) a.setAttribute("aria-current", "page");
+      a.addEventListener("click", closeNav);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!navLinks.contains(event.target) && !navToggle.contains(event.target)) closeNav();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && navLinks.classList.contains("open")) {
+        closeNav();
+        navToggle.focus();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 900) closeNav();
     });
   }
 

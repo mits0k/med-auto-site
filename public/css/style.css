@@ -3235,6 +3235,6 @@ textarea:focus-visible {
 }
 @media (max-width: 768px) {
   .home-hero + .section {
-    padding-top: 28px;
+    padding-top: 48px;
   }
 }

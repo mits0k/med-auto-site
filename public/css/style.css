@@ -3041,3 +3041,78 @@ textarea:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+/* === QUICK MOBILE CLEANUP === */
+
+/* Hide the Why MED AUTO section */
+.home-hero + .section {
+  display: none;
+}
+
+/* Center/fix hero buttons */
+.hero-actions .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Cleaner phone/tablet hero */
+@media (max-width: 900px) {
+  .home-hero .bb-copy {
+    padding-top: 56px;
+    padding-bottom: 260px;
+  }
+
+  .home-hero .bb-copy h1,
+  .home-hero .bb-sub {
+    display: none;
+  }
+
+  .home-hero .eyebrow {
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 18px;
+  }
+
+  .hero-actions {
+    gap: 12px;
+  }
+
+  .hero-actions .btn {
+    min-height: 54px;
+    font-size: 16px;
+  }
+}
+
+/* Smaller inventory filters on phones */
+@media (max-width: 768px) {
+  .inventory-filters {
+    padding: 14px !important;
+    gap: 10px !important;
+  }
+
+  .inventory-filters label span {
+    font-size: 11px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .inventory-filters select,
+  .inventory-filters .btn {
+    min-height: 42px !important;
+    padding: 9px 12px !important;
+    font-size: 14px !important;
+  }
+
+  .inventory-page .page-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .inventory-page .page-heading h1 {
+    font-size: 42px !important;
+  }
+
+  .inventory-page .page-heading p {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+}

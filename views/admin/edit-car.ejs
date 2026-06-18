@@ -1,13 +1,22 @@
 <%- include('../partials/header') %>
 
-<section class="form-card">
-  <h1 class="form-title">Edit Car</h1>
+<section class="form-card admin-car-editor">
+  <div class="admin-form-header">
+    <span class="admin-form-eyebrow">Inventory Manager</span>
+    <h1 class="form-title">Edit <%= car.make %> <%= car.model %></h1>
+    <p>Update the listing details and arrange the vehicle photos.</p>
+  </div>
 
   <% if (error) { %>
     <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
   <% } %>
 
   <form id="editCarForm" action="/admin/cars/<%= car._id %>/edit" method="POST" class="form" enctype="multipart/form-data">
+    <section class="admin-form-section" aria-labelledby="edit-basics-title">
+      <div class="admin-form-section-title">
+        <span>1</span>
+        <div><h2 id="edit-basics-title">Vehicle basics</h2><p>The information customers see first.</p></div>
+      </div>
     <div class="form-row">
   <div>
     <label class="label">Make</label>
@@ -46,7 +55,13 @@
 />
       </div>
     </div>
+    </section>
 
+    <section class="admin-form-section" aria-labelledby="edit-specs-title">
+      <div class="admin-form-section-title">
+        <span>2</span>
+        <div><h2 id="edit-specs-title">Specifications</h2><p>Color, mileage, and mechanical details.</p></div>
+      </div>
     <div class="form-row">
       <div>
         <label class="label">Exterior Color</label>
@@ -120,7 +135,13 @@
         </select>
       </div>
     </div>
+    </section>
 
+    <section class="admin-form-section" aria-labelledby="edit-listing-title">
+      <div class="admin-form-section-title">
+        <span>3</span>
+        <div><h2 id="edit-listing-title">Listing details</h2><p>Review the VIN and customer-facing description.</p></div>
+      </div>
     <div>
       <label class="label">VIN</label>
       <input type="text" name="vin" value="<%= car.vin || '' %>" />
@@ -130,9 +151,15 @@
       <label class="label">Short Description</label>
       <textarea name="description" rows="5"><%= car.description || '' %></textarea>
     </div>
+    </section>
 
+    <section class="admin-form-section admin-photo-section" aria-labelledby="edit-photos-title">
+      <div class="admin-form-section-title">
+        <span>4</span>
+        <div><h2 id="edit-photos-title">Photos</h2><p>Reorder existing photos or attach new ones.</p></div>
+      </div>
     <div class="stack-m">
-      <strong>Existing Images (drag to reorder)</strong>
+      <strong>Existing images <span class="admin-inline-note">Drag to reorder</span></strong>
 
       <% if (car.images && car.images.length > 0) { %>
         <ul id="dndList" class="dnd-list" aria-label="Reorder images">
@@ -163,7 +190,7 @@
       <small style="color:var(--muted);">Tip: the first image is the main photo on the site.</small>
     </div>
 
-    <div class="stack-m">
+    <div class="stack-m admin-file-upload">
       <label class="label" for="newImages">Attach more photos</label>
       <input id="newImages" type="file" name="newImages" accept="image/*" multiple />
       <small style="color:var(--muted);display:block;margin-top:6px;">
@@ -171,8 +198,9 @@
       </small>
       <ul id="newPreviewList" class="dnd-list" aria-label="New image previews"></ul>
     </div>
+    </section>
 
-    <div class="row">
+    <div class="row admin-form-actions">
       <button type="submit" class="btn btn-primary">Save Changes</button>
       <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
     </div>

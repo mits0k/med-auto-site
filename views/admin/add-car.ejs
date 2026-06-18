@@ -1,13 +1,22 @@
 <%- include('../partials/header') %>
 
-<section class="form-card">
-  <h1 class="form-title">Add a Car</h1>
+<section class="form-card admin-car-editor">
+  <div class="admin-form-header">
+    <span class="admin-form-eyebrow">Inventory Manager</span>
+    <h1 class="form-title">Add a Car</h1>
+    <p>Enter the vehicle details, add photos, and publish it to your inventory.</p>
+  </div>
 
   <% if (error) { %>
     <div style="color:#ffb3c7;margin-bottom:10px;"><strong><%= error %></strong></div>
   <% } %>
 
   <form id="addCarForm" action="/admin/add-car" method="POST" enctype="multipart/form-data" class="form">
+    <section class="admin-form-section" aria-labelledby="add-basics-title">
+      <div class="admin-form-section-title">
+        <span>1</span>
+        <div><h2 id="add-basics-title">Vehicle basics</h2><p>The information customers see first.</p></div>
+      </div>
     <div class="form-row">
       <div>
         <label class="label">Make</label>
@@ -33,7 +42,13 @@
 >
       </div>
     </div>
+    </section>
 
+    <section class="admin-form-section" aria-labelledby="add-specs-title">
+      <div class="admin-form-section-title">
+        <span>2</span>
+        <div><h2 id="add-specs-title">Specifications</h2><p>Color, mileage, and mechanical details.</p></div>
+      </div>
     <div class="form-row">
       <div>
         <label class="label">Exterior Color</label>
@@ -137,7 +152,13 @@
         </select>
       </div>
     </div>
+    </section>
 
+    <section class="admin-form-section" aria-labelledby="add-listing-title">
+      <div class="admin-form-section-title">
+        <span>3</span>
+        <div><h2 id="add-listing-title">Listing details</h2><p>Add the VIN and a short customer-facing description.</p></div>
+      </div>
     <div>
       <label class="label">VIN</label>
       <input type="text" name="vin" placeholder="Optional" />
@@ -147,8 +168,14 @@
       <label class="label">Short Description</label>
       <textarea name="description" placeholder="Add a short blurb (the specs cover the rest)"></textarea>
     </div>
+    </section>
 
-    <div>
+    <section class="admin-form-section admin-photo-section" aria-labelledby="add-photos-title">
+      <div class="admin-form-section-title">
+        <span>4</span>
+        <div><h2 id="add-photos-title">Photos</h2><p>The first photo becomes the main inventory image.</p></div>
+      </div>
+    <div class="admin-file-upload">
       <label class="label">Upload Car Images</label>
       <input id="imagesInput" type="file" name="images" accept="image/*" multiple />
       <small style="color:var(--muted);display:block;margin-top:6px;">
@@ -161,8 +188,9 @@
       <ul id="previewList" class="dnd-list" aria-label="Selected images"></ul>
       <small style="color:var(--muted);">Tip: the first image will be the main photo on the site.</small>
     </div>
+    </section>
 
-    <div class="row">
+    <div class="row admin-form-actions">
       <button id="submitBtn" type="submit" class="btn btn-primary">Add Car</button>
       <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
     </div>

@@ -1471,8 +1471,17 @@ input[type="number"] {
   }
 
   .nav {
-    justify-content: flex-end;
-  }
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-wordmark {
+  margin-right: auto;
+}
+
+.nav-toggle {
+  margin-left: auto;
+}
 
   .nav-toggle {
     display: inline-flex;

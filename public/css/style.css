@@ -3159,3 +3159,35 @@ textarea:focus-visible {
     display: none;
   }
 }
+/* === CLEAN HERO COPY FIX === */
+
+.home-hero .bb-copy {
+  max-width: 680px;
+}
+
+.home-hero .bb-copy h1 {
+  display: block;
+  font-size: clamp(42px, 5.5vw, 72px);
+  line-height: 0.95;
+  margin: 14px 0 18px;
+}
+
+.home-hero .bb-sub {
+  display: block;
+  max-width: 520px;
+  font-size: 20px;
+  line-height: 1.45;
+  color: rgba(255,255,255,.82);
+  margin-bottom: 26px;
+}
+
+@media (max-width: 600px) {
+  .home-hero .bb-copy h1 {
+    font-size: 38px;
+  }
+
+  .home-hero .bb-sub {
+    font-size: 16px;
+    max-width: 310px;
+  }
+}

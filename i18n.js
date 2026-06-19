@@ -3,6 +3,8 @@ const french = {
   'MED AUTO Home': 'Accueil MED AUTO',
   'SALES - FINANCING': 'VENTES - FINANCEMENT',
   'Directions': 'Itinéraire',
+  'Call Tom': 'Appeler Tom',
+  'Call Dimitri': 'Appeler Dimitri',
   'Home': 'Accueil',
   'Inventory': 'Inventaire',
   'Sell Your Car': 'Vendez votre auto',

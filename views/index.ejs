@@ -9,10 +9,8 @@
   <div class="billboard-inner container">
     <div class="bb-copy">
       <span class="eyebrow"><%= t('Pre-owned vehicles in Montreal') %></span>
-
-<h1><%= t('Quality cars. Straightforward deals.') %></h1>
-
-<p class="bb-sub"><%= t('Browse our current inventory or book a private visit.') %></p>
+      <h1><%= t('Quality cars. Straightforward deals.') %></h1>
+      <p class="bb-sub"><%= t('Browse our current inventory or book a private visit.') %></p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="/inventory"><%= t('Browse inventory') %></a>
         <a class="btn btn-secondary" href="/book"><%= t('Book a visit') %></a>
@@ -22,31 +20,7 @@
   </div>
 </section>
 
-<section class="container section">
-  <div class="section-heading">
-    <span class="section-eyebrow"><%= t('Why MED AUTO') %></span>
-    <h2 class="section-title"><%= t('A simpler way to buy pre-owned.') %></h2>
-  </div>
-  <div class="features">
-    <div class="feature">
-      <span class="feature-number">01</span>
-      <h3><%= t('Carefully selected') %></h3>
-      <p><%= t('Each car is checked for mechanical and cosmetic quality.') %></p>
-    </div>
-    <div class="feature">
-      <span class="feature-number">02</span>
-      <h3><%= t('Clear from the start') %></h3>
-      <p><%= t('No games. Clear pricing and straightforward deals.') %></p>
-    </div>
-    <div class="feature">
-      <span class="feature-number">03</span>
-      <h3><%= t('Personal service') %></h3>
-      <p><%= t('Speak directly with our team and book a test drive in minutes.') %></p>
-    </div>
-  </div>
-</section>
-
-<section class="container section">
+<section class="container section home-inventory-section">
   <div class="section-heading section-heading-row">
     <div>
       <span class="section-eyebrow"><%= t('Just arrived') %></span>
@@ -80,17 +54,6 @@
   <% } else { %>
     <p class="empty-state"><%= t('Add a car in Admin to showcase it here.') %></p>
   <% } %>
-</section>
-
-<section class="cta-strip">
-  <div class="container">
-    <div>
-      <span class="section-eyebrow"><%= t('Visit us in Dorval') %></span>
-      <h2><%= t('See something you like?') %></h2>
-      <p><%= t('Book a private viewing or test drive with our team.') %></p>
-    </div>
-    <a href="/book" class="btn btn-primary"><%= t('Book a visit') %></a>
-  </div>
 </section>
 
 <%- include('partials/footer') %>

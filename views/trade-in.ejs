@@ -2,9 +2,9 @@
 
 <section class="form-card trade-page">
   <header class="form-page-heading">
-    <span class="section-eyebrow">Vehicle acquisition</span>
-    <h1 class="form-title">Sell or trade your car</h1>
-    <p>Share a few details and our team will get back to you with a straightforward evaluation.</p>
+    <span class="section-eyebrow"><%= t('Vehicle acquisition') %></span>
+    <h1 class="form-title"><%= t('Sell or trade your car') %></h1>
+    <p><%= t('Share a few details and our team will get back to you with a straightforward evaluation.') %></p>
   </header>
 
   <% if (typeof error !== 'undefined' && error) { %>
@@ -15,17 +15,17 @@
 
   <% if (typeof success !== 'undefined' && success) { %>
     <div class="success-popup" id="successPopup">
-      Request sent successfully! We’ll get back to you soon.
+      <%= t('Request sent successfully! We will get back to you soon.') %>
     </div>
   <% } %>
 
   <form id="tradeInForm" action="/trade-in" method="POST" enctype="multipart/form-data" class="form">
-    <h3 class="form-section-heading">Your information</h3>
+    <h3 class="form-section-heading"><%= t('Your information') %></h3>
 
     <input
       type="text"
       name="name"
-      placeholder="Your Name"
+      placeholder="<%= t('Your Name') %>"
       required
       value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>"
     />
@@ -33,19 +33,19 @@
     <input
       type="email"
       name="email"
-      placeholder="Your Email"
+      placeholder="<%= t('Your Email') %>"
       value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>"
     />
 
     <input
       type="tel"
       name="phone"
-      placeholder="Phone Number"
+      placeholder="<%= t('Phone Number') %>"
       required
       value="<%= typeof formData !== 'undefined' ? formData.phone || '' : '' %>"
     />
 
-    <h3 class="form-section-heading form-section-heading-spaced">Vehicle information</h3>
+    <h3 class="form-section-heading form-section-heading-spaced"><%= t('Vehicle information') %></h3>
 
     <div class="form-row">
       <input
@@ -54,7 +54,7 @@
   pattern="[0-9]*"
   maxlength="4"
   name="year"
-        placeholder="Year"
+        placeholder="<%= t('Year') %>"
         required
         value="<%= typeof formData !== 'undefined' ? formData.year || '' : '' %>"
       />
@@ -62,7 +62,7 @@
       <input
         type="text"
         name="make"
-        placeholder="Make"
+        placeholder="<%= t('Make') %>"
         required
         value="<%= typeof formData !== 'undefined' ? formData.make || '' : '' %>"
       />
@@ -71,7 +71,7 @@
     <input
       type="text"
       name="model"
-      placeholder="Model"
+      placeholder="<%= t('Model') %>"
       required
       value="<%= typeof formData !== 'undefined' ? formData.model || '' : '' %>"
     />
@@ -79,7 +79,7 @@
     <input
       type="number"
       name="mileage"
-      placeholder="Mileage (km)"
+      placeholder="<%= t('Mileage (km)') %>"
       required
       value="<%= typeof formData !== 'undefined' ? formData.mileage || '' : '' %>"
     />
@@ -87,54 +87,54 @@
     <input
       type="text"
       name="vin"
-      placeholder="VIN (optional)"
+      placeholder="<%= t('VIN (optional)') %>"
       value="<%= typeof formData !== 'undefined' ? formData.vin || '' : '' %>"
     />
 
     <select name="condition">
-      <option value="">Vehicle Condition</option>
+      <option value=""><%= t('Vehicle Condition') %></option>
 
       <option
         value="Excellent"
         <%= typeof formData !== 'undefined' && formData.condition === 'Excellent' ? 'selected' : '' %>
       >
-        Excellent
+        <%= t('Excellent') %>
       </option>
 
       <option
         value="Good"
         <%= typeof formData !== 'undefined' && formData.condition === 'Good' ? 'selected' : '' %>
       >
-        Good
+        <%= t('Good') %>
       </option>
 
       <option
         value="Fair"
         <%= typeof formData !== 'undefined' && formData.condition === 'Fair' ? 'selected' : '' %>
       >
-        Fair
+        <%= t('Fair') %>
       </option>
 
       <option
         value="Needs Work"
         <%= typeof formData !== 'undefined' && formData.condition === 'Needs Work' ? 'selected' : '' %>
       >
-        Needs Work
+        <%= t('Needs Work') %>
       </option>
     </select>
 
     <input
       type="number"
       name="askingPrice"
-      placeholder="Asking Price (optional)"
+      placeholder="<%= t('Asking Price (optional)') %>"
       value="<%= typeof formData !== 'undefined' ? formData.askingPrice || '' : '' %>"
     />
 
     <div>
-      <label class="label">Upload Photos (optional)</label>
+      <label class="label"><%= t('Upload Photos (optional)') %></label>
 
       <label for="tradeImages" class="custom-upload-btn">
-  Choose Photos
+  <%= t('Choose Photos') %>
 </label>
 
 <input
@@ -147,7 +147,7 @@
 />
 
       <small class="form-helper">
-        Upload up to 10 photos. You can drag photos to reorder them.
+        <%= t('Upload up to 10 photos. You can drag photos to reorder them.') %>
       </small>
 
       <div id="tradePreviewGrid" class="trade-preview-grid"></div>
@@ -155,7 +155,7 @@
 
     <textarea
       name="message"
-      placeholder="Anything else we should know? Accidents, repairs, warning lights, etc."
+      placeholder="<%= t('Anything else we should know? Accidents, repairs, warning lights, etc.') %>"
     ><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
 
     <button
@@ -163,7 +163,7 @@
       type="submit"
       class="btn btn-primary btn-block"
     >
-      Submit Vehicle
+      <%= t('Submit Vehicle') %>
     </button>
   </form>
 
@@ -319,7 +319,7 @@
         previewGrid.innerHTML = '';
 
         showUploadWarning(
-          'You can upload a maximum of 10 photos. Please remove a few images and try again.'
+          <%- JSON.stringify(t('You can upload a maximum of 10 photos. Please remove a few images and try again.')) %>
         );
 
         return;
@@ -435,7 +435,7 @@
       if (selectedFiles.length > 10) {
 
         showUploadWarning(
-          'You can upload a maximum of 10 photos. Please remove a few images and try again.'
+          <%- JSON.stringify(t('You can upload a maximum of 10 photos. Please remove a few images and try again.')) %>
         );
 
         return;
@@ -443,7 +443,7 @@
 
       submitBtn.disabled = true;
 
-      submitBtn.textContent = 'Submitting...';
+      submitBtn.textContent = <%- JSON.stringify(t('Submitting...')) %>;
 
       try {
 
@@ -482,12 +482,12 @@
         console.error(err);
 
         alert(
-          'Something went wrong submitting the form. Please try again.'
+          <%- JSON.stringify(t('Something went wrong submitting the form. Please try again.')) %>
         );
 
         submitBtn.disabled = false;
 
-        submitBtn.textContent = 'Submit Vehicle';
+        submitBtn.textContent = <%- JSON.stringify(t('Submit Vehicle')) %>;
       }
     });
   </script>

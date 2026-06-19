@@ -7,14 +7,14 @@ document.addEventListener("DOMContentLoaded", function () {
       navLinks.classList.remove("open");
       navToggle.classList.remove("open");
       navToggle.setAttribute("aria-expanded", "false");
-      navToggle.setAttribute("aria-label", "Open navigation menu");
+      navToggle.setAttribute("aria-label", navToggle.dataset.openLabel || "Open navigation menu");
     };
 
     navToggle.addEventListener("click", () => {
       const isOpen = navLinks.classList.toggle("open");
       navToggle.classList.toggle("open", isOpen);
       navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      navToggle.setAttribute("aria-label", isOpen ? "Close navigation menu" : "Open navigation menu");
+      navToggle.setAttribute("aria-label", isOpen ? (navToggle.dataset.closeLabel || "Close navigation menu") : (navToggle.dataset.openLabel || "Open navigation menu"));
     });
 
     navLinks.querySelectorAll("a").forEach(a => {

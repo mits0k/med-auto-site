@@ -8,15 +8,15 @@
 <section class="billboard home-hero" style="--billboard:url(<%= heroBg %>)">
   <div class="billboard-inner container">
     <div class="bb-copy">
-      <span class="eyebrow">Pre-owned vehicles in Montreal</span>
+      <span class="eyebrow"><%= t('Pre-owned vehicles in Montreal') %></span>
 
-<h1>Quality cars. Straightforward deals.</h1>
+<h1><%= t('Quality cars. Straightforward deals.') %></h1>
 
-<p class="bb-sub">Browse our current inventory or book a private visit.</p>
+<p class="bb-sub"><%= t('Browse our current inventory or book a private visit.') %></p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="/inventory">Browse inventory</a>
-        <a class="btn btn-secondary" href="/book">Book a visit</a>
-        <a class="hero-text-link" href="/trade-in">Selling your car? <span>Get started</span></a>
+        <a class="btn btn-primary" href="/inventory"><%= t('Browse inventory') %></a>
+        <a class="btn btn-secondary" href="/book"><%= t('Book a visit') %></a>
+        <a class="hero-text-link" href="/trade-in"><%= t('Selling your car?') %> <span><%= t('Get started') %></span></a>
       </div>
     </div>
   </div>
@@ -24,24 +24,24 @@
 
 <section class="container section">
   <div class="section-heading">
-    <span class="section-eyebrow">Why MED AUTO</span>
-    <h2 class="section-title">A simpler way to buy pre-owned.</h2>
+    <span class="section-eyebrow"><%= t('Why MED AUTO') %></span>
+    <h2 class="section-title"><%= t('A simpler way to buy pre-owned.') %></h2>
   </div>
   <div class="features">
     <div class="feature">
       <span class="feature-number">01</span>
-      <h3>Carefully selected</h3>
-      <p>Each car is checked for mechanical and cosmetic quality.</p>
+      <h3><%= t('Carefully selected') %></h3>
+      <p><%= t('Each car is checked for mechanical and cosmetic quality.') %></p>
     </div>
     <div class="feature">
       <span class="feature-number">02</span>
-      <h3>Clear from the start</h3>
-      <p>No games. Clear pricing and straightforward deals.</p>
+      <h3><%= t('Clear from the start') %></h3>
+      <p><%= t('No games. Clear pricing and straightforward deals.') %></p>
     </div>
     <div class="feature">
       <span class="feature-number">03</span>
-      <h3>Personal service</h3>
-      <p>Speak directly with our team and book a test drive in minutes.</p>
+      <h3><%= t('Personal service') %></h3>
+      <p><%= t('Speak directly with our team and book a test drive in minutes.') %></p>
     </div>
   </div>
 </section>
@@ -49,10 +49,10 @@
 <section class="container section">
   <div class="section-heading section-heading-row">
     <div>
-      <span class="section-eyebrow">Just arrived</span>
-      <h2 class="section-title">Latest vehicle</h2>
+      <span class="section-eyebrow"><%= t('Just arrived') %></span>
+      <h2 class="section-title"><%= t('Latest vehicle') %></h2>
     </div>
-    <a class="section-link" href="/inventory">View all inventory</a>
+    <a class="section-link" href="/inventory"><%= t('View all inventory') %></a>
   </div>
 
   <% if (typeof featuredCar !== 'undefined' && featuredCar) { %>
@@ -62,34 +62,34 @@
           <img src="<%= featuredCar.images[0] %>" alt="<%= featuredCar.make %> <%= featuredCar.model %>" />
         <% } %>
 
-        <span class="spotlight-badge">New arrival</span>
+        <span class="spotlight-badge"><%= t('New arrival') %></span>
         <span class="spotlight-chip"><%= featuredCar.year %></span>
 
         <% if (typeof featuredCar.price === 'number') { %>
-          <span class="spotlight-price">$<%= featuredCar.price.toLocaleString() %></span>
+          <span class="spotlight-price"><%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(featuredCar.price) %></span>
         <% } %>
       </div>
 
       <div class="spotlight-caption">
         <h3><%= featuredCar.make %> <%= featuredCar.model %></h3>
         <% if (typeof featuredCar.mileage === 'number') { %>
-          <span class="meta"><%= featuredCar.mileage.toLocaleString() %> km</span>
+          <span class="meta"><%= new Intl.NumberFormat(locale).format(featuredCar.mileage) %> km</span>
         <% } %>
       </div>
     </a>
   <% } else { %>
-    <p class="empty-state">Add a car in Admin to showcase it here.</p>
+    <p class="empty-state"><%= t('Add a car in Admin to showcase it here.') %></p>
   <% } %>
 </section>
 
 <section class="cta-strip">
   <div class="container">
     <div>
-      <span class="section-eyebrow">Visit us in Dorval</span>
-      <h2>See something you like?</h2>
-      <p>Book a private viewing or test drive with our team.</p>
+      <span class="section-eyebrow"><%= t('Visit us in Dorval') %></span>
+      <h2><%= t('See something you like?') %></h2>
+      <p><%= t('Book a private viewing or test drive with our team.') %></p>
     </div>
-    <a href="/book" class="btn btn-primary">Book a visit</a>
+    <a href="/book" class="btn btn-primary"><%= t('Book a visit') %></a>
   </div>
 </section>
 

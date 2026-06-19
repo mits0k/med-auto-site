@@ -2,9 +2,9 @@
 
 <section class="booking-page">
   <header class="form-page-heading">
-    <span class="section-eyebrow">Plan your visit</span>
-    <h1>Book an appointment</h1>
-    <p>Choose a vehicle and a time that works for you. Business hours are 10:00 AM to 5:30 PM.</p>
+    <span class="section-eyebrow"><%= t('Plan your visit') %></span>
+    <h1><%= t('Book an appointment') %></h1>
+    <p><%= t('Choose a vehicle and a time that works for you. Business hours are 10:00 AM to 5:30 PM.') %></p>
   </header>
 
   <% if (typeof error !== 'undefined' && error) { %>
@@ -13,9 +13,9 @@
 
   <form action="/book" method="POST" class="professional-form">
     <!-- Car selection (optional) -->
-    <label class="label" for="carId">Car you’d like to see</label>
+    <label class="label" for="carId"><%= t('Car you would like to see') %></label>
     <select name="carId" id="carId">
-      <option value="">— Select Vehicle —</option>
+      <option value="">— <%= t('Select Vehicle') %> —</option>
       <% if (Array.isArray(cars)) { %>
         <% cars.forEach(c => { %>
           <option value="<%= c._id %>" <%= (selectedCarId === String(c._id)) ? 'selected' : '' %>>
@@ -28,7 +28,7 @@
     <input
       type="text"
       name="name"
-      placeholder="Your Name"
+      placeholder="<%= t('Your Name') %>"
       required
       value="<%= typeof name !== 'undefined' ? name : '' %>"
     />
@@ -36,7 +36,7 @@
     <input
       type="email"
       name="email"
-      placeholder="Your Email"
+      placeholder="<%= t('Your Email') %>"
       required
       value="<%= typeof email !== 'undefined' ? email : '' %>"
     />
@@ -44,7 +44,7 @@
     <input
       type="tel"
       name="phone"
-      placeholder="Phone Number"
+      placeholder="<%= t('Phone Number') %>"
       required
       value="<%= typeof phone !== 'undefined' ? phone : '' %>"
     />
@@ -52,7 +52,7 @@
     <!-- Date + Time -->
     <div class="booking-date-row">
       <div>
-        <label class="label" for="dateInput">Date</label>
+        <label class="label" for="dateInput"><%= t('Date') %></label>
         <input
           id="dateInput"
           type="date"
@@ -63,44 +63,24 @@
         />
       </div>
       <div>
-        <label class="label" for="timeInput">Time</label>
+        <label class="label" for="timeInput"><%= t('Time') %></label>
         <select id="timeInput" name="time" required>
-          <option value="">Select Time</option>
+          <option value=""><%= t('Select Time') %></option>
 
           <%
-            const times = [
-              ['10:00', '10:00 AM'],
-              ['10:15', '10:15 AM'],
-              ['10:30', '10:30 AM'],
-              ['10:45', '10:45 AM'],
-              ['11:00', '11:00 AM'],
-              ['11:15', '11:15 AM'],
-              ['11:30', '11:30 AM'],
-              ['11:45', '11:45 AM'],
-              ['12:00', '12:00 PM'],
-              ['12:15', '12:15 PM'],
-              ['12:30', '12:30 PM'],
-              ['12:45', '12:45 PM'],
-              ['13:00', '1:00 PM'],
-              ['13:15', '1:15 PM'],
-              ['13:30', '1:30 PM'],
-              ['13:45', '1:45 PM'],
-              ['14:00', '2:00 PM'],
-              ['14:15', '2:15 PM'],
-              ['14:30', '2:30 PM'],
-              ['14:45', '2:45 PM'],
-              ['15:00', '3:00 PM'],
-              ['15:15', '3:15 PM'],
-              ['15:30', '3:30 PM'],
-              ['15:45', '3:45 PM'],
-              ['16:00', '4:00 PM'],
-              ['16:15', '4:15 PM'],
-              ['16:30', '4:30 PM'],
-              ['16:45', '4:45 PM'],
-              ['17:00', '5:00 PM'],
-              ['17:15', '5:15 PM'],
-              ['17:30', '5:30 PM']
-            ];
+            const timeValues = [];
+            for (let minutes = 10 * 60; minutes <= 17 * 60 + 30; minutes += 15) {
+              timeValues.push(`${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`);
+            }
+            const times = timeValues.map(value => {
+              const [hours, minutes] = value.split(':').map(Number);
+              const display = new Intl.DateTimeFormat(locale, {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: lang === 'en'
+              }).format(new Date(2000, 0, 1, hours, minutes));
+              return [value, display];
+            });
           %>
 
           <% times.forEach(t => { %>
@@ -114,15 +94,15 @@
 
     <textarea
       name="message"
-      placeholder="Additional Info (optional)"
+      placeholder="<%= t('Additional Info (optional)') %>"
     ><%= typeof message !== 'undefined' ? message : '' %></textarea>
 
-    <button type="submit" class="btn btn-primary btn-block">Book appointment</button>
+    <button type="submit" class="btn btn-primary btn-block"><%= t('Book appointment') %></button>
   </form>
 
   <% if (success) { %>
     <div class="success-popup" id="successPopup">
-      Booking confirmed!
+      <%= t('Booking confirmed!') %>
     </div>
     <script>
       setTimeout(() => {
@@ -139,7 +119,7 @@
       dateInput.addEventListener('input', () => {
         const picked = new Date(dateInput.value);
         if (picked.getDay() === 0) {
-          alert("We're closed on Sundays. Please choose another day.");
+          alert(<%- JSON.stringify(t('We are closed on Sundays. Please choose another day.')) %>);
           dateInput.value = '';
         }
       });

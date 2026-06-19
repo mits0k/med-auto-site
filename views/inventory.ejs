@@ -1,47 +1,47 @@
 <%- include('partials/header') %>
 <section class="container stack-l inventory-page">
   <header class="page-heading">
-    <span class="section-eyebrow">Available vehicles</span>
-    <h1>Inventory</h1>
-    <p>Browse our current selection of pre-owned vehicles.</p>
+    <span class="section-eyebrow"><%= t('Available vehicles') %></span>
+    <h1><%= t('Inventory') %></h1>
+    <p><%= t('Browse our current selection of pre-owned vehicles.') %></p>
   </header>
 
   <form method="GET" action="/inventory" class="inventory-filters">
-    <label><span>Make</span><select name="make">
-      <option value="all" <%= selectedMake === 'all' ? 'selected' : '' %>>All Makes</option>
+    <label><span><%= t('Make') %></span><select name="make">
+      <option value="all" <%= selectedMake === 'all' ? 'selected' : '' %>><%= t('All Makes') %></option>
       <% makes.forEach(m => { %>
         <option value="<%= m %>" <%= selectedMake === m ? 'selected' : '' %>><%= m %></option>
       <% }) %>
     </select></label>
 
-    <label><span>Year</span><select name="year">
-      <option value="all" <%= selectedYear === 'all' ? 'selected' : '' %>>All Years</option>
+    <label><span><%= t('Year') %></span><select name="year">
+      <option value="all" <%= selectedYear === 'all' ? 'selected' : '' %>><%= t('All Years') %></option>
       <% years.sort((a,b)=>b-a).forEach(y => { %>
         <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
       <% }) %>
     </select></label>
 
-    <label><span>Sort</span><select name="sort">
-      <option value="">Sort By</option>
-      <option value="price-asc"  <%= selectedSort === 'price-asc'  ? 'selected' : '' %>>Price: Low to High</option>
-      <option value="price-desc" <%= selectedSort === 'price-desc' ? 'selected' : '' %>>Price: High to Low</option>
-      <option value="year-asc"   <%= selectedSort === 'year-asc'   ? 'selected' : '' %>>Year: Oldest</option>
-      <option value="year-desc"  <%= selectedSort === 'year-desc'  ? 'selected' : '' %>>Year: Newest</option>
+    <label><span><%= t('Sort') %></span><select name="sort">
+      <option value=""><%= t('Sort By') %></option>
+      <option value="price-asc"  <%= selectedSort === 'price-asc'  ? 'selected' : '' %>><%= t('Price: Low to High') %></option>
+      <option value="price-desc" <%= selectedSort === 'price-desc' ? 'selected' : '' %>><%= t('Price: High to Low') %></option>
+      <option value="year-asc"   <%= selectedSort === 'year-asc'   ? 'selected' : '' %>><%= t('Year: Oldest') %></option>
+      <option value="year-desc"  <%= selectedSort === 'year-desc'  ? 'selected' : '' %>><%= t('Year: Newest') %></option>
     </select></label>
 
     <input type="hidden" name="showSold" value="<%= showSold %>" />
 
-    <button type="submit" class="btn btn-primary">Apply filters</button>
+    <button type="submit" class="btn btn-primary"><%= t('Apply filters') %></button>
 
 <a href="/inventory" class="btn btn-muted inventory-reset">
-  Reset
+  <%= t('Reset') %>
 </a>
 
 <a
   href="/inventory?make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold === 'true' ? 'false' : 'true' %>"
   class="btn <%= showSold === 'true' ? 'btn-primary' : 'btn-muted' %>"
 >
-      <%= showSold === 'true' ? 'Hide Sold Cars' : 'Show Sold Cars' %>
+      <%= showSold === 'true' ? t('Hide Sold Cars') : t('Show Sold Cars') %>
     </a>
   </form>
 
@@ -57,11 +57,11 @@
                 class="<%= car.sold ? 'is-sold-image' : '' %>"
               />
             <% } else { %>
-              <div class="vehicle-noimg">No image</div>
+              <div class="vehicle-noimg"><%= t('No image') %></div>
             <% } %>
 
             <% if (car.sold) { %>
-              <div class="sold-badge">SOLD</div>
+              <div class="sold-badge"><%= t('SOLD') %></div>
             <% } %>
           </div>
 
@@ -69,13 +69,13 @@
             <h3><%= car.year %> <%= car.make %> <%= car.model %></h3>
 
             <% if (typeof car.mileage === 'number') { %>
-              <p class="meta"><%= car.mileage.toLocaleString() %> km</p>
+              <p class="meta"><%= new Intl.NumberFormat(locale).format(car.mileage) %> km</p>
             <% } %>
 
             <% if (!car.sold && car.price && car.price > 0) { %>
-              <p class="price">$<%= car.price.toLocaleString() %></p>
+              <p class="price"><%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(car.price) %></p>
             <% } %>
-            <span class="vehicle-card-link">View details</span>
+            <span class="vehicle-card-link"><%= t('View details') %></span>
           </div>
         </a>
       <% }) %>
@@ -83,7 +83,7 @@
 
     <div class="pager">
       <% if (currentPage > 1) { %>
-        <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn">Prev</a>
+        <a href="?page=<%= currentPage - 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn"><%= t('Previous') %></a>
       <% } %>
 
       <% for (let i = 1; i <= totalPages; i++) { %>
@@ -91,11 +91,11 @@
       <% } %>
 
       <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn">Next</a>
+        <a href="?page=<%= currentPage + 1 %>&make=<%= selectedMake %>&year=<%= selectedYear %>&sort=<%= selectedSort %>&showSold=<%= showSold %>" class="pagination-btn"><%= t('Next') %></a>
       <% } %>
     </div>
   <% } else { %>
-    <p>No cars match your filter.</p>
+    <p><%= t('No cars match your filter.') %></p>
   <% } %>
 </section>
 <%- include('partials/footer') %>

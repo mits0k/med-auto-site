@@ -29,7 +29,7 @@ const upload = multer({
     const ext = path.extname(file.originalname || '').toLowerCase();
 
     if (!allowed.includes(ext)) {
-      return cb(new Error('Only image files are allowed'));
+      return cb(new Error(req.t ? req.t('Only image files are allowed') : 'Only image files are allowed'));
     }
 
     cb(null, true);
@@ -129,7 +129,7 @@ router.get('/inventory', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.send('Error loading cars');
+    res.send(req.t('Error loading cars'));
   }
 });
 
@@ -137,10 +137,10 @@ router.get('/inventory', async (req, res) => {
 router.get('/inventory/:id', async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
-    if (!car) return res.status(404).send('Car not found');
+    if (!car) return res.status(404).send(req.t('Car not found'));
     res.render('car-details', { car });
   } catch (err) {
-    res.status(500).send('Server error');
+    res.status(500).send(req.t('Server error'));
   }
 });
 
@@ -173,7 +173,7 @@ router.get('/book', async (req, res) => {
     });
   } catch (e) {
     console.error('Error loading booking page:', e);
-    res.status(500).send('Server error');
+    res.status(500).send(req.t('Server error'));
   }
 });
 
@@ -196,7 +196,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Please fill in your name, email, phone, date and time.',
+        error: req.t('Please fill in your name, email, phone, date and time.'),
         name,
         email,
         phone,
@@ -214,7 +214,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Invalid date or time.',
+        error: req.t('Invalid date or time.'),
         name,
         email,
         phone,
@@ -230,7 +230,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: "We're closed on Sundays. Please choose another day.",
+        error: req.t('We are closed on Sundays. Please choose another day.'),
         name,
         email,
         phone,
@@ -248,7 +248,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Please choose a time in the future.',
+        error: req.t('Please choose a time in the future.'),
         name,
         email,
         phone,
@@ -269,7 +269,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Please choose a time between 10:00 AM and 5:30 PM.',
+        error: req.t('Please choose a time between 10:00 AM and 5:30 PM.'),
         name,
         email,
         phone,
@@ -285,7 +285,7 @@ router.post('/book', async (req, res) => {
         selectedCarId: carId || '',
         minDate,
         success: false,
-        error: 'Please choose one of the available appointment times.',
+        error: req.t('Please choose one of the available appointment times.'),
         name,
         email,
         phone,
@@ -365,7 +365,7 @@ Message: ${message || 'No message'}
       selectedCarId: '',
       minDate: '',
       success: false,
-      error: 'Error booking appointment. Please try again.',
+      error: req.t('Error booking appointment. Please try again.'),
       ...req.body
     });
   }
@@ -401,7 +401,7 @@ router.post('/trade-in', upload.array('images', 10), async (req, res) => {
     if (!name || !phone || !year || !make || !model || !mileage) {
       return res.render('trade-in', {
         success: false,
-        error: 'Please fill in all required fields.',
+        error: req.t('Please fill in all required fields.'),
         formData
       });
     }
@@ -482,7 +482,7 @@ ${message || 'No message'}
 
     res.render('trade-in', {
       success: false,
-      error: 'Something went wrong. Please try again.',
+      error: req.t('Something went wrong. Please try again.'),
       formData: req.body || {}
     });
   }

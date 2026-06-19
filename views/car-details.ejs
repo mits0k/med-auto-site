@@ -3,7 +3,7 @@
 <section class="container stack-l car-detail-page">
   <!-- Title & price -->
   <header class="car-header">
-  <span class="section-eyebrow">Vehicle details</span>
+  <span class="section-eyebrow"><%= t('Vehicle details') %></span>
   <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
 
   <div class="car-price-row">
@@ -11,13 +11,13 @@
     <% if (car.price && car.price > 0) { %>
 
       <span class="car-price">
-        $<%= car.price.toLocaleString() %>
+        <%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(car.price) %>
       </span>
 
     <% } else { %>
 
       <span class="car-price">
-        Coming Soon
+        <%= t('Coming Soon') %>
       </span>
 
     <% } %>
@@ -47,55 +47,55 @@
             class="thumb <%= i === 0 ? 'active' : '' %>"
             src="<%= img %>"
             data-index="<%= i %>"
-            alt="<%= car.make %> <%= car.model %> thumbnail <%= i+1 %>"
+            alt="<%= car.make %> <%= car.model %> <%= t('thumbnail') %> <%= i+1 %>"
           />
         <% }) %>
       </div>
     </section>
   <% } else { %>
-    <div class="no-photos">No photos uploaded</div>
+    <div class="no-photos"><%= t('No photos uploaded') %></div>
   <% } %>
 
   <!-- Specs + description -->
   <section class="desc-panel">
-    <h2>Specifications</h2>
+    <h2><%= t('Specifications') %></h2>
 
     <ul class="spec-grid">
-      <li><span>Exterior</span><strong><%= car.exteriorColor || '—' %></strong></li>
-      <li><span>Interior</span><strong><%= car.interiorColor || '—' %></strong></li>
-      <li><span>Mileage</span><strong>
+      <li><span><%= t('Exterior') %></span><strong><%= car.exteriorColor ? t(car.exteriorColor) : '—' %></strong></li>
+      <li><span><%= t('Interior') %></span><strong><%= car.interiorColor ? t(car.interiorColor) : '—' %></strong></li>
+      <li><span><%= t('Mileage') %></span><strong>
         <% if (typeof car.mileage === 'number') { %>
-          <%= car.mileage.toLocaleString() %> km
+          <%= new Intl.NumberFormat(locale).format(car.mileage) %> km
         <% } else { %>—<% } %>
       </strong></li>
-      <li><span>Engine</span><strong><%= car.engine || '—' %></strong></li>
-      <li><span>Transmission</span><strong><%= car.transmission || '—' %></strong></li>
-      <li><span>Drivetrain</span><strong><%= car.drivetrain || '—' %></strong></li>
-      <li><span>Fuel</span><strong><%= car.fuel || '—' %></strong></li>
-      <li><span>Body Style</span><strong><%= car.bodyStyle || '—' %></strong></li>
-      <li><span>VIN</span><strong><%= car.vin || '—' %></strong></li>
-      <li><span>Year</span><strong><%= car.year %></strong></li>
+      <li><span><%= t('Engine') %></span><strong><%= car.engine || '—' %></strong></li>
+      <li><span><%= t('Transmission') %></span><strong><%= car.transmission ? t(car.transmission) : '—' %></strong></li>
+      <li><span><%= t('Drivetrain') %></span><strong><%= car.drivetrain ? t(car.drivetrain) : '—' %></strong></li>
+      <li><span><%= t('Fuel') %></span><strong><%= car.fuel ? t(car.fuel) : '—' %></strong></li>
+      <li><span><%= t('Body Style') %></span><strong><%= car.bodyStyle ? t(car.bodyStyle) : '—' %></strong></li>
+      <li><span><%= t('VIN') %></span><strong><%= car.vin || '—' %></strong></li>
+      <li><span><%= t('Year') %></span><strong><%= car.year %></strong></li>
     </ul>
 
     <% if (car.description) { %>
-      <h2>Description</h2>
+      <h2><%= t('Description') %></h2>
       <div class="description"><%= car.description %></div>
     <% } %>
   </section>
 
   <div class="row car-detail-actions">
-    <a href="/book?car=<%= car._id %>" class="btn btn-primary">Book a viewing</a>
-    <a href="/inventory" class="btn btn-muted">Back to Inventory</a>
+    <a href="/book?car=<%= car._id %>" class="btn btn-primary"><%= t('Book a viewing') %></a>
+    <a href="/inventory" class="btn btn-muted"><%= t('Back to Inventory') %></a>
   </div>
 </section>
 
 <!-- Lightbox -->
 <div id="lightbox" class="lightbox">
-  <button type="button" class="close" aria-label="Close image viewer">&times;</button>
+  <button type="button" class="close" aria-label="<%= t('Close image viewer') %>">&times;</button>
   <img class="lightbox-img" src="" alt="Car image" />
   <div class="lightbox-controls">
-    <button type="button" class="prev" aria-label="Previous image">&#10094;</button>
-    <button type="button" class="next" aria-label="Next image">&#10095;</button>
+    <button type="button" class="prev" aria-label="<%= t('Previous image') %>">&#10094;</button>
+    <button type="button" class="next" aria-label="<%= t('Next image') %>">&#10095;</button>
   </div>
 </div>
 

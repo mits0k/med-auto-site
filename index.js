@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const { createTranslator } = require('./i18n');
 
 const siteRoutes = require('./routes/siteRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -43,7 +44,34 @@ app.use(session({
 
 
 app.use((req, res, next) => {
+  const requestedLanguage = ['en', 'fr'].includes(req.query.lang) ? req.query.lang : null;
+
+  if (requestedLanguage && req.method === 'GET') {
+    req.session.language = requestedLanguage;
+    const params = new URLSearchParams(req.query);
+    params.delete('lang');
+    const destination = `${req.path}${params.toString() ? `?${params}` : ''}`;
+    return req.session.save(() => res.redirect(303, destination));
+  }
+
+  const browserLanguage = String(req.headers['accept-language'] || '').toLowerCase();
+  const publicLanguage = req.session.language || (browserLanguage.startsWith('fr') ? 'fr' : 'en');
+  const isAdminPath = req.path.startsWith('/admin');
+  const language = isAdminPath ? 'en' : publicLanguage;
+  const queryFor = targetLanguage => {
+    const params = new URLSearchParams(req.query);
+    params.set('lang', targetLanguage);
+    return `${req.path}?${params}`;
+  };
+
   res.locals.session = req.session;
+  res.locals.lang = language;
+  res.locals.locale = language === 'fr' ? 'fr-CA' : 'en-CA';
+  res.locals.t = createTranslator(language);
+  res.locals.showLanguageSwitch = !isAdminPath;
+  res.locals.languageUrls = { en: queryFor('en'), fr: queryFor('fr') };
+  req.language = language;
+  req.t = res.locals.t;
   next();
 });
 

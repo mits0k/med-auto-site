@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MED AUTO</title>
+  <title><%= t('MED AUTO | Pre-owned vehicles in Dorval') %></title>
 
   <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@
         <span class="divider">•</span>
         <a class="topbar-link" href="https://maps.google.com/?q=2046+Avenue+Chartier,+Dorval,+QC+H9P+1H2" target="_blank" rel="noopener">
           <span class="addr-long">2046 Avenue Chartier, Dorval, QC H9P 1H2</span>
-          <span class="addr-short">Directions</span>
+          <span class="addr-short"><%= t('Directions') %></span>
         </a>
       </div>
     </div>
@@ -42,34 +42,42 @@
   <!-- Main nav -->
   <header class="site-header">
     <nav class="nav container">
-      <a href="/" class="wordmark nav-wordmark" aria-label="MED AUTO Home">
+      <a href="/" class="wordmark nav-wordmark" aria-label="<%= t('MED AUTO Home') %>">
         <span class="wm-initials">MA</span>
         <span class="wm-text">
           <span class="wm-title">MED AUTO</span>
-          <span class="wm-sub">SALES &bull; FINANCING</span>
+          <span class="wm-sub"><%= t('SALES - FINANCING') %></span>
         </span>
       </a>
 
-      <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Open navigation menu">
+      <button class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="<%= t('Open navigation menu') %>" data-open-label="<%= t('Open navigation menu') %>" data-close-label="<%= t('Close navigation menu') %>">
         <span class="nav-toggle-icon" aria-hidden="true">
           <span></span>
           <span></span>
           <span></span>
         </span>
-        <span class="nav-toggle-label">Menu</span>
+        <span class="nav-toggle-label"><%= t('Menu') %></span>
       </button>
 
       <ul id="primary-nav" class="nav-links">
-        <li><a href="/">Home</a></li>
-        <li><a href="/inventory">Inventory</a></li>
-        <li><a href="/trade-in">Sell Your Car</a></li>
-        <li><a href="/book">Booking</a></li>
-        <li><a href="/contact">Contact</a></li>
+        <li><a href="/"><%= t('Home') %></a></li>
+        <li><a href="/inventory"><%= t('Inventory') %></a></li>
+        <li><a href="/trade-in"><%= t('Sell Your Car') %></a></li>
+        <li><a href="/book"><%= t('Booking') %></a></li>
+        <li><a href="/contact"><%= t('Contact') %></a></li>
 
         <% if (typeof session !== 'undefined' && session.admin) { %>
-          <li><a href="/admin/dashboard">Admin</a></li>
+          <li><a href="/admin/dashboard"><%= t('Admin') %></a></li>
         <% } %>
       </ul>
+
+      <% if (showLanguageSwitch) { %>
+        <div class="language-switch" aria-label="Language / Langue">
+          <a href="<%= languageUrls.en %>" lang="en" class="<%= lang === 'en' ? 'active' : '' %>" <%= lang === 'en' ? 'aria-current="true"' : '' %>>EN</a>
+          <span aria-hidden="true">/</span>
+          <a href="<%= languageUrls.fr %>" lang="fr" class="<%= lang === 'fr' ? 'active' : '' %>" <%= lang === 'fr' ? 'aria-current="true"' : '' %>>FR</a>
+        </div>
+      <% } %>
     </nav>
   </header>
 

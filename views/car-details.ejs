@@ -29,13 +29,14 @@
   <% if (car.images && car.images.length) { %>
     <section class="gallery">
       <!-- Main / hero image -->
-      <div class="gallery-main">
+      <div class="gallery-main" data-empty-label="<%= t('No photos uploaded') %>">
         <img
           id="mainImage"
           class="gallery-img"
           src="<%= car.images[0] %>"
           data-index="0"
           alt="<%= car.make %> <%= car.model %> main"
+          onerror="this.style.display='none';this.parentElement.classList.add('image-missing')"
         />
       </div>
 
@@ -48,6 +49,7 @@
             src="<%= img %>"
             data-index="<%= i %>"
             alt="<%= car.make %> <%= car.model %> <%= t('thumbnail') %> <%= i+1 %>"
+            onerror="this.style.display='none'"
           />
         <% }) %>
       </div>

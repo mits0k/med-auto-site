@@ -51,10 +51,12 @@
         <a href="/inventory/<%= car._id %>" class="vehicle-card">
           <div class="vehicle-media">
             <% if (car.images && car.images.length > 0) { %>
+              <div class="vehicle-noimg"><%= t('No image') %></div>
               <img
                 src="<%= car.images[0] %>"
                 alt="<%= car.make %> <%= car.model %>"
                 class="<%= car.sold ? 'is-sold-image' : '' %>"
+                onerror="this.style.display='none'"
               />
             <% } else { %>
               <div class="vehicle-noimg"><%= t('No image') %></div>

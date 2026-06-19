@@ -2900,14 +2900,11 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 .contact-card a { color: #d8dde2; }
 
 .site-footer { padding: 52px 0 30px; background: #080a0c; border-color: var(--line); text-align: left; }
-.footer-inner { display: grid; grid-template-columns: 1fr auto; gap: 44px; align-items: start; }
+.footer-inner { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
 .footer-brand { display: grid; gap: 8px; }
 .footer-brand strong { color: #f2f1ed; font-family: "Manrope", sans-serif; font-size: 15px; letter-spacing: .05em; }
 .footer-brand span { color: #777f88; font-size: 12px; }
-.footer-links { display: flex; gap: 24px; }
-.footer-links a { color: #a8afb7; font-size: 12px; text-decoration: none; }
-.footer-links a:hover { color: #fff; }
-.footer-legal { grid-column: 1 / -1; margin: 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.07); color: #656d76; font-size: 11px; }
+.footer-legal { margin: 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.07); color: #656d76; font-size: 11px; }
 
 @media (max-width: 1024px) {
   .vehicle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2969,9 +2966,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   .booking-date-row { grid-template-columns: 1fr; }
   .contact-page { padding-top: 45px; padding-bottom: 70px; }
   .contact-cards { grid-template-columns: 1fr; }
-  .footer-inner { grid-template-columns: 1fr; gap: 28px; }
-  .footer-links { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
-  .footer-legal { grid-column: 1; }
+  .footer-inner { gap: 22px; }
 }
 
 @media (max-width: 420px) {
@@ -3162,7 +3157,6 @@ textarea:focus-visible {
   .professional-form, .trade-page .form { gap: 13px; }
   .car-detail-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
   .car-detail-actions .btn { width: 100%; text-align: center; }
-  .footer-links a { min-height: 40px; display: inline-flex; align-items: center; }
 }
 
 @media (max-width: 600px) {

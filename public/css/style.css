@@ -3192,6 +3192,14 @@ textarea:focus-visible {
 
 /* Desktop homepage framing: keep the hero and warranty aligned with site content. */
 @media (min-width: 1025px) {
+  .site-header .nav.container,
+  .topbar .topbar-inner.container {
+    width: min(1440px, calc(100% - 80px));
+    max-width: 1440px;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
   .billboard.home-hero {
     width: min(1440px, calc(100% - 80px));
     min-height: 620px;

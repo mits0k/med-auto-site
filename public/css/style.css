@@ -3143,11 +3143,49 @@ textarea:focus-visible {
 }
 .home-inventory-section { padding-top: 72px; padding-bottom: 82px; }
 
+.warranty-band {
+  border-top: 1px solid rgba(141, 178, 213, .2);
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  background: linear-gradient(90deg, #0d1116, #111820 55%, #0d1116);
+}
+.warranty-band-inner {
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+}
+.warranty-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(141, 178, 213, .28);
+  border-radius: 50%;
+  color: #8db2d5;
+  background: rgba(141, 178, 213, .06);
+}
+.warranty-mark svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.warranty-copy { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(320px, 1.2fr); align-items: center; gap: 26px; }
+.warranty-copy h2 { margin: 0; color: #f2f4f6; font-size: 17px; line-height: 1.35; letter-spacing: -.01em; }
+.warranty-copy p { margin: 0; color: #949da7; font-size: 14px; line-height: 1.55; }
+.warranty-link {
+  color: #dbe8f3;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(141, 178, 213, .55);
+  white-space: nowrap;
+}
+.warranty-link:hover { color: #fff; border-color: #fff; }
+
 @media (max-width: 900px) {
   .home-hero { min-height: 570px; }
   .home-hero .bb-copy { max-width: 540px; padding: 62px 0 110px; }
   .home-hero .bb-copy h1 { font-size: clamp(42px, 7vw, 56px); }
   .home-inventory-section { padding-top: 60px; padding-bottom: 70px; }
+  .warranty-copy { grid-template-columns: 1fr; gap: 5px; }
 }
 
 @media (max-width: 768px) {
@@ -3194,6 +3232,12 @@ textarea:focus-visible {
   .home-inventory-section { display: block; padding-top: 48px; padding-bottom: 56px; }
   .home-inventory-section .section-heading { margin-bottom: 22px; }
   .spotlight-caption { padding: 16px; }
+  .warranty-band-inner { min-height: 0; grid-template-columns: auto 1fr; gap: 14px; padding-top: 22px; padding-bottom: 22px; }
+  .warranty-mark { width: 40px; height: 40px; }
+  .warranty-copy { gap: 4px; }
+  .warranty-copy h2 { font-size: 15px; }
+  .warranty-copy p { font-size: 12px; line-height: 1.5; }
+  .warranty-link { grid-column: 2; justify-self: start; margin-top: 2px; }
 }
 
 @media (max-width: 380px) {

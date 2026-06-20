@@ -882,14 +882,16 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 /* === Booking inputs: visible calendar/clock icons on dark === */
 .booking-page input[type="date"],
 .booking-page input[type="time"] {
-  background: #131822;
+  height: 48px;
+  box-sizing: border-box;
+  background: #0c0f12;
   color: var(--text);
-  border: 1px solid rgba(255,255,255,.22);
-  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 4px;
   padding: 12px 14px;
-  padding-right: 42px;              /* room for the icon */
+  padding-right: 42px;
   font-size: 16px;
-  line-height: 1.2;
+  line-height: 1.4;
   width: 100%;
   color-scheme: dark;
   appearance: auto;
@@ -931,12 +933,12 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 /* Hover/focus polish */
 .booking-page input[type="date"]:hover,
 .booking-page input[type="time"]:hover {
-  border-color: rgba(255,255,255,.35);
+  border-color: rgba(255,255,255,.22);
 }
 .booking-page input[type="date"]:focus,
 .booking-page input[type="time"]:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 4px rgba(79,140,255,.18);
+  border-color: #6f96bb;
+  box-shadow: 0 0 0 3px rgba(72,119,167,.16);
   outline: none;
 }
 
@@ -944,8 +946,9 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 @media (max-width: 768px) {
   .booking-page input[type="date"],
   .booking-page input[type="time"] {
-    padding-right: 46px;
-    font-size: 17px;
+    height: 48px;
+    padding-right: 42px;
+    font-size: 16px;
   }
 }
 
@@ -2903,6 +2906,13 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="date"], 
   border-radius: 4px;
   border-color: rgba(255,255,255,.14);
   background: #0c0f12;
+}
+.professional-form input:not([type="hidden"]):not([type="file"]),
+.professional-form select,
+.trade-page .form input:not([type="hidden"]):not([type="file"]),
+.trade-page .form select {
+  min-height: 48px;
+  box-sizing: border-box;
 }
 input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0 0 0 3px rgba(72,119,167,.16); }
 .success-popup { border-radius: 4px; box-shadow: none; }

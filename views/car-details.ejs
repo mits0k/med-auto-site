@@ -1,34 +1,9 @@
 <%- include('partials/header') %>
 
 <section class="container stack-l car-detail-page">
-  <!-- Title & price -->
-  <header class="car-header">
-  <span class="section-eyebrow"><%= t('Vehicle details') %></span>
-  <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
-
-  <div class="car-price-row">
-
-    <% if (car.price && car.price > 0) { %>
-
-      <span class="car-price">
-        <%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(car.price) %>
-      </span>
-
-    <% } else { %>
-
-      <span class="car-price">
-        <%= t('Coming Soon') %>
-      </span>
-
-    <% } %>
-
-  </div>
-</header>
-
-  <!-- Gallery -->
-  <% if (car.images && car.images.length) { %>
-    <section class="gallery">
-      <!-- Main / hero image -->
+  <div class="car-detail-hero">
+    <% if (car.images && car.images.length) { %>
+    <section class="gallery" aria-label="<%= t('Vehicle photos') %>">
       <div class="gallery-main" data-empty-label="<%= t('No photos uploaded') %>">
         <img
           id="mainImage"
@@ -38,25 +13,54 @@
           alt="<%= car.make %> <%= car.model %> main"
           onerror="this.style.display='none';this.parentElement.classList.add('image-missing')"
         />
+        <% if (car.images.length > 1) { %>
+          <button type="button" class="gallery-nav gallery-prev" aria-label="<%= t('Previous image') %>">&#10094;</button>
+          <button type="button" class="gallery-nav gallery-next" aria-label="<%= t('Next image') %>">&#10095;</button>
+        <% } %>
+        <div class="gallery-status">
+          <span id="galleryCounter" aria-live="polite"><%= t('Photo') %> 1 / <%= car.images.length %></span>
+          <button type="button" class="gallery-expand" aria-label="<%= t('Open full-screen gallery') %>">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" /></svg>
+            <span><%= t('View full screen') %></span>
+          </button>
+        </div>
       </div>
 
-      <!-- Thumbnail strip -->
-      <div class="thumb-strip" role="list">
+      <div class="thumb-strip" role="list" aria-label="<%= t('Choose a photo') %>">
         <% car.images.forEach((img, i) => { %>
-          <img
-            role="listitem"
-            class="thumb <%= i === 0 ? 'active' : '' %>"
-            src="<%= img %>"
-            data-index="<%= i %>"
-            alt="<%= car.make %> <%= car.model %> <%= t('thumbnail') %> <%= i+1 %>"
-            onerror="this.style.display='none'"
-          />
+          <button type="button" class="thumb-button" role="listitem" aria-label="<%= t('Photo') %> <%= i + 1 %>">
+            <img
+              class="thumb <%= i === 0 ? 'active' : '' %>"
+              src="<%= img %>"
+              data-index="<%= i %>"
+              alt="<%= car.make %> <%= car.model %> <%= t('thumbnail') %> <%= i+1 %>"
+              onerror="this.style.display='none'"
+            />
+          </button>
         <% }) %>
       </div>
     </section>
-  <% } else { %>
-    <div class="no-photos"><%= t('No photos uploaded') %></div>
-  <% } %>
+    <% } else { %>
+      <div class="no-photos"><%= t('No photos uploaded') %></div>
+    <% } %>
+
+    <aside class="car-summary">
+      <span class="section-eyebrow"><%= t('Vehicle details') %></span>
+      <h1 class="car-title"><%= car.year %> <%= car.make %> <%= car.model %></h1>
+      <div class="car-price-row">
+        <% if (car.price && car.price > 0) { %>
+          <span class="car-price"><%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(car.price) %></span>
+        <% } else { %>
+          <span class="car-price"><%= t('Coming Soon') %></span>
+        <% } %>
+      </div>
+      <p class="car-summary-note"><%= t('Interested in this vehicle? Book a private viewing with our team.') %></p>
+      <div class="car-summary-actions">
+        <a href="/book?car=<%= car._id %>" class="btn btn-primary"><%= t('Book a viewing') %></a>
+        <a href="/contact" class="btn btn-secondary"><%= t('Contact our team') %></a>
+      </div>
+    </aside>
+  </div>
 
   <!-- Specs + description -->
   <section class="desc-panel">
@@ -85,16 +89,22 @@
     <% } %>
   </section>
 
-  <div class="row car-detail-actions">
-    <a href="/book?car=<%= car._id %>" class="btn btn-primary"><%= t('Book a viewing') %></a>
-    <a href="/inventory" class="btn btn-muted"><%= t('Back to Inventory') %></a>
-  </div>
+  <section class="car-mobile-cta" aria-label="<%= t('Viewing options') %>">
+    <p><%= t('Interested in this vehicle? Book a private viewing with our team.') %></p>
+    <div class="car-mobile-cta-actions">
+      <a href="/book?car=<%= car._id %>" class="btn btn-primary"><%= t('Book a viewing') %></a>
+      <a href="/contact" class="btn btn-secondary"><%= t('Contact our team') %></a>
+    </div>
+  </section>
+
+  <div class="row car-detail-actions"><a href="/inventory" class="section-link"><%= t('Back to Inventory') %></a></div>
 </section>
 
 <!-- Lightbox -->
 <div id="lightbox" class="lightbox">
   <button type="button" class="close" aria-label="<%= t('Close image viewer') %>">&times;</button>
   <img class="lightbox-img" src="" alt="Car image" />
+  <span class="lightbox-counter" aria-live="polite"></span>
   <div class="lightbox-controls">
     <button type="button" class="prev" aria-label="<%= t('Previous image') %>">&#10094;</button>
     <button type="button" class="next" aria-label="<%= t('Next image') %>">&#10095;</button>

@@ -3202,17 +3202,23 @@ textarea:focus-visible {
 
   .billboard.home-hero {
     width: min(1440px, calc(100% - 80px));
-    min-height: 620px;
+    min-height: clamp(540px, 58vh, 600px);
     margin: 32px auto 0;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, .1);
     border-bottom: 0;
     border-radius: 8px 8px 0 0;
   }
-  .home-hero .billboard-inner { min-height: 620px; }
-  .home-hero .bb-copy { max-width: 640px; padding: 72px 0; }
-  .home-hero .bb-copy h1 { max-width: 640px; font-size: clamp(48px, 4.2vw, 64px); }
-  .home-hero .bb-sub { max-width: 510px; font-size: 17px; }
+  .home-hero .billboard-inner {
+    width: 100%;
+    max-width: none;
+    min-height: clamp(540px, 58vh, 600px);
+    padding-right: 80px;
+    padding-left: 80px;
+  }
+  .home-hero .bb-copy { max-width: 610px; padding: 64px 0; }
+  .home-hero .bb-copy h1 { max-width: 610px; font-size: clamp(48px, 4vw, 62px); }
+  .home-hero .bb-sub { max-width: 490px; font-size: 16px; }
   .home-hero .hero-actions { gap: 12px; }
   .home-hero .hero-actions .btn { min-width: 160px; }
 
@@ -3223,9 +3229,15 @@ textarea:focus-visible {
     border-left: 1px solid rgba(255, 255, 255, .1);
     border-radius: 0 0 8px 8px;
   }
-  .warranty-band-inner { min-height: 100px; }
-  .warranty-mark { width: 44px; height: 44px; }
-  .warranty-copy { grid-template-columns: minmax(230px, .75fr) minmax(360px, 1.25fr); gap: 22px; }
+  .warranty-band-inner {
+    width: 100%;
+    max-width: none;
+    min-height: 88px;
+    padding-right: 64px;
+    padding-left: 64px;
+  }
+  .warranty-mark { width: 42px; height: 42px; }
+  .warranty-copy { max-width: 900px; grid-template-columns: minmax(250px, .75fr) minmax(390px, 1.25fr); gap: 22px; }
   .warranty-copy h2 { font-size: 16px; }
   .warranty-copy p { font-size: 13px; }
 }

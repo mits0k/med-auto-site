@@ -3416,6 +3416,37 @@ textarea:focus-visible {
   .car-detail-actions .section-link { flex: 0 0 auto; }
 }
 
+@media (min-width: 700px) and (max-width: 768px) and (orientation: portrait) {
+  .site-header .nav.container {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    column-gap: 12px;
+    justify-content: normal;
+  }
+  .nav-wordmark { grid-column: 1; margin-right: 0; }
+  .language-switch {
+    grid-column: 3;
+    justify-self: end;
+    margin-right: 8px;
+    margin-left: 0;
+  }
+  .nav-toggle {
+    grid-column: 4;
+    justify-self: end;
+    margin-left: 0;
+  }
+  .nav-links { grid-column: 1 / -1; }
+
+  .home-hero .billboard-inner { align-items: center; }
+  .billboard.home-hero .bb-copy,
+  .home-hero .bb-copy {
+    max-width: 610px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .billboard.home-hero,
   .home-hero .billboard-inner { min-height: clamp(425px, calc(100svh - 250px), 510px); }

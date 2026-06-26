@@ -11,6 +11,12 @@ const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
 
+const displaySort = {
+  sold: 1,
+  displayOrder: 1,
+  createdAt: -1
+};
+
 let resend = null;
 
 if (process.env.RESEND_API_KEY) {
@@ -63,7 +69,17 @@ async function processAndSaveTradeImage(fileBuffer) {
 // Home
 router.get('/', async (req, res) => {
   try {
-    const featuredCar = await Car.findOne().sort({ _id: -1 }).lean();
+    let featuredCar = await Car.findOne({
+      isFeatured: true,
+      sold: { $ne: true }
+    }).sort(displaySort).lean();
+
+    if (!featuredCar) {
+      featuredCar = await Car.findOne({ sold: { $ne: true } })
+        .sort(displaySort)
+        .lean();
+    }
+
     res.render('index', { featuredCar: featuredCar || null });
   } catch (e) {
     console.error('Error loading featured car:', e);
@@ -89,18 +105,16 @@ router.get('/inventory', async (req, res) => {
       filter.sold = { $ne: true };
     }
 
-    let sortOption = { sold: 1 };
+    let sortOption = displaySort;
 
     if (sort === 'price-asc') {
-      sortOption.price = 1;
+      sortOption = { sold: 1, price: 1, displayOrder: 1, createdAt: -1 };
     } else if (sort === 'price-desc') {
-      sortOption.price = -1;
+      sortOption = { sold: 1, price: -1, displayOrder: 1, createdAt: -1 };
     } else if (sort === 'year-asc') {
-      sortOption.year = 1;
+      sortOption = { sold: 1, year: 1, displayOrder: 1, createdAt: -1 };
     } else if (sort === 'year-desc') {
-      sortOption.year = -1;
-    } else {
-      sortOption.createdAt = -1;
+      sortOption = { sold: 1, year: -1, displayOrder: 1, createdAt: -1 };
     }
 
     const totalCars = await Car.countDocuments(filter);
@@ -148,7 +162,7 @@ router.get('/inventory/:id', async (req, res) => {
 router.get('/book', async (req, res) => {
   try {
     const cars = await Car.find({ sold: { $ne: true } })
-      .sort({ createdAt: -1 })
+      .sort(displaySort)
       .select('_id make model year')
       .lean();
 
@@ -182,7 +196,7 @@ router.post('/book', async (req, res) => {
     const { name, email, phone, date, time, message, carId } = req.body;
 
     const cars = await Car.find({ sold: { $ne: true } })
-      .sort({ createdAt: -1 })
+      .sort(displaySort)
       .select('_id make model year')
       .lean();
 

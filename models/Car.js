@@ -26,6 +26,16 @@ const carSchema = new mongoose.Schema({
   bodyStyle: String,
   vin: String,
 
+  displayOrder: {
+    type: Number,
+    default: 0
+  },
+
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+
   images: [String]
 }, { timestamps: true });
 

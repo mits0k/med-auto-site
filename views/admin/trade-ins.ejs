@@ -1,232 +1,168 @@
 <%- include('../partials/header') %>
 
-<section class="container stack-l admin-page">
-  <h1>Trade-In Requests</h1>
+<%
+  const newCount = tradeIns.filter(t => !t.status || t.status === 'New').length;
+  const contactedCount = tradeIns.filter(t => t.status === 'Contacted').length;
+  const closedCount = tradeIns.filter(t => t.status === 'Closed').length;
+%>
+
+<section class="container admin-shell admin-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Purchase Pipeline</span>
+      <h1>Trade-In Requests</h1>
+      <p>Track customer vehicles, photos, asking prices, and follow-up status.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/dashboard" class="btn btn-secondary">Dashboard</a>
+      <a href="/admin/appointments" class="btn btn-secondary">Appointments</a>
+    </div>
+  </div>
+
+  <div class="admin-stats" aria-label="Trade-in summary">
+    <div class="admin-stat">
+      <span>New</span>
+      <strong><%= newCount %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Contacted</span>
+      <strong><%= contactedCount %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Closed</span>
+      <strong><%= closedCount %></strong>
+    </div>
+  </div>
 
   <% if (tradeIns.length > 0) { %>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Vehicle</th>
-          <th>Details</th>
-          <th>Status</th>
-          <th>Photos</th>
-          <th>Message</th>
-          <th style="width:220px;">Actions</th>
-        </tr>
-      </thead>
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>Trade-In Pipeline</h2>
+          <p>Newest requests are shown first so fresh leads stay easy to spot.</p>
+        </div>
+      </div>
 
-      <tbody>
+      <div class="admin-table-wrap">
+        <table class="admin-table admin-trade-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Vehicle</th>
+              <th>Details</th>
+              <th>Status</th>
+              <th>Photos</th>
+              <th>Message</th>
+              <th class="admin-actions-col">Actions</th>
+            </tr>
+          </thead>
 
-        <% tradeIns.forEach(t => { %>
+          <tbody>
+            <% tradeIns.forEach(t => { %>
+              <tr>
+                <td>
+                  <strong><%= t.name %></strong>
+                  <span class="admin-cell-meta"><%= t.email || 'No email' %></span>
+                  <span class="admin-cell-meta"><%= t.phone %></span>
+                </td>
 
-          <tr>
+                <td>
+                  <strong><%= t.year %> <%= t.make %> <%= t.model %></strong>
+                  <span class="admin-cell-meta">
+                    <% if (typeof t.mileage === 'number') { %>
+                      <%= t.mileage.toLocaleString() %> km
+                    <% } else { %>
+                      Mileage unavailable
+                    <% } %>
+                  </span>
+                  <span class="admin-cell-meta">VIN: <%= t.vin || 'N/A' %></span>
+                </td>
 
-            <td>
-              <strong><%= t.name %></strong>
+                <td>
+                  <span class="admin-cell-meta">Condition: <%= t.condition || 'N/A' %></span>
+                  <span class="admin-cell-meta">
+                    Asking:
+                    <% if (typeof t.askingPrice === 'number') { %>
+                      $<%= t.askingPrice.toLocaleString() %>
+                    <% } else { %>
+                      N/A
+                    <% } %>
+                  </span>
+                  <span class="admin-cell-meta">
+                    Sent:
+                    <% if (t.createdAt) { %>
+                      <%= t.createdAt.toLocaleString() %>
+                    <% } else { %>
+                      N/A
+                    <% } %>
+                  </span>
+                </td>
 
-              <div>
-                <%= t.email || 'No email' %>
-              </div>
+                <td>
+                  <span class="status-badge <%= t.status === 'Closed'
+                    ? 'status-sold'
+                    : t.status === 'Contacted'
+                    ? 'status-contacted'
+                    : 'status-new' %>">
+                    <%= t.status || 'New' %>
+                  </span>
+                </td>
 
-              <div>
-                <%= t.phone %>
-              </div>
-            </td>
+                <td>
+                  <% if (t.images && t.images.length > 0) { %>
+                    <div class="trade-photo-grid">
+                      <% t.images.slice(0, 4).forEach(img => { %>
+                        <a href="<%= img %>" target="_blank" rel="noopener">
+                          <img src="<%= img %>" alt="Trade-in photo" />
+                        </a>
+                      <% }) %>
+                    </div>
+                    <% if (t.images.length > 4) { %>
+                      <span class="admin-cell-meta">+<%= t.images.length - 4 %> more</span>
+                    <% } %>
+                  <% } else { %>
+                    <span class="admin-muted">No photos</span>
+                  <% } %>
+                </td>
 
-            <td>
-              <strong>
-                <%= t.year %> <%= t.make %> <%= t.model %>
-              </strong>
+                <td class="admin-message-cell"><%= t.message || '-' %></td>
 
-              <div>
+                <td>
+                  <div class="admin-actions">
+                    <form action="/admin/trade-ins/<%= t._id %>/status" method="POST">
+                      <select name="status" onchange="this.form.submit()" aria-label="Update status">
+                        <option value="New" <%= t.status === 'New' ? 'selected' : '' %>>New</option>
+                        <option value="Contacted" <%= t.status === 'Contacted' ? 'selected' : '' %>>Contacted</option>
+                        <option value="Closed" <%= t.status === 'Closed' ? 'selected' : '' %>>Closed</option>
+                      </select>
+                    </form>
 
-                <% if (typeof t.mileage === 'number') { %>
-
-                  <%= t.mileage.toLocaleString() %> km
-
-                <% } else { %>
-
-                  —
-
-                <% } %>
-
-              </div>
-
-              <div>
-                VIN: <%= t.vin || '—' %>
-              </div>
-            </td>
-
-            <td>
-
-              <div>
-                Condition:
-                <%= t.condition || '—' %>
-              </div>
-
-              <div>
-                Asking:
-
-                <% if (typeof t.askingPrice === 'number') { %>
-
-                  $<%= t.askingPrice.toLocaleString() %>
-
-                <% } else { %>
-
-                  —
-
-                <% } %>
-
-              </div>
-
-              <div>
-                Sent:
-
-                <% if (t.createdAt) { %>
-
-                  <%= t.createdAt.toLocaleString() %>
-
-                <% } else { %>
-
-                  —
-
-                <% } %>
-
-              </div>
-
-            </td>
-
-            <td>
-
-              <span class="status-badge <%= t.status === 'Closed'
-                ? 'status-sold'
-                : t.status === 'Contacted'
-                ? 'status-contacted'
-                : 'status-new' %>">
-
-                <%= t.status || 'New' %>
-
-              </span>
-
-            </td>
-
-            <td>
-
-              <% if (t.images && t.images.length > 0) { %>
-
-                <div class="trade-photo-grid">
-
-                  <% t.images.forEach(img => { %>
-
-                    <a href="<%= img %>" target="_blank">
-
-                      <img
-                        src="<%= img %>"
-                        alt="Trade-in photo"
-                      />
-
-                    </a>
-
-                  <% }) %>
-
-                </div>
-
-              <% } else { %>
-
-                —
-
-              <% } %>
-
-            </td>
-
-            <td style="max-width:280px; white-space:normal;">
-
-              <%= t.message || '-' %>
-
-            </td>
-
-            <td>
-
-              <div class="row">
-
-                <form
-                  action="/admin/trade-ins/<%= t._id %>/status"
-                  method="POST"
-                >
-
-                  <select
-                    name="status"
-                    onchange="this.form.submit()"
-                  >
-
-                    <option
-                      value="New"
-                      <%= t.status === 'New' ? 'selected' : '' %>
+                    <form
+                      action="/admin/trade-ins/<%= t._id %>/delete"
+                      method="POST"
+                      onsubmit="return confirm('Delete this trade-in request?');"
                     >
-                      New
-                    </option>
-
-                    <option
-                      value="Contacted"
-                      <%= t.status === 'Contacted' ? 'selected' : '' %>
-                    >
-                      Contacted
-                    </option>
-
-                    <option
-                      value="Closed"
-                      <%= t.status === 'Closed' ? 'selected' : '' %>
-                    >
-                      Closed
-                    </option>
-
-                  </select>
-
-                </form>
-
-                <form
-                  action="/admin/trade-ins/<%= t._id %>/delete"
-                  method="POST"
-                  onsubmit="return confirm('Delete this trade-in request?');"
-                >
-
-                  <button
-                    type="submit"
-                    class="btn btn-danger"
-                  >
-                    Delete
-                  </button>
-
-                </form>
-
-              </div>
-
-            </td>
-
-          </tr>
-
-        <% }) %>
-
-      </tbody>
-    </table>
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   <% } else { %>
 
-    <p>No trade-in requests found.</p>
+    <div class="admin-empty">
+      <h2>No trade-in requests found</h2>
+      <p>New trade-in submissions will appear here with customer and vehicle details.</p>
+    </div>
 
   <% } %>
-
-  <div class="row">
-    <a
-      href="/admin/dashboard"
-      class="btn btn-muted"
-    >
-      ← Back to Dashboard
-    </a>
-  </div>
 
 </section>
 

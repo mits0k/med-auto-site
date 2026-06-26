@@ -1,54 +1,84 @@
 <%- include('../partials/header') %>
 
-<section class="container stack-l admin-page">
-  <h1>Manage Appointments</h1>
+<section class="container admin-shell admin-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Customer Requests</span>
+      <h1>Appointments</h1>
+      <p>Review test drive and visit requests submitted from the website.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/dashboard" class="btn btn-secondary">Dashboard</a>
+      <a href="/admin/trade-ins" class="btn btn-secondary">Trade-Ins</a>
+    </div>
+  </div>
+
+  <div class="admin-stats" aria-label="Appointment summary">
+    <div class="admin-stat">
+      <span>Total Requests</span>
+      <strong><%= appointments.length %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>With Vehicle</span>
+      <strong><%= appointments.filter(a => a.carLabel).length %></strong>
+    </div>
+  </div>
 
   <% if (appointments.length > 0) { %>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Contact</th>
-          <th>Car</th>
-          <th>Date & Time</th>
-          <th>Message</th>
-          <th style="width:120px">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% appointments.forEach(a => { %>
-          <tr>
-            <td><strong><%= a.name %></strong></td>
-            <td>
-              <div><%= a.email %></div>
-              <div><%= a.phone %></div>
-            </td>
-            <td>
-              <% if (a.carLabel) { %>
-                <%= a.carLabel %>
-              <% } else { %>
-                —
-              <% } %>
-            </td>
-            <td><%= a.date.toLocaleString() %></td>
-            <td style="max-width:280px;"><%= a.message || '-' %></td>
-            <td>
-              <form action="/admin/appointments/<%= a._id %>/delete" method="POST"
-                    onsubmit="return confirm('Delete this appointment?');">
-                <button type="submit" class="btn btn-danger">Delete</button>
-              </form>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  <% } else { %>
-    <p>No appointments found.</p>
-  <% } %>
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>Appointment List</h2>
+          <p>Most recent requested times are shown first.</p>
+        </div>
+      </div>
 
-  <div class="row">
-    <a href="/admin/dashboard" class="btn btn-muted">← Back to Dashboard</a>
-  </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Vehicle</th>
+              <th>Date & Time</th>
+              <th>Message</th>
+              <th class="admin-actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% appointments.forEach(a => { %>
+              <tr>
+                <td>
+                  <strong><%= a.name %></strong>
+                  <span class="admin-cell-meta"><%= a.email %></span>
+                  <span class="admin-cell-meta"><%= a.phone %></span>
+                </td>
+                <td><%= a.carLabel || 'General appointment' %></td>
+                <td><strong><%= a.date.toLocaleString() %></strong></td>
+                <td class="admin-message-cell"><%= a.message || '-' %></td>
+                <td>
+                  <div class="admin-actions">
+                    <form
+                      action="/admin/appointments/<%= a._id %>/delete"
+                      method="POST"
+                      onsubmit="return confirm('Delete this appointment?');"
+                    >
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="admin-empty">
+      <h2>No appointments found</h2>
+      <p>New appointment requests will appear here as customers submit them.</p>
+    </div>
+  <% } %>
 </section>
 
 <%- include('../partials/footer') %>

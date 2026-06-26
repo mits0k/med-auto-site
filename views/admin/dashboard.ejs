@@ -1,165 +1,165 @@
 <%- include('../partials/header') %>
 
-<section class="container stack-l admin-page">
-  <h1>Admin Dashboard</h1>
+<%
+  const availableCount = cars.filter(car => !car.sold).length;
+  const soldCount = cars.length - availableCount;
+%>
 
-  <div class="row-right">
-    <a href="/admin/add-car" class="btn btn-success">
-      + Add New Car
-    </a>
+<section class="container admin-shell admin-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Inventory Manager</span>
+      <h1>Admin Dashboard</h1>
+      <p>Review your inventory, update vehicle status, and keep the public listing clean.</p>
+    </div>
 
-    <a href="/admin/appointments" class="btn btn-info">
-      Manage Appointments
-    </a>
+    <div class="admin-hero-actions">
+      <a href="/admin/add-car" class="btn btn-success">Add New Car</a>
+      <a href="/admin/appointments" class="btn btn-secondary">Appointments</a>
+      <a href="/admin/trade-ins" class="btn btn-secondary">Trade-Ins</a>
+    </div>
+  </div>
 
-    <a href="/admin/trade-ins" class="btn btn-secondary">
-      Trade-In Requests
-    </a>
+  <div class="admin-stats" aria-label="Inventory summary">
+    <div class="admin-stat">
+      <span>Total Listings</span>
+      <strong><%= cars.length %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Available</span>
+      <strong><%= availableCount %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Sold</span>
+      <strong><%= soldCount %></strong>
+    </div>
   </div>
 
   <% if (cars.length > 0) { %>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>Make</th>
-          <th>Model</th>
-          <th>Year</th>
-          <th>Price</th>
-          <th>Status</th>
-          <th style="width:320px">
-            Actions
-          </th>
-        </tr>
-      </thead>
+    <form id="inventoryOrderForm" action="/admin/cars/order" method="POST"></form>
 
-      <tbody>
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>Vehicle Listings</h2>
+          <p>Type the position number you want, then save once. Lower numbers appear first.</p>
+        </div>
 
-        <% cars.forEach(car => { %>
+        <button type="submit" form="inventoryOrderForm" class="btn btn-primary">Save Order</button>
+      </div>
 
-          <tr>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Year</th>
+              <th>Price</th>
+              <th>Display</th>
+              <th>Status</th>
+              <th class="admin-actions-col">Actions</th>
+            </tr>
+          </thead>
 
-            <td>
-              <% if (car.images && car.images.length > 0) { %>
+          <tbody>
+            <% cars.forEach((car, index) => { %>
+              <tr>
+                <td>
+                  <div class="admin-vehicle-cell">
+                    <% if (car.images && car.images.length > 0) { %>
+                      <img src="<%= car.images[0] %>" alt="<%= car.make %> <%= car.model %>" />
+                    <% } else { %>
+                      <div class="admin-table-placeholder">No image</div>
+                    <% } %>
+                    <div>
+                      <strong><%= car.make %> <%= car.model %></strong>
+                      <span><%= car.bodyStyle || car.drivetrain || 'Inventory listing' %></span>
+                    </div>
+                  </div>
+                </td>
 
-                <img
-                  src="<%= car.images[0] %>"
-                  alt="<%= car.make %>"
-                  style="
-                    width:110px;
-                    height:66px;
-                    object-fit:cover;
-                    border-radius:6px;
-                  "
-                />
+                <td><%= car.year %></td>
 
-              <% } else { %>
-
-                No image
-
-              <% } %>
-            </td>
-
-            <td><%= car.make %></td>
-
-            <td><%= car.model %></td>
-
-            <td><%= car.year %></td>
-
-            <td>
-  <% if (typeof car.price === 'number' && car.price > 0) { %>
-    $<%= car.price.toLocaleString() %>
-  <% } else { %>
-    Coming Soon
-  <% } %>
-</td>
-
-            <td>
-
-              <% if (car.sold) { %>
-
-                <span class="status-badge status-sold">
-                  Sold
-                </span>
-
-              <% } else { %>
-
-                <span class="status-badge status-available">
-                  Available
-                </span>
-
-              <% } %>
-
-            </td>
-
-            <td>
-
-              <div class="row">
-
-                <a
-                  href="/admin/cars/<%= car._id %>/edit"
-                  class="btn btn-secondary"
-                >
-                  Edit
-                </a>
-
-                <form
-                  action="/admin/cars/<%= car._id %>/toggle-sold"
-                  method="POST"
-                >
-
-                  <% if (car.sold) { %>
-
-                    <button
-                      type="submit"
-                      class="btn btn-warning"
-                    >
-                      Mark Available
-                    </button>
-
+                <td>
+                  <% if (typeof car.price === 'number' && car.price > 0) { %>
+                    <strong>$<%= car.price.toLocaleString() %></strong>
                   <% } else { %>
-
-                    <button
-                      type="submit"
-                      class="btn btn-info"
-                    >
-                      Mark Sold
-                    </button>
-
+                    <span class="admin-muted">Coming Soon</span>
                   <% } %>
+                </td>
 
-                </form>
+                <td>
+                  <div class="admin-display-cell">
+                    <label class="admin-order-label">
+                      <span>Position</span>
+                      <input
+                        form="inventoryOrderForm"
+                        class="admin-order-input"
+                        type="number"
+                        name="order[<%= car._id %>]"
+                        value="<%= index + 1 %>"
+                        min="1"
+                        step="1"
+                      />
+                    </label>
+                    <% if (car.isFeatured && !car.sold) { %>
+                      <span class="status-badge status-featured">Homepage</span>
+                    <% } %>
+                  </div>
+                </td>
 
-                <form
-                  action="/admin/cars/<%= car._id %>/delete"
-                  method="POST"
-                  onsubmit="return confirm('Delete this car?');"
-                >
+                <td>
+                  <% if (car.sold) { %>
+                    <span class="status-badge status-sold">Sold</span>
+                  <% } else { %>
+                    <span class="status-badge status-available">Available</span>
+                  <% } %>
+                </td>
 
-                  <button
-                    type="submit"
-                    class="btn btn-danger"
-                  >
-                    Delete
-                  </button>
+                <td>
+                  <div class="admin-actions">
+                    <% if (!car.sold) { %>
+                      <form action="/admin/cars/<%= car._id %>/feature" method="POST">
+                        <button type="submit" class="btn <%= car.isFeatured ? 'btn-primary' : 'btn-secondary' %>">
+                          <%= car.isFeatured ? 'Featured' : 'Feature' %>
+                        </button>
+                      </form>
+                    <% } %>
 
-                </form>
+                    <a href="/admin/cars/<%= car._id %>/edit" class="btn btn-secondary">Edit</a>
 
-              </div>
+                    <form action="/admin/cars/<%= car._id %>/toggle-sold" method="POST">
+                      <% if (car.sold) { %>
+                        <button type="submit" class="btn btn-warning">Available</button>
+                      <% } else { %>
+                        <button type="submit" class="btn btn-info">Sold</button>
+                      <% } %>
+                    </form>
 
-            </td>
-
-          </tr>
-
-        <% }) %>
-
-      </tbody>
-    </table>
+                    <form
+                      action="/admin/cars/<%= car._id %>/delete"
+                      method="POST"
+                      onsubmit="return confirm('Delete this car?');"
+                    >
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   <% } else { %>
 
-    <p>No cars available.</p>
+    <div class="admin-empty">
+      <h2>No cars available</h2>
+      <p>Add your first listing to start building the public inventory.</p>
+      <a href="/admin/add-car" class="btn btn-primary">Add New Car</a>
+    </div>
 
   <% } %>
 </section>

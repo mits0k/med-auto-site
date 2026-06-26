@@ -44,6 +44,44 @@ function isAdmin(req, res, next) {
   return res.redirect('/admin/login');
 }
 
+const displaySort = {
+  sold: 1,
+  displayOrder: 1,
+  createdAt: -1
+};
+
+async function normalizeDisplayOrder(filter = {}) {
+  const cars = await Car.find(filter).sort(displaySort);
+
+  await Promise.all(
+    cars.map((car, index) => {
+      const nextOrder = (index + 1) * 10;
+      if (typeof car.displayOrder === 'number' && car.displayOrder === nextOrder) {
+        return null;
+      }
+
+      car.displayOrder = nextOrder;
+      return car.save();
+    }).filter(Boolean)
+  );
+
+  return cars.map((car, index) => {
+    car.displayOrder = (index + 1) * 10;
+    return car;
+  });
+}
+
+async function getNextTopDisplayOrder() {
+  const firstCar = await Car.findOne({ sold: { $ne: true } })
+    .sort({ displayOrder: 1, createdAt: -1 })
+    .select('displayOrder')
+    .lean();
+
+  return typeof firstCar?.displayOrder === 'number'
+    ? firstCar.displayOrder - 10
+    : 0;
+}
+
 router.get('/', (req, res) => res.redirect('/admin/login'));
 
 // ===== LOGIN =====
@@ -106,10 +144,12 @@ router.post('/logout', (req, res) => {
 router.get('/dashboard', isAdmin, async (req, res) => {
   try {
 
-    const cars = await Car.find().sort({
-      sold: 1,
-      createdAt: -1
-    });
+    let cars = await Car.find().sort(displaySort);
+    const unorderedCount = await Car.countDocuments({ displayOrder: { $exists: false } });
+
+    if (unorderedCount > 0 || cars.some(car => typeof car.displayOrder !== 'number')) {
+      cars = await normalizeDisplayOrder();
+    }
 
     res.render('admin/dashboard', { cars });
 
@@ -323,6 +363,7 @@ router.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) =>
       year,
       price,
       sold: false,
+      displayOrder: await getNextTopDisplayOrder(),
       description,
       exteriorColor,
       interiorColor,
@@ -484,6 +525,10 @@ router.post('/cars/:id/toggle-sold', isAdmin, async (req, res) => {
 
     car.sold = !car.sold;
 
+    if (car.sold) {
+      car.isFeatured = false;
+    }
+
     await car.save();
 
     res.redirect('/admin/dashboard');
@@ -492,6 +537,122 @@ router.post('/cars/:id/toggle-sold', isAdmin, async (req, res) => {
 
     console.error(e);
     res.status(500).send('Error updating sold status');
+
+  }
+});
+
+// ===== DISPLAY ORDER =====
+router.post('/cars/order', isAdmin, async (req, res) => {
+  try {
+
+    const submittedOrder = req.body.order || {};
+    const cars = await normalizeDisplayOrder();
+
+    const requested = Object.entries(submittedOrder)
+      .map(([id, value]) => {
+        const position = parseInt(value, 10);
+        const car = cars.find(c => String(c._id) === String(id));
+        return Number.isInteger(position) && position > 0 && car
+          ? { car, position }
+          : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.position - b.position);
+
+    const requestedIds = new Set(requested.map(item => String(item.car._id)));
+    const orderedCars = cars.filter(car => !requestedIds.has(String(car._id)));
+
+    requested.forEach(item => {
+      const nextIndex = Math.min(item.position - 1, orderedCars.length);
+      orderedCars.splice(nextIndex, 0, item.car);
+    });
+
+    await Promise.all(
+      orderedCars.map((car, index) => {
+        car.displayOrder = (index + 1) * 10;
+        return car.save();
+      })
+    );
+
+    res.redirect('/admin/dashboard');
+
+  } catch (e) {
+
+    console.error(e);
+    res.status(500).send('Error saving display order');
+
+  }
+});
+
+router.post('/cars/:id/move', isAdmin, async (req, res) => {
+  try {
+
+    const targetCar = await Car.findById(req.params.id);
+
+    if (!targetCar) {
+      return res.status(404).send('Car not found');
+    }
+
+    const direction = req.body.direction === 'down' ? 'down' : 'up';
+    const cars = await normalizeDisplayOrder({ sold: targetCar.sold });
+    const index = cars.findIndex(car => String(car._id) === String(targetCar._id));
+
+    if (index === -1) {
+      return res.redirect('/admin/dashboard');
+    }
+
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (swapIndex < 0 || swapIndex >= cars.length) {
+      return res.redirect('/admin/dashboard');
+    }
+
+    const current = cars[index];
+    const swapWith = cars[swapIndex];
+    const currentOrder = current.displayOrder;
+
+    current.displayOrder = swapWith.displayOrder;
+    swapWith.displayOrder = currentOrder;
+
+    await Promise.all([
+      current.save(),
+      swapWith.save()
+    ]);
+
+    res.redirect('/admin/dashboard');
+
+  } catch (e) {
+
+    console.error(e);
+    res.status(500).send('Error updating display order');
+
+  }
+});
+
+// ===== HOMEPAGE FEATURE =====
+router.post('/cars/:id/feature', isAdmin, async (req, res) => {
+  try {
+
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    if (car.sold) {
+      return res.redirect('/admin/dashboard');
+    }
+
+    await Car.updateMany({}, { $set: { isFeatured: false } });
+    car.isFeatured = true;
+    await car.save();
+
+    res.redirect('/admin/dashboard');
+
+  } catch (e) {
+
+    console.error(e);
+    res.status(500).send('Error updating homepage feature');
 
   }
 });

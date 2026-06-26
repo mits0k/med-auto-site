@@ -427,6 +427,12 @@ body{
   border: 1px solid rgba(54, 211, 153, 0.35);
 }
 
+.status-featured{
+  background: rgba(79, 140, 255, 0.16);
+  color: #9fc0ff;
+  border: 1px solid rgba(79, 140, 255, 0.35);
+}
+
 
 /* ====== FORMS ====== */
 .form-card, .booking-page{
@@ -458,6 +464,342 @@ input:focus,textarea:focus,select:focus{border-color:var(--brand); box-shadow:0 
 table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
 th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
 thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.15));color:#fff}
+
+/* ====== ADMIN ====== */
+.admin-shell{
+  display:grid;
+  gap:18px;
+}
+
+.admin-hero{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  padding:22px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(20,24,35,.96),rgba(15,18,24,.96));
+  box-shadow:var(--shadow);
+}
+
+.admin-hero h1{
+  margin:6px 0 6px;
+  font-size:30px;
+  line-height:1.15;
+}
+
+.admin-hero p{
+  max-width:620px;
+  margin:0;
+  color:var(--muted);
+}
+
+.admin-kicker,
+.admin-form-eyebrow{
+  display:inline-block;
+  color:#9fc0ff;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.admin-hero-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.admin-stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:12px;
+}
+
+.admin-stat{
+  min-height:92px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+  background:#0c1018;
+}
+
+.admin-stat span{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+}
+
+.admin-stat strong{
+  display:block;
+  margin-top:8px;
+  color:#fff;
+  font-size:30px;
+  line-height:1;
+}
+
+.admin-panel{
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  box-shadow:var(--shadow);
+}
+
+.admin-panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px 20px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.admin-panel-header h2,
+.admin-empty h2{
+  margin:0 0 4px;
+  font-size:18px;
+}
+
+.admin-panel-header p,
+.admin-empty p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.admin-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+
+.admin-table{
+  min-width:1040px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+
+.admin-trade-table{
+  min-width:1120px;
+}
+
+.admin-table th{
+  padding:12px 16px;
+  color:#dbe5f6;
+  font-size:12px;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.admin-table td{
+  padding:14px 16px;
+  vertical-align:middle;
+}
+
+.admin-table tbody tr{
+  transition:background .15s ease;
+}
+
+.admin-table tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.admin-table tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.admin-actions-col{
+  width:390px;
+}
+
+.admin-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.admin-actions form{
+  margin:0;
+}
+
+.admin-actions .btn,
+.admin-actions select{
+  min-height:38px;
+  padding:9px 12px;
+  border-radius:8px;
+  font-size:13px;
+}
+
+.admin-actions select{
+  min-width:130px;
+}
+
+.admin-vehicle-cell{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:250px;
+}
+
+.admin-vehicle-cell img,
+.admin-table-placeholder{
+  flex:0 0 96px;
+  width:96px;
+  height:62px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.admin-vehicle-cell img{
+  display:block;
+  object-fit:cover;
+}
+
+.admin-table-placeholder{
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  background:#0b0d12;
+  font-size:12px;
+  font-weight:700;
+}
+
+.admin-vehicle-cell strong,
+.admin-table td > strong{
+  color:#fff;
+}
+
+.admin-vehicle-cell span,
+.admin-cell-meta{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.35;
+}
+
+.admin-message-cell{
+  max-width:300px;
+  color:#cbd5e1;
+  white-space:normal;
+  line-height:1.45;
+}
+
+.admin-muted{
+  color:var(--muted);
+}
+
+.admin-display-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  min-width:140px;
+}
+
+.admin-order-label{
+  display:inline-grid;
+  gap:5px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.admin-order-input{
+  width:76px;
+  min-height:38px;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:15px;
+  font-weight:800;
+  text-align:center;
+}
+
+.admin-icon-btn{
+  min-width:54px;
+}
+
+.admin-empty{
+  display:grid;
+  justify-items:start;
+  gap:10px;
+  padding:24px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  box-shadow:var(--shadow);
+}
+
+@media (max-width: 900px){
+  .admin-hero{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .admin-hero-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+}
+
+@media (max-width: 768px){
+  .admin-shell{
+    gap:14px;
+  }
+
+  .admin-hero{
+    padding:18px;
+    border-radius:12px;
+  }
+
+  .admin-hero h1{
+    font-size:26px;
+  }
+
+  .admin-hero-actions .btn{
+    flex:1 1 150px;
+    text-align:center;
+  }
+
+  .admin-stat{
+    min-height:78px;
+    padding:14px;
+  }
+
+  .admin-stat strong{
+    font-size:26px;
+  }
+
+  .admin-panel-header{
+    padding:16px;
+  }
+
+  .admin-table{
+    display:table;
+    white-space:normal;
+  }
+
+  .admin-table th,
+  .admin-table td{
+    padding:12px;
+    font-size:13px;
+  }
+
+  .admin-actions .btn,
+  .admin-actions select{
+    width:auto;
+    min-width:0;
+  }
+}
 
 /* ====== CAR DETAILS ====== */
 .car-header{margin-bottom:8px}

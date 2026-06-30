@@ -1024,6 +1024,14 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
 
 /* ====== WORDMARK ====== */
 .wordmark{display:flex; align-items:center; gap:10px; text-decoration:none; color:#e5e7eb;}
+.wm-logo{
+  display:block;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  object-fit:cover;
+  box-shadow:0 0 0 1px rgba(255,255,255,.22);
+}
 .wm-initials{
   display:inline-grid; place-items:center;
   width:34px; height:34px; border-radius:6px;
@@ -1173,6 +1181,7 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   }
 
   /* Brand lockup smaller */
+  .wm-logo{ width: 32px; height: 32px; }
   .wm-initials{ width: 28px; height: 28px; }
   .wm-title{ font-size: 12px; }
   .wm-sub{ display: none; }
@@ -3019,6 +3028,10 @@ h1, h2, h3, .wm-title {
 
 .nav { min-height: 70px; padding-top: 0; padding-bottom: 0; }
 .nav-wordmark { flex-shrink: 0; }
+.wm-logo {
+  width: 42px;
+  height: 42px;
+}
 .wm-initials {
   width: 36px;
   height: 36px;
@@ -3270,7 +3283,16 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 .site-footer { padding: 52px 0 30px; background: #080a0c; border-color: var(--line); text-align: left; }
 .footer-inner { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
-.footer-brand { display: grid; gap: 8px; }
+.footer-brand { display: flex; align-items: center; gap: 12px; }
+.footer-brand img {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.18);
+}
+.footer-brand div { display: grid; gap: 8px; }
 .footer-brand strong { color: #f2f1ed; font-family: "Manrope", sans-serif; font-size: 15px; letter-spacing: .05em; }
 .footer-brand span { color: #777f88; font-size: 12px; }
 .footer-legal { margin: 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.07); color: #656d76; font-size: 11px; }

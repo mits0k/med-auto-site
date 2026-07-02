@@ -3606,6 +3606,16 @@ textarea:focus-visible {
   .warranty-copy p { font-size: 13px; }
 }
 
+@media (min-width: 1400px) {
+  .site-header .nav.container,
+  .topbar .topbar-inner.container,
+  .billboard.home-hero,
+  .warranty-band {
+    width: min(1760px, calc(100% - 48px));
+    max-width: 1760px;
+  }
+}
+
 @media (max-width: 900px) {
   .home-hero { min-height: 570px; }
   .home-hero .bb-copy { max-width: 540px; padding: 62px 0 110px; }

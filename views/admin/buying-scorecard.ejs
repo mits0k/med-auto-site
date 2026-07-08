@@ -1,0 +1,140 @@
+<%- include('../partials/header') %>
+
+<%
+  const money = value => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+  const percent = value => `${Math.round(Number(value || 0) * 100)}%`;
+%>
+
+<section class="container admin-shell admin-page command-center-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Buying Scorecard</span>
+      <h1>Pre-Purchase Decision Tool</h1>
+      <p>Score potential inventory by gross, ROI, turn speed, and capital efficiency.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/command-center" class="btn btn-secondary">Dealer Dashboard</a>
+      <a href="/admin/command-center/weekly" class="btn btn-secondary">Weekly Actions</a>
+    </div>
+  </div>
+
+  <% if (error) { %>
+    <div class="form-alert form-alert-error"><%= error %></div>
+  <% } %>
+
+  <div class="admin-panel scorecard-layout">
+    <div>
+      <div class="admin-panel-header">
+        <div>
+          <h2>Evaluate a Car</h2>
+          <p>Fast-turning cars with clean ROI score higher than slow high-gross units.</p>
+        </div>
+      </div>
+
+      <form method="POST" action="/admin/command-center/buying-scorecard" class="form command-form">
+        <div class="form-row">
+          <div><label class="label">Year</label><input type="number" name="year" /></div>
+          <div><label class="label">Make</label><input type="text" name="make" /></div>
+        </div>
+        <div class="form-row">
+          <div><label class="label">Model</label><input type="text" name="model" /></div>
+          <div><label class="label">Trim</label><input type="text" name="trim" /></div>
+        </div>
+        <div class="form-row">
+          <div><label class="label">Mileage</label><input type="number" name="mileage" min="0" /></div>
+          <div><label class="label">Expected Days to Sell</label><input type="number" name="expectedDaysToSell" min="1" value="45" /></div>
+        </div>
+        <div class="form-row">
+          <div><label class="label">Expected Retail</label><input type="number" name="expectedRetail" min="0" step="1" /></div>
+          <div><label class="label">Proposed Purchase Price</label><input type="number" name="proposedPurchasePrice" min="0" step="1" /></div>
+        </div>
+        <div class="form-row">
+          <div><label class="label">Auction Fees</label><input type="number" name="auctionFees" min="0" step="1" /></div>
+          <div><label class="label">Transport</label><input type="number" name="transport" min="0" step="1" /></div>
+        </div>
+        <div class="form-row">
+          <div><label class="label">Estimated Recon</label><input type="number" name="estimatedRecon" min="0" step="1" /></div>
+          <div></div>
+        </div>
+        <div>
+          <label class="label">Carfax / History Notes</label>
+          <textarea name="carfaxNotes" rows="3"></textarea>
+        </div>
+        <div>
+          <label class="label">Mechanical Risk Notes</label>
+          <textarea name="mechanicalRiskNotes" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Scorecard</button>
+      </form>
+    </div>
+
+    <div class="scorecard-rules">
+      <h2>Decision Logic</h2>
+      <p>This is rule-based, not AI. The score rewards ROI and faster turns.</p>
+      <dl>
+        <dt>All-in cost</dt><dd>Purchase + fees + transport + recon</dd>
+        <dt>Expected gross</dt><dd>Retail minus all-in cost</dd>
+        <dt>Capital efficiency</dt><dd>ROI × 45 days / expected days</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Saved Scorecards</h2>
+        <p>Recent private buying evaluations.</p>
+      </div>
+    </div>
+
+    <% if (scorecards.length > 0) { %>
+      <div class="admin-table-wrap">
+        <table class="admin-table command-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Retail</th>
+              <th>All-in</th>
+              <th>Gross</th>
+              <th>ROI</th>
+              <th>Gross / Day</th>
+              <th>Score</th>
+              <th>Decision</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% scorecards.forEach(card => { const metrics = getBuyingScorecardMetrics(card); %>
+              <tr>
+                <td data-label="Vehicle">
+                  <strong><%= [card.year, card.make, card.model, card.trim].filter(Boolean).join(' ') || 'Candidate' %></strong>
+                  <span class="admin-cell-meta"><%= card.mileage ? `${card.mileage.toLocaleString()} km` : 'Mileage not set' %></span>
+                </td>
+                <td data-label="Retail"><%= money(card.expectedRetail) %></td>
+                <td data-label="All-in"><%= money(metrics.allInCost) %></td>
+                <td data-label="Gross"><%= money(metrics.expectedGross) %></td>
+                <td data-label="ROI"><%= percent(metrics.expectedRoi) %></td>
+                <td data-label="Gross / Day"><%= money(metrics.expectedGrossPerDay) %></td>
+                <td data-label="Score"><strong><%= Math.round(metrics.capitalEfficiencyScore) %></strong></td>
+                <td data-label="Decision"><span class="status-badge command-action-badge"><%= metrics.decision %></span></td>
+                <td data-label="Actions">
+                  <form action="/admin/command-center/buying-scorecard/<%= card._id %>/delete" method="POST" onsubmit="return confirm('Delete this scorecard?');">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="admin-empty">
+        <h2>No scorecards yet</h2>
+        <p>Evaluate the next possible purchase before tying up capital.</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

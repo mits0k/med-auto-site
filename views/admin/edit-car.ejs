@@ -53,7 +53,24 @@
   min="0"
   step="1"
 />
+        <small class="form-helper">If this changes, a private price-history entry will be logged.</small>
       </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label class="label">Trim</label>
+        <input type="text" name="trim" value="<%= car.trim || '' %>" />
+      </div>
+      <div>
+        <label class="label">Stock #</label>
+        <input type="text" name="stockNumber" value="<%= car.stockNumber || '' %>" />
+      </div>
+    </div>
+
+    <div>
+      <label class="label">Price Change Reason</label>
+      <input type="text" name="priceChangeReason" placeholder="Optional note if changing asking price" />
     </div>
     </section>
 
@@ -153,9 +170,207 @@
     </div>
     </section>
 
-    <section class="admin-form-section admin-photo-section" aria-labelledby="edit-photos-title">
+    <section class="admin-form-section command-financial-section" aria-labelledby="edit-financial-title">
       <div class="admin-form-section-title">
         <span>4</span>
+        <div>
+          <h2 id="edit-financial-title">Private Financials</h2>
+          <p>Admin-only profitability, cost, status, and sale tracking.</p>
+        </div>
+      </div>
+
+      <div class="command-summary-strip">
+        <div><span>Total invested</span><strong>$<%= Math.round(metrics.totalInvested || 0).toLocaleString() %></strong></div>
+        <div><span>Potential gross</span><strong>$<%= Math.round(metrics.potentialGross || 0).toLocaleString() %></strong></div>
+        <div><span>ROI</span><strong><%= Math.round((metrics.roi || 0) * 100) %>%</strong></div>
+        <div><span>Recommendation</span><strong><%= metrics.recommendation.action %></strong></div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Purchase Cost</label>
+          <input type="number" name="purchaseCost" value="<%= car.purchaseCost || '' %>" min="0" step="1" />
+        </div>
+        <div>
+          <label class="label">Purchase Date</label>
+          <input type="date" name="purchaseDate" value="<%= car.purchaseDate ? car.purchaseDate.toISOString().slice(0, 10) : '' %>" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Auction / Source</label>
+          <input type="text" name="auctionSource" value="<%= car.auctionSource || '' %>" placeholder="Auction, trade, private, referral" />
+        </div>
+        <div>
+          <label class="label">Admin Vehicle Status</label>
+          <select name="adminStatus">
+            <% ['Retail Ready','In Recon','Needs Photos','Needs Detail','On Hold','Active Buyer','Sold','Wholesale Review'].forEach(status => { %>
+              <option value="<%= status %>" <%= car.adminStatus === status ? 'selected' : '' %>><%= status %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Auction Fees</label>
+          <input type="number" name="auctionFees" value="<%= car.auctionFees || '' %>" min="0" step="1" />
+        </div>
+        <div>
+          <label class="label">Transport</label>
+          <input type="number" name="transportCost" value="<%= car.transportCost || '' %>" min="0" step="1" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Inspection</label>
+          <input type="number" name="inspectionCost" value="<%= car.inspectionCost || '' %>" min="0" step="1" />
+        </div>
+        <div>
+          <label class="label">Active Buyer Status</label>
+          <input type="text" name="activeBuyerStatus" value="<%= car.activeBuyerStatus || '' %>" placeholder="Active lead, appointment booked, buyer paused" />
+        </div>
+      </div>
+
+      <div class="command-subsection">
+        <div class="admin-panel-header command-inline-header">
+          <div>
+            <h2>Recon / Repair Expenses</h2>
+            <p>Add every repair line that changes total invested.</p>
+          </div>
+          <button type="button" class="btn btn-secondary" data-add-row="recon">Add Recon Row</button>
+        </div>
+
+        <div id="reconRows" class="command-row-editor">
+          <% const reconRows = (car.reconExpenses && car.reconExpenses.length ? car.reconExpenses : [{}]); %>
+          <% reconRows.forEach(expense => { %>
+            <div class="command-edit-row">
+              <input type="date" name="reconDate" value="<%= expense.date ? expense.date.toISOString().slice(0, 10) : '' %>" />
+              <select name="reconCategory">
+                <% ['Mechanical','Body','Detail','Tires','Brakes','Glass','Inspection','Other'].forEach(category => { %>
+                  <option value="<%= category %>" <%= expense.category === category ? 'selected' : '' %>><%= category %></option>
+                <% }) %>
+              </select>
+              <input type="text" name="reconDescription" value="<%= expense.description || '' %>" placeholder="Description" />
+              <input type="number" name="reconAmount" value="<%= expense.amount || '' %>" min="0" step="1" placeholder="Amount" />
+              <button type="button" class="btn btn-muted command-remove-row">Remove</button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Sale Date</label>
+          <input type="date" name="saleDate" value="<%= car.saleDate ? car.saleDate.toISOString().slice(0, 10) : '' %>" />
+        </div>
+        <div>
+          <label class="label">Final Sale Price</label>
+          <input type="number" name="finalSalePrice" value="<%= car.finalSalePrice || '' %>" min="0" step="1" />
+        </div>
+      </div>
+
+      <div>
+        <label class="label">Private Notes</label>
+        <textarea name="privateNotes" rows="4"><%= car.privateNotes || '' %></textarea>
+      </div>
+    </section>
+
+    <section class="admin-form-section command-financial-section" aria-labelledby="edit-market-title">
+      <div class="admin-form-section-title">
+        <span>5</span>
+        <div>
+          <h2 id="edit-market-title">Lead Funnel & Market Signals</h2>
+          <p>Track sources, stages, CarGurus saves, IMV, and deal rating.</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">CarGurus Saves</label>
+          <input type="number" name="cargurusSaves" value="<%= car.cargurus?.saves || '' %>" min="0" step="1" />
+        </div>
+        <div>
+          <label class="label">CarGurus IMV</label>
+          <input type="number" name="cargurusImv" value="<%= car.cargurus?.imv || '' %>" min="0" step="1" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label class="label">Deal Rating</label>
+          <input type="text" name="cargurusDealRating" value="<%= car.cargurus?.dealRating || '' %>" placeholder="Great Deal, Good Deal, Fair Deal" />
+        </div>
+        <div>
+          <label class="label">Days on CarGurus</label>
+          <input type="number" name="cargurusDaysOnMarket" value="<%= car.cargurus?.daysOnMarket || '' %>" min="0" step="1" />
+        </div>
+      </div>
+
+      <div class="command-subsection">
+        <div class="admin-panel-header command-inline-header">
+          <div>
+            <h2>Leads</h2>
+            <p>Log platform, stage, and next-step notes by vehicle.</p>
+          </div>
+          <button type="button" class="btn btn-secondary" data-add-row="lead">Add Lead Row</button>
+        </div>
+
+        <div id="leadRows" class="command-row-editor">
+          <% const leadRows = (car.leads && car.leads.length ? car.leads : [{}]); %>
+          <% leadRows.forEach(lead => { %>
+            <div class="command-edit-row command-lead-row">
+              <input type="date" name="leadDate" value="<%= lead.date ? lead.date.toISOString().slice(0, 10) : '' %>" />
+              <select name="leadSource">
+                <option value="">Source</option>
+                <% LEAD_SOURCES.forEach(source => { %>
+                  <option value="<%= source %>" <%= lead.source === source ? 'selected' : '' %>><%= source %></option>
+                <% }) %>
+              </select>
+              <select name="leadStage">
+                <option value="">Stage</option>
+                <% LEAD_STAGES.forEach(stage => { %>
+                  <option value="<%= stage %>" <%= lead.stage === stage ? 'selected' : '' %>><%= stage %></option>
+                <% }) %>
+              </select>
+              <input type="text" name="leadCustomerName" value="<%= lead.customerName || '' %>" placeholder="Customer" />
+              <input type="text" name="leadContact" value="<%= lead.contact || '' %>" placeholder="Phone/email" />
+              <input type="text" name="leadNotes" value="<%= lead.notes || '' %>" placeholder="Notes" />
+              <button type="button" class="btn btn-muted command-remove-row">Remove</button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <div class="command-subsection">
+        <div class="admin-panel-header command-inline-header">
+          <div>
+            <h2>Price History</h2>
+            <p>Every asking-price change is tracked automatically when this form is saved.</p>
+          </div>
+        </div>
+
+        <% if (car.priceHistory && car.priceHistory.length > 0) { %>
+          <div class="price-timeline">
+            <% car.priceHistory.slice().reverse().forEach(item => { %>
+              <article class="price-timeline-item">
+                <strong>$<%= Math.round(item.oldPrice || 0).toLocaleString() %> to $<%= Math.round(item.newPrice || 0).toLocaleString() %></strong>
+                <span><%= item.date ? item.date.toLocaleDateString() : 'No date' %> · <%= item.reason || 'Price update' %></span>
+                <p><%= item.savesBeforeChange || 0 %> saves · <%= item.leadsBeforeChange || 0 %> leads · <%= item.appointmentsBeforeChange || 0 %> appointments before change</p>
+              </article>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="admin-muted">No price changes logged yet.</p>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="admin-form-section admin-photo-section" aria-labelledby="edit-photos-title">
+      <div class="admin-form-section-title">
+        <span>6</span>
         <div><h2 id="edit-photos-title">Photos</h2><p>Reorder existing photos or attach new ones.</p></div>
       </div>
     <div class="stack-m">
@@ -391,6 +606,64 @@
       selectedNewFiles.push(...incoming);
       renderNewPreviews();
       newInput.value = '';
+    });
+
+    const reconRows = document.getElementById('reconRows');
+    const leadRows = document.getElementById('leadRows');
+    const reconCategories = ['Mechanical','Body','Detail','Tires','Brakes','Glass','Inspection','Other'];
+    const leadSources = <%- JSON.stringify(LEAD_SOURCES) %>;
+    const leadStages = <%- JSON.stringify(LEAD_STAGES) %>;
+
+    function optionHtml(items, placeholder) {
+      return `${placeholder ? `<option value="">${placeholder}</option>` : ''}${items.map(item => `<option value="${item}">${item}</option>`).join('')}`;
+    }
+
+    function addReconRow() {
+      const row = document.createElement('div');
+      row.className = 'command-edit-row';
+      row.innerHTML = `
+        <input type="date" name="reconDate" />
+        <select name="reconCategory">${optionHtml(reconCategories)}</select>
+        <input type="text" name="reconDescription" placeholder="Description" />
+        <input type="number" name="reconAmount" min="0" step="1" placeholder="Amount" />
+        <button type="button" class="btn btn-muted command-remove-row">Remove</button>
+      `;
+      reconRows.appendChild(row);
+    }
+
+    function addLeadRow() {
+      const row = document.createElement('div');
+      row.className = 'command-edit-row command-lead-row';
+      row.innerHTML = `
+        <input type="date" name="leadDate" />
+        <select name="leadSource">${optionHtml(leadSources, 'Source')}</select>
+        <select name="leadStage">${optionHtml(leadStages, 'Stage')}</select>
+        <input type="text" name="leadCustomerName" placeholder="Customer" />
+        <input type="text" name="leadContact" placeholder="Phone/email" />
+        <input type="text" name="leadNotes" placeholder="Notes" />
+        <button type="button" class="btn btn-muted command-remove-row">Remove</button>
+      `;
+      leadRows.appendChild(row);
+    }
+
+    document.addEventListener('click', (e) => {
+      const addButton = e.target.closest('[data-add-row]');
+      if (addButton) {
+        if (addButton.dataset.addRow === 'recon') addReconRow();
+        if (addButton.dataset.addRow === 'lead') addLeadRow();
+      }
+
+      const removeButton = e.target.closest('.command-remove-row');
+      if (removeButton) {
+        const row = removeButton.closest('.command-edit-row');
+        const container = row ? row.parentElement : null;
+        if (row && container && container.querySelectorAll('.command-edit-row').length > 1) {
+          row.remove();
+        } else if (row) {
+          row.querySelectorAll('input').forEach(input => { input.value = ''; });
+          row.querySelectorAll('select').forEach(select => { select.selectedIndex = 0; });
+        }
+      }
     });
 
     form.addEventListener('submit', async (e) => {

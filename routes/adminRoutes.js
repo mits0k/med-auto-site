@@ -10,6 +10,17 @@ const bcrypt = require('bcryptjs');
 const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
+const BuyingScorecard = require('../models/BuyingScorecard');
+const CarGurusImportLog = require('../models/CarGurusImportLog');
+const {
+  ACTION_GROUPS,
+  LEAD_SOURCES,
+  LEAD_STAGES,
+  buildDashboard,
+  getBuyingScorecardMetrics,
+  getVehicleMetrics,
+  toNumber
+} = require('../utils/commandCenter');
 
 // ===== Admin creds from env =====
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -36,6 +47,21 @@ const upload = multer({
     files: 30,
     fileSize: 25 * 1024 * 1024,
   },
+});
+
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (!['.csv', '.txt'].includes(ext)) {
+      return cb(new Error('Only CSV files allowed'));
+    }
+    cb(null, true);
+  },
+  limits: {
+    files: 1,
+    fileSize: 4 * 1024 * 1024
+  }
 });
 
 // ===== Admin Guard =====
@@ -255,6 +281,378 @@ router.post('/trade-ins/:id/delete', isAdmin, async (req, res) => {
   }
 });
 
+// ===============================
+// COMMAND CENTER
+// ===============================
+
+function parseDate(value) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function formArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'undefined') return [];
+  return [value];
+}
+
+function normalizeVin(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function normalizeStock(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      i += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === ',' && !quoted) {
+      row.push(cell);
+      cell = '';
+    } else if ((char === '\n' || char === '\r') && !quoted) {
+      if (char === '\r' && next === '\n') i += 1;
+      row.push(cell);
+      if (row.some(value => String(value).trim())) rows.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell);
+  if (row.some(value => String(value).trim())) rows.push(row);
+  return rows;
+}
+
+function getCsvValue(row, aliases) {
+  const keys = Object.keys(row);
+  const normalizedAliases = aliases.map(alias => alias.toLowerCase());
+  const key = keys.find(item => normalizedAliases.includes(item.toLowerCase()));
+  if (key) return row[key];
+
+  return '';
+}
+
+function buildCsvPreview(fileName, csvText, cars) {
+  const parsed = parseCsv(csvText);
+  const headers = (parsed.shift() || []).map(header => String(header || '').trim());
+  const inventory = cars.map(car => ({
+    id: String(car._id),
+    label: `${car.year || ''} ${car.make || ''} ${car.model || ''}`.trim(),
+    vin: normalizeVin(car.vin),
+    stockNumber: normalizeStock(car.stockNumber)
+  }));
+
+  const rows = parsed.map((values, index) => {
+    const raw = {};
+    headers.forEach((header, headerIndex) => {
+      raw[header] = values[headerIndex] || '';
+    });
+
+    const vin = normalizeVin(getCsvValue(raw, ['VIN', 'vin', 'Vehicle VIN']));
+    const stockNumber = normalizeStock(getCsvValue(raw, ['Stock #', 'Stock', 'Stock Number', 'stockNumber']));
+    const match = inventory.find(car =>
+      (vin && car.vin && vin === car.vin) ||
+      (stockNumber && car.stockNumber && stockNumber === car.stockNumber)
+    );
+    const askingPrice = toNumber(getCsvValue(raw, ['Price', 'Asking Price', 'List Price', 'Current Price']));
+    const saves = toNumber(getCsvValue(raw, ['Saves', 'Saved', 'Save Count']));
+    const imv = toNumber(getCsvValue(raw, ['IMV', 'CarGurus IMV', 'Instant Market Value']));
+    const dealRating = getCsvValue(raw, ['Deal Rating', 'Deal', 'Rating']);
+    const daysOnMarket = toNumber(getCsvValue(raw, ['Days on CarGurus', 'Days on Market', 'DOM']));
+    const conflicts = [];
+
+    if (match && askingPrice > 0) {
+      const car = cars.find(item => String(item._id) === match.id);
+      if (car && toNumber(car.price) > 0 && toNumber(car.price) !== askingPrice) {
+        conflicts.push(`Asking price differs: site $${toNumber(car.price).toLocaleString()} vs CSV $${askingPrice.toLocaleString()}`);
+      }
+    }
+
+    return {
+      index,
+      raw,
+      vin,
+      stockNumber,
+      carId: match ? match.id : '',
+      vehicleLabel: match ? match.label : '',
+      askingPrice,
+      saves,
+      imv,
+      dealRating,
+      daysOnMarket,
+      matched: Boolean(match),
+      conflicts
+    };
+  });
+
+  return {
+    fileName,
+    headers,
+    rows,
+    createdAt: new Date().toISOString()
+  };
+}
+
+function buildScorecardFromBody(body) {
+  return {
+    year: toNumber(body.year),
+    make: String(body.make || '').trim(),
+    model: String(body.model || '').trim(),
+    trim: String(body.trim || '').trim(),
+    mileage: toNumber(body.mileage),
+    expectedRetail: toNumber(body.expectedRetail),
+    proposedPurchasePrice: toNumber(body.proposedPurchasePrice),
+    auctionFees: toNumber(body.auctionFees),
+    transport: toNumber(body.transport),
+    estimatedRecon: toNumber(body.estimatedRecon),
+    expectedDaysToSell: toNumber(body.expectedDaysToSell) || 45,
+    carfaxNotes: String(body.carfaxNotes || '').trim(),
+    mechanicalRiskNotes: String(body.mechanicalRiskNotes || '').trim()
+  };
+}
+
+router.get('/command-center', isAdmin, async (req, res) => {
+  try {
+    const sort = req.query.sort || 'action';
+    const status = req.query.status || 'active';
+    const action = req.query.action || 'all';
+    const search = String(req.query.search || '').trim().toLowerCase();
+    const filter = status === 'sold' ? { sold: true } : status === 'all' ? {} : { sold: { $ne: true } };
+    const cars = await Car.find(filter).sort(displaySort);
+    const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
+    const dashboard = buildDashboard(cars, appointments);
+
+    let rows = dashboard.rows;
+
+    if (search) {
+      rows = rows.filter(row => {
+        const haystack = [
+          row.metrics.label,
+          row.car.vin,
+          row.car.stockNumber,
+          row.car.adminStatus,
+          row.car.cargurus?.dealRating
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(search);
+      });
+    }
+
+    if (action !== 'all') {
+      rows = rows.filter(row => row.metrics.recommendation.group === action || row.metrics.recommendation.action === action);
+    }
+
+    rows.sort((a, b) => {
+      if (sort === 'roi') return b.metrics.roi - a.metrics.roi;
+      if (sort === 'gross') return b.metrics.potentialGross - a.metrics.potentialGross;
+      if (sort === 'days') return b.metrics.daysInStock - a.metrics.daysInStock;
+      if (sort === 'capital') return b.metrics.totalInvested - a.metrics.totalInvested;
+      if (sort === 'leads') return b.metrics.leadCounts.total - a.metrics.leadCounts.total;
+      return a.metrics.recommendation.group.localeCompare(b.metrics.recommendation.group) || b.metrics.daysInStock - a.metrics.daysInStock;
+    });
+
+    const leadFunnel = rows
+      .flatMap(row => (row.car.leads || []).map(lead => ({
+        vehicle: row.metrics.label,
+        source: lead.source || 'other',
+        stage: lead.stage || 'New Lead',
+        date: lead.date,
+        customerName: lead.customerName,
+        notes: lead.notes
+      })))
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    res.render('admin/command-center', {
+      rows,
+      leadFunnel,
+      kpis: dashboard.kpis,
+      ACTION_GROUPS,
+      filters: { sort, status, action, search }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading command center');
+  }
+});
+
+router.get('/command-center/weekly', isAdmin, async (req, res) => {
+  try {
+    const cars = await Car.find({ sold: { $ne: true } }).sort(displaySort);
+    const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
+    const dashboard = buildDashboard(cars, appointments);
+    const groups = ACTION_GROUPS.map(group => ({
+      group,
+      rows: dashboard.rows.filter(row => row.metrics.recommendation.group === group)
+    }));
+
+    res.render('admin/weekly-action-center', { groups });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading weekly action center');
+  }
+});
+
+router.get('/command-center/buying-scorecard', isAdmin, async (req, res) => {
+  try {
+    const scorecards = await BuyingScorecard.find().sort({ createdAt: -1 }).limit(40);
+    res.render('admin/buying-scorecard', {
+      scorecards,
+      getBuyingScorecardMetrics,
+      draft: null,
+      error: null
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading buying scorecard');
+  }
+});
+
+router.post('/command-center/buying-scorecard', isAdmin, async (req, res) => {
+  try {
+    const draft = buildScorecardFromBody(req.body);
+    const metrics = getBuyingScorecardMetrics(draft);
+    const scorecard = new BuyingScorecard({
+      ...draft,
+      decision: metrics.decision,
+      score: metrics.capitalEfficiencyScore
+    });
+
+    await scorecard.save();
+    res.redirect('/admin/command-center/buying-scorecard');
+  } catch (e) {
+    console.error(e);
+    const scorecards = await BuyingScorecard.find().sort({ createdAt: -1 }).limit(40);
+    res.status(500).render('admin/buying-scorecard', {
+      scorecards,
+      getBuyingScorecardMetrics,
+      draft: req.body,
+      error: 'Could not save scorecard'
+    });
+  }
+});
+
+router.post('/command-center/buying-scorecard/:id/delete', isAdmin, async (req, res) => {
+  try {
+    await BuyingScorecard.findByIdAndDelete(req.params.id);
+    res.redirect('/admin/command-center/buying-scorecard');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error deleting scorecard');
+  }
+});
+
+router.get('/command-center/cargurus-import', isAdmin, async (req, res) => {
+  try {
+    const logs = await CarGurusImportLog.find().sort({ createdAt: -1 }).limit(10);
+    res.render('admin/cargurus-import', {
+      preview: req.session.cargurusPreview || null,
+      logs,
+      error: null
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error loading CSV import');
+  }
+});
+
+router.post('/command-center/cargurus-import/preview', isAdmin, csvUpload.single('csv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.redirect('/admin/command-center/cargurus-import');
+    }
+
+    const cars = await Car.find().select('year make model vin stockNumber price');
+    const preview = buildCsvPreview(req.file.originalname, req.file.buffer.toString('utf8'), cars);
+    req.session.cargurusPreview = preview;
+    req.session.save(() => res.redirect('/admin/command-center/cargurus-import'));
+  } catch (e) {
+    console.error(e);
+    const logs = await CarGurusImportLog.find().sort({ createdAt: -1 }).limit(10);
+    res.status(500).render('admin/cargurus-import', {
+      preview: null,
+      logs,
+      error: 'Could not preview this CSV'
+    });
+  }
+});
+
+router.post('/command-center/cargurus-import/apply', isAdmin, async (req, res) => {
+  try {
+    const preview = req.session.cargurusPreview;
+    if (!preview) {
+      return res.redirect('/admin/command-center/cargurus-import');
+    }
+
+    let appliedRows = 0;
+
+    for (const row of preview.rows) {
+      if (!row.matched || !row.carId) continue;
+
+      const car = await Car.findById(row.carId);
+      if (!car) continue;
+
+      car.cargurus = car.cargurus || {};
+      car.cargurus.saves = row.saves;
+      car.cargurus.imv = row.imv || undefined;
+      car.cargurus.dealRating = row.dealRating || '';
+      car.cargurus.daysOnMarket = row.daysOnMarket || undefined;
+      car.cargurus.lastImportedAt = new Date();
+
+      if (row.askingPrice > 0 && toNumber(car.price) !== row.askingPrice) {
+        car.priceHistory.push({
+          date: new Date(),
+          oldPrice: toNumber(car.price),
+          newPrice: row.askingPrice,
+          reason: 'CarGurus CSV import',
+          savesBeforeChange: toNumber(car.cargurus.saves),
+          leadsBeforeChange: (car.leads || []).length,
+          appointmentsBeforeChange: (car.leads || []).filter(lead => lead.stage === 'Appointment Set').length
+        });
+        car.price = row.askingPrice;
+      }
+
+      await car.save();
+      appliedRows += 1;
+    }
+
+    await new CarGurusImportLog({
+      fileName: preview.fileName,
+      totalRows: preview.rows.length,
+      matchedRows: preview.rows.filter(row => row.matched).length,
+      unmatchedRows: preview.rows.filter(row => !row.matched).length,
+      conflictRows: preview.rows.filter(row => row.conflicts.length > 0).length,
+      appliedRows,
+      summary: 'Updated public price only when CSV price differed; private financial data was not touched.'
+    }).save();
+
+    req.session.cargurusPreview = null;
+    req.session.save(() => res.redirect('/admin/command-center/cargurus-import'));
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error applying CSV import');
+  }
+});
+
+router.post('/command-center/cargurus-import/clear', isAdmin, (req, res) => {
+  req.session.cargurusPreview = null;
+  req.session.save(() => res.redirect('/admin/command-center/cargurus-import'));
+});
+
 // ===== Helper =====
 async function processAndSaveImage(fileBuffer, mimetype) {
 
@@ -337,6 +735,8 @@ router.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) =>
     const {
       make,
       model,
+      trim,
+      stockNumber,
       year,
       price,
       description,
@@ -360,6 +760,8 @@ router.post('/add-car', isAdmin, upload.array('images', 30), async (req, res) =>
     const newCar = new Car({
       make,
       model,
+      trim,
+      stockNumber,
       year,
       price,
       sold: false,
@@ -401,6 +803,9 @@ router.get('/cars/:id/edit', isAdmin, async (req, res) => {
 
     res.render('admin/edit-car', {
       car,
+      metrics: getVehicleMetrics(car),
+      LEAD_SOURCES,
+      LEAD_STAGES,
       error: null
     });
 
@@ -425,6 +830,8 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     const {
     make,
     model,
+    trim,
+    stockNumber,
     price,
     description,
     exteriorColor,
@@ -437,7 +844,23 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     bodyStyle,
     vin,
     imagesOrder,
-    deletedImages
+    deletedImages,
+    priceChangeReason,
+    purchaseCost,
+    purchaseDate,
+    auctionSource,
+    auctionFees,
+    transportCost,
+    inspectionCost,
+    adminStatus,
+    privateNotes,
+    activeBuyerStatus,
+    saleDate,
+    finalSalePrice,
+    cargurusSaves,
+    cargurusImv,
+    cargurusDealRating,
+    cargurusDaysOnMarket
 } = req.body;
 
     // Delete removed images
@@ -486,9 +909,14 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
       car.images.push(...newImages);
     }
 
+    const oldPrice = toNumber(car.price);
+    const nextPrice = toNumber(price);
+
     // Update fields
     car.make = make;
     car.model = model;
+    car.trim = trim;
+    car.stockNumber = stockNumber;
     car.price = price;
     car.description = description;
     car.exteriorColor = exteriorColor;
@@ -500,6 +928,66 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     car.fuel = fuel;
     car.bodyStyle = bodyStyle;
     car.vin = vin;
+    car.purchaseCost = toNumber(purchaseCost);
+    car.purchaseDate = parseDate(purchaseDate);
+    car.auctionSource = auctionSource;
+    car.auctionFees = toNumber(auctionFees);
+    car.transportCost = toNumber(transportCost);
+    car.inspectionCost = toNumber(inspectionCost);
+    car.adminStatus = adminStatus || 'Retail Ready';
+    car.privateNotes = privateNotes;
+    car.activeBuyerStatus = activeBuyerStatus;
+    car.saleDate = parseDate(saleDate);
+    car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
+    car.cargurus = car.cargurus || {};
+    car.cargurus.saves = toNumber(cargurusSaves);
+    car.cargurus.imv = cargurusImv === '' ? undefined : toNumber(cargurusImv);
+    car.cargurus.dealRating = cargurusDealRating || '';
+    car.cargurus.daysOnMarket = cargurusDaysOnMarket === '' ? undefined : toNumber(cargurusDaysOnMarket);
+
+    const reconDates = formArray(req.body.reconDate);
+    const reconCategories = formArray(req.body.reconCategory);
+    const reconDescriptions = formArray(req.body.reconDescription);
+    const reconAmounts = formArray(req.body.reconAmount);
+
+    car.reconExpenses = reconAmounts
+      .map((amount, index) => ({
+        date: parseDate(reconDates[index]),
+        category: String(reconCategories[index] || '').trim(),
+        description: String(reconDescriptions[index] || '').trim(),
+        amount: toNumber(amount)
+      }))
+      .filter(item => item.amount > 0 || item.category || item.description || item.date);
+
+    const leadDates = formArray(req.body.leadDate);
+    const leadSources = formArray(req.body.leadSource);
+    const leadStages = formArray(req.body.leadStage);
+    const leadCustomers = formArray(req.body.leadCustomerName);
+    const leadContacts = formArray(req.body.leadContact);
+    const leadNotes = formArray(req.body.leadNotes);
+
+    car.leads = leadSources
+      .map((source, index) => ({
+        date: parseDate(leadDates[index]) || new Date(),
+        source: String(source || '').trim(),
+        stage: String(leadStages[index] || '').trim(),
+        customerName: String(leadCustomers[index] || '').trim(),
+        contact: String(leadContacts[index] || '').trim(),
+        notes: String(leadNotes[index] || '').trim()
+      }))
+      .filter(item => item.source || item.stage || item.customerName || item.contact || item.notes);
+
+    if (oldPrice !== nextPrice && nextPrice > 0) {
+      car.priceHistory.push({
+        date: new Date(),
+        oldPrice,
+        newPrice: nextPrice,
+        reason: String(priceChangeReason || 'Admin price update').trim(),
+        savesBeforeChange: toNumber(car.cargurus?.saves),
+        leadsBeforeChange: (car.leads || []).length,
+        appointmentsBeforeChange: (car.leads || []).filter(lead => lead.stage === 'Appointment Set').length
+      });
+    }
 
     await car.save();
 
@@ -527,6 +1015,8 @@ router.post('/cars/:id/toggle-sold', isAdmin, async (req, res) => {
 
     if (car.sold) {
       car.isFeatured = false;
+      if (!car.saleDate) car.saleDate = new Date();
+      if (!car.finalSalePrice && car.price) car.finalSalePrice = car.price;
     }
 
     await car.save();

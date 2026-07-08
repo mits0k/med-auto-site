@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<%
+  const money = value => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+%>
+
+<section class="container admin-shell admin-page command-center-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Weekly Action Center</span>
+      <h1>This Week's Worklist</h1>
+      <p>Grouped by action so the team knows what to close, hold, refresh, review, or move.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/command-center" class="btn btn-secondary">Dealer Dashboard</a>
+      <a href="/admin/dashboard" class="btn btn-secondary">Inventory</a>
+    </div>
+  </div>
+
+  <div class="weekly-grid">
+    <% groups.forEach(({ group, rows }) => { %>
+      <section class="admin-panel weekly-panel">
+        <div class="admin-panel-header">
+          <div>
+            <h2><%= group %></h2>
+            <p><%= rows.length %> vehicle<%= rows.length === 1 ? '' : 's' %></p>
+          </div>
+        </div>
+
+        <% if (rows.length > 0) { %>
+          <div class="weekly-list">
+            <% rows.forEach(({ car, metrics }) => { %>
+              <article class="weekly-item">
+                <div class="weekly-main">
+                  <% if (car.images && car.images.length > 0) { %>
+                    <img src="<%= car.images[0] %>" alt="<%= metrics.label %>" />
+                  <% } else { %>
+                    <div class="admin-table-placeholder">No image</div>
+                  <% } %>
+                  <div>
+                    <strong><%= metrics.label || 'Vehicle' %></strong>
+                    <span><%= metrics.daysInStock %> days in stock · <%= money(metrics.potentialGross) %> potential gross</span>
+                  </div>
+                </div>
+                <div class="weekly-action">
+                  <span class="status-badge command-action-badge"><%= metrics.recommendation.action %></span>
+                  <p><%= metrics.recommendation.nextStep %></p>
+                  <a href="/admin/cars/<%= car._id %>/edit" class="btn btn-secondary">Open Vehicle</a>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="admin-muted">No vehicles in this action group right now.</p>
+        <% } %>
+      </section>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

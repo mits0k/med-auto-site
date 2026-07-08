@@ -1,0 +1,150 @@
+<%- include('../partials/header') %>
+
+<%
+  const money = value => value ? `$${Math.round(Number(value || 0)).toLocaleString()}` : '-';
+%>
+
+<section class="container admin-shell admin-page command-center-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">CarGurus CSV Import</span>
+      <h1>Preview Before Applying</h1>
+      <p>Match rows by VIN or stock number, update market metrics, and protect private financial data.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/command-center" class="btn btn-secondary">Dealer Dashboard</a>
+      <a href="/admin/command-center/weekly" class="btn btn-secondary">Weekly Actions</a>
+    </div>
+  </div>
+
+  <% if (error) { %>
+    <div class="form-alert form-alert-error"><%= error %></div>
+  <% } %>
+
+  <div class="admin-panel import-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Upload Report</h2>
+        <p>CSV import updates saves, IMV, deal rating, days on CarGurus, and asking price when confirmed.</p>
+      </div>
+    </div>
+
+    <form action="/admin/command-center/cargurus-import/preview" method="POST" enctype="multipart/form-data" class="command-import-form">
+      <input type="file" name="csv" accept=".csv,text/csv" required />
+      <button type="submit" class="btn btn-primary">Preview CSV</button>
+    </form>
+  </div>
+
+  <% if (preview) { %>
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>Import Preview</h2>
+          <p><%= preview.fileName %> · <%= preview.rows.length %> row<%= preview.rows.length === 1 ? '' : 's' %></p>
+        </div>
+        <div class="admin-actions">
+          <form action="/admin/command-center/cargurus-import/apply" method="POST" onsubmit="return confirm('Apply this CarGurus import? Private financial data will not be changed.');">
+            <button type="submit" class="btn btn-success">Apply Import</button>
+          </form>
+          <form action="/admin/command-center/cargurus-import/clear" method="POST">
+            <button type="submit" class="btn btn-muted">Clear Preview</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table command-table">
+          <thead>
+            <tr>
+              <th>Match</th>
+              <th>VIN / Stock</th>
+              <th>Price</th>
+              <th>Saves</th>
+              <th>IMV</th>
+              <th>Deal Rating</th>
+              <th>Days</th>
+              <th>Conflicts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% preview.rows.forEach(row => { %>
+              <tr>
+                <td data-label="Match">
+                  <% if (row.matched) { %>
+                    <strong><%= row.vehicleLabel %></strong>
+                    <span class="status-badge status-available">Matched</span>
+                  <% } else { %>
+                    <span class="status-badge status-sold">Unmatched</span>
+                  <% } %>
+                </td>
+                <td data-label="VIN / Stock">
+                  <span class="admin-cell-meta">VIN: <%= row.vin || '-' %></span>
+                  <span class="admin-cell-meta">Stock: <%= row.stockNumber || '-' %></span>
+                </td>
+                <td data-label="Price"><%= money(row.askingPrice) %></td>
+                <td data-label="Saves"><%= row.saves || 0 %></td>
+                <td data-label="IMV"><%= money(row.imv) %></td>
+                <td data-label="Deal Rating"><%= row.dealRating || '-' %></td>
+                <td data-label="Days"><%= row.daysOnMarket || '-' %></td>
+                <td data-label="Conflicts">
+                  <% if (row.conflicts.length > 0) { %>
+                    <% row.conflicts.forEach(conflict => { %>
+                      <span class="admin-cell-meta command-conflict"><%= conflict %></span>
+                    <% }) %>
+                  <% } else { %>
+                    <span class="admin-muted">None</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Recent Imports</h2>
+        <p>Audit trail for applied CSV imports.</p>
+      </div>
+    </div>
+
+    <% if (logs.length > 0) { %>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>File</th>
+              <th>Rows</th>
+              <th>Matched</th>
+              <th>Unmatched</th>
+              <th>Conflicts</th>
+              <th>Applied</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td><%= log.createdAt ? log.createdAt.toLocaleString() : '-' %></td>
+                <td><strong><%= log.fileName || 'CSV import' %></strong></td>
+                <td><%= log.totalRows %></td>
+                <td><%= log.matchedRows %></td>
+                <td><%= log.unmatchedRows %></td>
+                <td><%= log.conflictRows %></td>
+                <td><%= log.appliedRows %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="admin-muted">No imports applied yet.</p>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,206 @@
+<%- include('../partials/header') %>
+
+<%
+  const money = value => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+  const percent = value => `${Math.round(Number(value || 0) * 100)}%`;
+  const number = value => Math.round(Number(value || 0)).toLocaleString();
+  const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];
+%>
+
+<section class="container admin-shell admin-page command-center-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Inventory Command Center</span>
+      <h1>Dealer Dashboard</h1>
+      <p>Track capital, buyer activity, pricing pressure, and this week's inventory actions.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/dashboard" class="btn btn-secondary">Inventory</a>
+      <a href="/admin/command-center/weekly" class="btn btn-secondary">Weekly Actions</a>
+      <a href="/admin/command-center/buying-scorecard" class="btn btn-secondary">Buying Scorecard</a>
+      <a href="/admin/command-center/cargurus-import" class="btn btn-primary">CarGurus Import</a>
+    </div>
+  </div>
+
+  <div class="command-kpi-grid" aria-label="Command center KPIs">
+    <div class="admin-stat"><span>Total Vehicles</span><strong><%= number(kpis.totalVehicles) %></strong></div>
+    <div class="admin-stat"><span>Capital Tied Up</span><strong><%= money(kpis.capitalTiedUp) %></strong></div>
+    <div class="admin-stat"><span>Total Asking Value</span><strong><%= money(kpis.totalAskingValue) %></strong></div>
+    <div class="admin-stat"><span>Potential Gross</span><strong><%= money(kpis.potentialGross) %></strong></div>
+    <div class="admin-stat"><span>Average ROI</span><strong><%= percent(kpis.averageRoi) %></strong></div>
+    <div class="admin-stat"><span>Avg Days In Stock</span><strong><%= number(kpis.averageDaysInStock) %></strong></div>
+    <div class="admin-stat"><span>Aging 30 / 45 / 60</span><strong><%= kpis.over30 %> / <%= kpis.over45 %> / <%= kpis.over60 %></strong></div>
+    <div class="admin-stat"><span>Leads This Month</span><strong><%= number(kpis.leadsThisMonth) %></strong></div>
+    <div class="admin-stat"><span>Appointments This Month</span><strong><%= number(kpis.appointmentsThisMonth) %></strong></div>
+    <div class="admin-stat"><span>Sales This Month</span><strong><%= number(kpis.salesThisMonth) %></strong></div>
+    <div class="admin-stat"><span>Lead-to-Sale</span><strong><%= percent(kpis.leadToSaleConversion) %></strong></div>
+  </div>
+
+  <div class="admin-panel command-filter-panel">
+    <form method="GET" action="/admin/command-center" class="command-filters">
+      <label>
+        <span>Status</span>
+        <select name="status">
+          <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active inventory</option>
+          <option value="sold" <%= filters.status === 'sold' ? 'selected' : '' %>>Sold inventory</option>
+          <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>>All vehicles</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Action</span>
+        <select name="action">
+          <option value="all">All actions</option>
+          <% ACTION_GROUPS.forEach(group => { %>
+            <option value="<%= group %>" <%= filters.action === group ? 'selected' : '' %>><%= group %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>
+        <span>Sort</span>
+        <select name="sort">
+          <option value="action" <%= filters.sort === 'action' ? 'selected' : '' %>>Recommended action</option>
+          <option value="days" <%= filters.sort === 'days' ? 'selected' : '' %>>Days in stock</option>
+          <option value="gross" <%= filters.sort === 'gross' ? 'selected' : '' %>>Potential gross</option>
+          <option value="roi" <%= filters.sort === 'roi' ? 'selected' : '' %>>ROI</option>
+          <option value="capital" <%= filters.sort === 'capital' ? 'selected' : '' %>>Capital invested</option>
+          <option value="leads" <%= filters.sort === 'leads' ? 'selected' : '' %>>Leads</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Search</span>
+        <input type="text" name="search" value="<%= filters.search %>" placeholder="VIN, stock, model" />
+      </label>
+
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </form>
+  </div>
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Profitability Workbench</h2>
+        <p>Private admin-only view of cost basis, engagement, and rule-based recommendations.</p>
+      </div>
+    </div>
+
+    <% if (rows.length > 0) { %>
+      <div class="admin-table-wrap command-table-wrap">
+        <table class="admin-table command-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Asking</th>
+              <th>Cost</th>
+              <th>Recon</th>
+              <th>Invested</th>
+              <th>Gross</th>
+              <th>ROI</th>
+              <th>Days</th>
+              <th>Engagement</th>
+              <th>Deal / IMV</th>
+              <th>Action</th>
+              <th>Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% rows.forEach(({ car, metrics }) => { %>
+              <tr>
+                <td data-label="Vehicle">
+                  <div class="admin-vehicle-cell">
+                    <% if (car.images && car.images.length > 0) { %>
+                      <img src="<%= car.images[0] %>" alt="<%= metrics.label %>" />
+                    <% } else { %>
+                      <div class="admin-table-placeholder">No image</div>
+                    <% } %>
+                    <div>
+                      <strong><%= metrics.label || 'Vehicle' %></strong>
+                      <span><%= car.stockNumber ? `Stock ${car.stockNumber}` : (car.vin || 'No VIN') %></span>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Asking"><strong><%= money(car.price) %></strong></td>
+                <td data-label="Cost"><%= money(car.purchaseCost) %></td>
+                <td data-label="Recon"><%= money(metrics.reconTotal) %></td>
+                <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
+                <td data-label="Gross" class="<%= metrics.potentialGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.potentialGross) %></td>
+                <td data-label="ROI"><%= percent(metrics.roi) %></td>
+                <td data-label="Days"><%= metrics.daysInStock %></td>
+                <td data-label="Engagement">
+                  <span class="command-mini-stat"><%= car.cargurus?.saves || 0 %> saves</span>
+                  <span class="command-mini-stat"><%= metrics.leadCounts.total %> leads</span>
+                  <span class="command-mini-stat"><%= metrics.appointments %> appts</span>
+                </td>
+                <td data-label="Deal / IMV">
+                  <strong><%= car.cargurus?.dealRating || 'No rating' %></strong>
+                  <span class="admin-cell-meta"><%= car.cargurus?.imv ? money(car.cargurus.imv) : 'No IMV' %></span>
+                </td>
+                <td data-label="Action">
+                  <span class="status-badge command-action-badge"><%= metrics.recommendation.action %></span>
+                  <span class="admin-cell-meta"><%= metrics.recommendation.why %></span>
+                </td>
+                <td data-label="Target">
+                  <strong><%= metrics.recommendation.targetPrice ? money(metrics.recommendation.targetPrice) : '-' %></strong>
+                  <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit financials</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="admin-empty">
+        <h2>No vehicles match this view</h2>
+        <p>Change filters or add inventory financial details from the vehicle editor.</p>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Lead Funnel</h2>
+        <p>Recent buyer activity by vehicle, source, and stage.</p>
+      </div>
+    </div>
+
+    <% if (funnelRows.length > 0) { %>
+      <div class="admin-table-wrap">
+        <table class="admin-table command-table command-funnel-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Source</th>
+              <th>Stage</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% funnelRows.slice(0, 20).forEach(lead => { %>
+              <tr>
+                <td data-label="Vehicle"><strong><%= lead.vehicle %></strong></td>
+                <td data-label="Source"><%= lead.source %></td>
+                <td data-label="Stage"><span class="status-badge command-action-badge"><%= lead.stage %></span></td>
+                <td data-label="Customer"><%= lead.customerName || '-' %></td>
+                <td data-label="Date"><%= lead.date ? new Date(lead.date).toLocaleDateString() : '-' %></td>
+                <td data-label="Notes"><%= lead.notes || '-' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="admin-empty">
+        <h2>No leads logged yet</h2>
+        <p>Add leads inside a vehicle editor to track source, stage, appointments, show-ups, and sales.</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

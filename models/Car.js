@@ -100,6 +100,8 @@ const carSchema = new mongoose.Schema({
   reconExpenses: [reconExpenseSchema],
   privateNotes: String,
   activeBuyerStatus: String,
+  recommendationOverride: String,
+  recommendationNote: String,
   saleDate: Date,
   finalSalePrice: Number,
 

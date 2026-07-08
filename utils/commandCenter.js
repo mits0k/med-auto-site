@@ -66,7 +66,8 @@ function getTotalInvested(car) {
 }
 
 function getPotentialGross(car) {
-  return toNumber(car.price) - getTotalInvested(car);
+  const totalInvested = getTotalInvested(car);
+  return totalInvested > 0 ? toNumber(car.price) - totalInvested : 0;
 }
 
 function getSoldGross(car) {
@@ -111,6 +112,18 @@ function hasActiveBuyer(car, appointmentsByCar = {}) {
 }
 
 function getRecommendation(car, appointmentsByCar = {}) {
+  if (car.recommendationOverride) {
+    const override = String(car.recommendationOverride).trim();
+    const note = String(car.recommendationNote || '').trim();
+    return {
+      action: override,
+      why: note || 'Manual dealership recommendation is active.',
+      nextStep: note || 'Follow the manually entered dealership action.',
+      targetPrice: toNumber(car.price) || null,
+      group: getActionGroupForOverride(override)
+    };
+  }
+
   const days = getDaysInStock(car);
   const saves = toNumber(car.cargurus?.saves);
   const imv = toNumber(car.cargurus?.imv);
@@ -168,6 +181,17 @@ function getRecommendation(car, appointmentsByCar = {}) {
   }
 
   return { action, why, nextStep, targetPrice, group };
+}
+
+function getActionGroupForOverride(action) {
+  const value = String(action || '').toLowerCase();
+  if (value.includes('active') || value.includes('close buyer') || value.includes('interest')) return 'Close Active Buyer';
+  if (value.includes('convert') || value.includes('follow')) return 'Follow Up Leads';
+  if (value.includes('refresh')) return 'Refresh Listing';
+  if (value.includes('urgent') || value.includes('aging')) return 'Urgent Aging Review';
+  if (value.includes('wholesale')) return 'Wholesale Review';
+  if (value.includes('market') || value.includes('price') || value.includes('move') || value.includes('imv')) return 'Price Review';
+  return 'Hold';
 }
 
 function getVehicleMetrics(car, appointmentsByCar = {}) {

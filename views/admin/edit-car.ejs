@@ -272,6 +272,17 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div>
+          <label class="label">Recommendation Override</label>
+          <input type="text" name="recommendationOverride" value="<%= car.recommendationOverride || '' %>" placeholder="Example: HOLD + CONVERT INTEREST" />
+        </div>
+        <div>
+          <label class="label">Recommendation Note</label>
+          <input type="text" name="recommendationNote" value="<%= car.recommendationNote || '' %>" placeholder="Why this manual action is active" />
+        </div>
+      </div>
+
       <div>
         <label class="label">Private Notes</label>
         <textarea name="privateNotes" rows="4"><%= car.privateNotes || '' %></textarea>

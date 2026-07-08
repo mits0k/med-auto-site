@@ -366,16 +366,32 @@ function buildCsvPreview(fileName, csvText, cars) {
 
     const vin = normalizeVin(getCsvValue(raw, ['VIN', 'vin', 'Vehicle VIN']));
     const stockNumber = normalizeStock(getCsvValue(raw, ['Stock #', 'Stock', 'Stock Number', 'stockNumber']));
-    const match = inventory.find(car =>
-      (vin && car.vin && vin === car.vin) ||
-      (stockNumber && car.stockNumber && stockNumber === car.stockNumber)
-    );
+    const vinMatches = vin ? inventory.filter(car => car.vin && vin === car.vin) : [];
+    const stockMatches = stockNumber ? inventory.filter(car => car.stockNumber && stockNumber === car.stockNumber) : [];
+    const conflicts = [];
+    let match = null;
+
+    if (vinMatches.length === 1) {
+      match = vinMatches[0];
+
+      if (stockNumber && match.stockNumber && stockNumber !== match.stockNumber) {
+        conflicts.push(`Stock conflict: VIN matches ${match.label}, but CSV stock is ${stockNumber}`);
+      }
+    } else if (vinMatches.length > 1) {
+      conflicts.push(`VIN conflict: ${vin} matches multiple vehicles`);
+    } else if (vin) {
+      conflicts.push(`VIN not found: ${vin}`);
+    } else if (stockMatches.length === 1) {
+      match = stockMatches[0];
+    } else if (stockMatches.length > 1) {
+      conflicts.push(`Stock conflict: ${stockNumber} matches multiple vehicles; VIN is required`);
+    }
+
     const askingPrice = toNumber(getCsvValue(raw, ['Price', 'Asking Price', 'List Price', 'Current Price']));
     const saves = toNumber(getCsvValue(raw, ['Saves', 'Saved', 'Save Count']));
     const imv = toNumber(getCsvValue(raw, ['IMV', 'CarGurus IMV', 'Instant Market Value']));
     const dealRating = getCsvValue(raw, ['Deal Rating', 'Deal', 'Rating']);
     const daysOnMarket = toNumber(getCsvValue(raw, ['Days on CarGurus', 'Days on Market', 'DOM']));
-    const conflicts = [];
 
     if (match && askingPrice > 0) {
       const car = cars.find(item => String(item._id) === match.id);
@@ -855,6 +871,8 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     adminStatus,
     privateNotes,
     activeBuyerStatus,
+    recommendationOverride,
+    recommendationNote,
     saleDate,
     finalSalePrice,
     cargurusSaves,
@@ -937,6 +955,8 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     car.adminStatus = adminStatus || 'Retail Ready';
     car.privateNotes = privateNotes;
     car.activeBuyerStatus = activeBuyerStatus;
+    car.recommendationOverride = recommendationOverride;
+    car.recommendationNote = recommendationNote;
     car.saleDate = parseDate(saleDate);
     car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
     car.cargurus = car.cargurus || {};

@@ -595,9 +595,13 @@ router.post('/command-center/cars/:id/pricing', isAdmin, async (req, res) => {
       return res.status(404).send('Car not found');
     }
 
-    const { commandCenterPrice, finalSalePrice } = req.body;
-    car.commandCenterPrice = commandCenterPrice === '' ? undefined : toNumber(commandCenterPrice);
-    car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
+    if (Object.prototype.hasOwnProperty.call(req.body, 'commandCenterPrice')) {
+      car.commandCenterPrice = req.body.commandCenterPrice === '' ? undefined : toNumber(req.body.commandCenterPrice);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'finalSalePrice')) {
+      car.finalSalePrice = req.body.finalSalePrice === '' ? undefined : toNumber(req.body.finalSalePrice);
+    }
 
     await car.save();
     res.redirect('/admin/command-center');

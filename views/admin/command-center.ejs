@@ -109,7 +109,16 @@
                   <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit sale details</a>
                 </td>
                 <td data-label="Sold Date"><%= car.saleDate ? new Date(car.saleDate).toLocaleDateString() : '-' %></td>
-                <td data-label="Sale Price"><strong><%= money(car.finalSalePrice) %></strong></td>
+                <td data-label="Sale Price">
+                  <strong><%= money(car.finalSalePrice) %></strong>
+                  <form class="command-price-form command-sale-price-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
+                    <label>
+                      <span>Sale price</span>
+                      <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="Sold for" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                  </form>
+                </td>
                 <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
                 <td data-label="Gross Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.soldGross) %></td>
                 <td data-label="ROI"><%= percent(metrics.soldRoi) %></td>

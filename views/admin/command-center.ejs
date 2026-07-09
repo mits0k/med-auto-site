@@ -8,6 +8,7 @@
   const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
   const recentSoldRows = Array.isArray(profit.recentRows) ? profit.recentRows : [];
   const tireRows = Array.isArray(profit.tireRows) ? profit.tireRows : [];
+  const offsiteCarRows = Array.isArray(profit.offsiteCarRows) ? profit.offsiteCarRows : [];
   const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
   const isCommandSold = car => Boolean(car && (car.sold || car.commandCenterSold));
 %>
@@ -85,9 +86,42 @@
       <div class="admin-stat"><span>Total Profit</span><strong><%= money(profit.totalProfit) %></strong></div>
       <div class="admin-stat"><span>This Month</span><strong><%= money(profit.profitThisMonth) %></strong></div>
       <div class="admin-stat"><span>Sold Units</span><strong><%= number(profit.soldUnits) %></strong></div>
+      <div class="admin-stat"><span>Off-site Cars</span><strong><%= money(profit.offsiteCarProfit) %></strong></div>
       <div class="admin-stat"><span>Tire Profit</span><strong><%= money(profit.tireProfit) %></strong></div>
       <div class="admin-stat"><span>Sold ROI</span><strong><%= percent(profit.averageRoi) %></strong></div>
     </div>
+
+    <form class="command-extra-profit-form" action="/admin/command-center/offsite-car-profit" method="POST">
+      <label>
+        <span>Car</span>
+        <input type="text" name="vehicleLabel" placeholder="Example: Civic beater" />
+      </label>
+      <label>
+        <span>Bought for</span>
+        <input type="number" name="purchaseCost" min="0" step="1" placeholder="Bought for" />
+      </label>
+      <label>
+        <span>Sold for</span>
+        <input type="number" name="salePrice" min="0" step="1" placeholder="Sold for" required />
+      </label>
+      <label>
+        <span>Date</span>
+        <input type="date" name="date" />
+      </label>
+      <label>
+        <span>Note</span>
+        <input type="text" name="note" placeholder="Cousin / off-site sale" />
+      </label>
+      <button type="submit" class="btn btn-primary">Add Off-site Car Profit</button>
+    </form>
+
+    <% if (offsiteCarRows.length > 0) { %>
+      <div class="command-tire-list">
+        <% offsiteCarRows.forEach(item => { %>
+          <span><%= item.date ? new Date(item.date).toLocaleDateString() : '-' %> · <strong><%= money(item.profit) %></strong><%= item.vehicleLabel ? ` · ${item.vehicleLabel}` : '' %></span>
+        <% }) %>
+      </div>
+    <% } %>
 
     <form class="command-tire-form" action="/admin/command-center/tire-profit" method="POST">
       <label>

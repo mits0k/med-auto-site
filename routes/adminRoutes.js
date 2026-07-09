@@ -13,6 +13,7 @@ const TradeIn = require('../models/TradeIn');
 const BuyingScorecard = require('../models/BuyingScorecard');
 const CarGurusImportLog = require('../models/CarGurusImportLog');
 const TireProfit = require('../models/TireProfit');
+const OffsiteCarProfit = require('../models/OffsiteCarProfit');
 const {
   ACTION_GROUPS,
   LEAD_SOURCES,
@@ -491,6 +492,8 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
     const allTireProfits = await TireProfit.find().lean();
     const tireProfits = await TireProfit.find().sort({ date: -1, createdAt: -1 }).limit(8).lean();
+    const allOffsiteCarProfits = await OffsiteCarProfit.find().lean();
+    const offsiteCarProfits = await OffsiteCarProfit.find().sort({ date: -1, createdAt: -1 }).limit(8).lean();
     const dashboard = buildDashboard(allCars, appointments);
     const tableDashboard = buildDashboard(cars, appointments);
     const now = new Date();
@@ -498,14 +501,25 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const tireProfitThisMonth = allTireProfits
       .filter(item => item.date && item.date.getFullYear() === now.getFullYear() && item.date.getMonth() === now.getMonth())
       .reduce((sum, item) => sum + toNumber(item.amount), 0);
+    const getOffsiteProfit = item => toNumber(item.salePrice) - toNumber(item.purchaseCost);
+    const offsiteCarProfitTotal = allOffsiteCarProfits.reduce((sum, item) => sum + getOffsiteProfit(item), 0);
+    const offsiteCarProfitThisMonth = allOffsiteCarProfits
+      .filter(item => item.date && item.date.getFullYear() === now.getFullYear() && item.date.getMonth() === now.getMonth())
+      .reduce((sum, item) => sum + getOffsiteProfit(item), 0);
     const soldProfit = {
       ...dashboard.soldProfit,
       carProfit: dashboard.soldProfit.totalProfit,
       tireProfit: tireProfitTotal,
       tireProfitThisMonth,
-      totalProfit: dashboard.soldProfit.totalProfit + tireProfitTotal,
-      profitThisMonth: dashboard.soldProfit.profitThisMonth + tireProfitThisMonth,
-      tireRows: tireProfits
+      offsiteCarProfit: offsiteCarProfitTotal,
+      offsiteCarProfitThisMonth,
+      totalProfit: dashboard.soldProfit.totalProfit + tireProfitTotal + offsiteCarProfitTotal,
+      profitThisMonth: dashboard.soldProfit.profitThisMonth + tireProfitThisMonth + offsiteCarProfitThisMonth,
+      tireRows: tireProfits,
+      offsiteCarRows: offsiteCarProfits.map(item => ({
+        ...item,
+        profit: getOffsiteProfit(item)
+      }))
     };
 
     let rows = tableDashboard.rows;
@@ -577,6 +591,27 @@ router.post('/command-center/tire-profit', isAdmin, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).send('Error saving tire profit');
+  }
+});
+
+router.post('/command-center/offsite-car-profit', isAdmin, async (req, res) => {
+  try {
+    const salePrice = toNumber(req.body.salePrice);
+
+    if (salePrice > 0) {
+      await new OffsiteCarProfit({
+        vehicleLabel: String(req.body.vehicleLabel || '').trim(),
+        purchaseCost: toNumber(req.body.purchaseCost),
+        salePrice,
+        date: parseDate(req.body.date) || new Date(),
+        note: String(req.body.note || '').trim()
+      }).save();
+    }
+
+    res.redirect('/admin/command-center');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error saving off-site car profit');
   }
 });
 

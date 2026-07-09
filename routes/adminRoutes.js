@@ -348,6 +348,34 @@ function getCsvValue(row, aliases) {
   return '';
 }
 
+function buildCarDraftFromCsvRow(raw) {
+  const year = toNumber(getCsvValue(raw, ['Year', 'Vehicle Year', 'Model Year']));
+  const make = getCsvValue(raw, ['Make', 'Vehicle Make']);
+  const model = getCsvValue(raw, ['Model', 'Vehicle Model']);
+  const trim = getCsvValue(raw, ['Trim', 'Vehicle Trim']);
+  const mileage = toNumber(getCsvValue(raw, ['Mileage', 'Kilometers', 'Odometer', 'KM', 'KMs']));
+  const exteriorColor = getCsvValue(raw, ['Exterior Color', 'Exterior', 'Color']);
+  const interiorColor = getCsvValue(raw, ['Interior Color', 'Interior']);
+  const transmission = getCsvValue(raw, ['Transmission']);
+  const drivetrain = getCsvValue(raw, ['Drivetrain', 'Drive Type']);
+  const fuel = getCsvValue(raw, ['Fuel', 'Fuel Type']);
+  const bodyStyle = getCsvValue(raw, ['Body Style', 'Body']);
+
+  return {
+    year: year || undefined,
+    make: make || 'Unknown Make',
+    model: model || 'Unknown Model',
+    trim,
+    mileage: mileage || undefined,
+    exteriorColor,
+    interiorColor,
+    transmission,
+    drivetrain,
+    fuel,
+    bodyStyle
+  };
+}
+
 function buildCsvPreview(fileName, csvText, cars) {
   const parsed = parseCsv(csvText);
   const headers = (parsed.shift() || []).map(header => String(header || '').trim());
@@ -379,8 +407,6 @@ function buildCsvPreview(fileName, csvText, cars) {
       }
     } else if (vinMatches.length > 1) {
       conflicts.push(`VIN conflict: ${vin} matches multiple vehicles`);
-    } else if (vin) {
-      conflicts.push(`VIN not found: ${vin}`);
     } else if (stockMatches.length === 1) {
       match = stockMatches[0];
     } else if (stockMatches.length > 1) {
@@ -392,6 +418,8 @@ function buildCsvPreview(fileName, csvText, cars) {
     const imv = toNumber(getCsvValue(raw, ['IMV', 'CarGurus IMV', 'Instant Market Value']));
     const dealRating = getCsvValue(raw, ['Deal Rating', 'Deal', 'Rating']);
     const daysOnMarket = toNumber(getCsvValue(raw, ['Days on CarGurus', 'Days on Market', 'DOM']));
+    const draft = buildCarDraftFromCsvRow(raw);
+    const canCreate = !match && Boolean(vin || stockNumber);
 
     if (match && askingPrice > 0) {
       const car = cars.find(item => String(item._id) === match.id);
@@ -413,6 +441,8 @@ function buildCsvPreview(fileName, csvText, cars) {
       dealRating,
       daysOnMarket,
       matched: Boolean(match),
+      canCreate,
+      draft,
       conflicts
     };
   });
@@ -610,9 +640,49 @@ router.post('/command-center/cargurus-import/apply', isAdmin, async (req, res) =
     }
 
     let appliedRows = 0;
+    let createdRows = 0;
 
     for (const row of preview.rows) {
-      if (!row.matched || !row.carId) continue;
+      if (!row.matched) {
+        if (!row.canCreate || (!row.vin && !row.stockNumber)) continue;
+
+        const draft = row.draft || {};
+        const newCar = new Car({
+          make: draft.make || 'Unknown Make',
+          model: draft.model || 'Unknown Model',
+          year: draft.year || undefined,
+          price: row.askingPrice || 0,
+          trim: draft.trim || '',
+          stockNumber: row.stockNumber || '',
+          sold: false,
+          displayOrder: await getNextTopDisplayOrder(),
+          description: 'Imported from CarGurus. Add full listing details, photos, and private financials before publishing.',
+          exteriorColor: draft.exteriorColor || '',
+          interiorColor: draft.interiorColor || '',
+          mileage: draft.mileage || undefined,
+          transmission: draft.transmission || '',
+          drivetrain: draft.drivetrain || '',
+          fuel: draft.fuel || '',
+          bodyStyle: draft.bodyStyle || '',
+          vin: row.vin || '',
+          adminStatus: 'Needs Photos',
+          privateNotes: 'Created from CarGurus CSV import. Add purchase cost and private financial details.',
+          cargurus: {
+            saves: row.saves,
+            imv: row.imv || undefined,
+            dealRating: row.dealRating || '',
+            daysOnMarket: row.daysOnMarket || undefined,
+            lastImportedAt: new Date()
+          },
+          images: []
+        });
+
+        await newCar.save();
+        createdRows += 1;
+        continue;
+      }
+
+      if (!row.carId) continue;
 
       const car = await Car.findById(row.carId);
       if (!car) continue;
@@ -648,7 +718,8 @@ router.post('/command-center/cargurus-import/apply', isAdmin, async (req, res) =
       unmatchedRows: preview.rows.filter(row => !row.matched).length,
       conflictRows: preview.rows.filter(row => row.conflicts.length > 0).length,
       appliedRows,
-      summary: 'Updated public price only when CSV price differed; private financial data was not touched.'
+      createdRows,
+      summary: 'Updated matched vehicles and created draft listings for unmatched rows with VIN or stock number. Private financial data was not touched.'
     }).save();
 
     req.session.cargurusPreview = null;

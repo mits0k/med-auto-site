@@ -22,6 +22,10 @@ const carGurusImportLogSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  createdRows: {
+    type: Number,
+    default: 0
+  },
   summary: String
 }, { timestamps: true });
 

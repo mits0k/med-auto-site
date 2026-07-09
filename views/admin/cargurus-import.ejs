@@ -26,7 +26,7 @@
     <div class="admin-panel-header">
       <div>
         <h2>Upload Report</h2>
-        <p>CSV import updates saves, IMV, deal rating, days on CarGurus, and asking price when confirmed.</p>
+        <p>CSV import updates matched cars and creates draft listings for unmatched rows with VIN or stock number.</p>
       </div>
     </div>
 
@@ -74,6 +74,9 @@
                   <% if (row.matched) { %>
                     <strong><%= row.vehicleLabel %></strong>
                     <span class="status-badge status-available">Matched</span>
+                  <% } else if (row.canCreate) { %>
+                    <strong><%= row.draft.year || '' %> <%= row.draft.make %> <%= row.draft.model %></strong>
+                    <span class="status-badge status-available">Will create</span>
                   <% } else { %>
                     <span class="status-badge status-sold">Unmatched</span>
                   <% } %>
@@ -124,6 +127,7 @@
               <th>Unmatched</th>
               <th>Conflicts</th>
               <th>Applied</th>
+              <th>Created</th>
             </tr>
           </thead>
           <tbody>
@@ -136,6 +140,7 @@
                 <td><%= log.unmatchedRows %></td>
                 <td><%= log.conflictRows %></td>
                 <td><%= log.appliedRows %></td>
+                <td><%= log.createdRows || 0 %></td>
               </tr>
             <% }) %>
           </tbody>

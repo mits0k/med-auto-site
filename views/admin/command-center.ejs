@@ -119,7 +119,32 @@
                     <button type="submit" class="btn btn-secondary command-table-button">Update</button>
                   </form>
                 </td>
-                <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
+                <td data-label="Invested">
+                  <strong><%= money(metrics.totalInvested) %></strong>
+                  <form class="command-price-form command-investment-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
+                    <label>
+                      <span>Paid</span>
+                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Paid" />
+                    </label>
+                    <label>
+                      <span>Fees</span>
+                      <input type="number" name="auctionFees" min="0" step="1" value="<%= car.auctionFees || '' %>" placeholder="Fees" />
+                    </label>
+                    <label>
+                      <span>Transport</span>
+                      <input type="number" name="transportCost" min="0" step="1" value="<%= car.transportCost || '' %>" placeholder="Transport" />
+                    </label>
+                    <label>
+                      <span>Inspection</span>
+                      <input type="number" name="inspectionCost" min="0" step="1" value="<%= car.inspectionCost || '' %>" placeholder="Inspection" />
+                    </label>
+                    <label>
+                      <span>Recon</span>
+                      <input type="number" name="reconTotal" min="0" step="1" value="<%= metrics.reconTotal || '' %>" placeholder="Recon" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                  </form>
+                </td>
                 <td data-label="Gross Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.soldGross) %></td>
                 <td data-label="ROI"><%= percent(metrics.soldRoi) %></td>
               </tr>
@@ -194,7 +219,32 @@
                     <span class="admin-cell-meta">No website price</span>
                   <% } %>
                 </td>
-                <td data-label="Cost"><%= money(car.purchaseCost) %></td>
+                <td data-label="Cost">
+                  <strong><%= money(car.purchaseCost) %></strong>
+                  <form class="command-price-form command-investment-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
+                    <label>
+                      <span>Paid</span>
+                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Paid" />
+                    </label>
+                    <label>
+                      <span>Fees</span>
+                      <input type="number" name="auctionFees" min="0" step="1" value="<%= car.auctionFees || '' %>" placeholder="Fees" />
+                    </label>
+                    <label>
+                      <span>Transport</span>
+                      <input type="number" name="transportCost" min="0" step="1" value="<%= car.transportCost || '' %>" placeholder="Transport" />
+                    </label>
+                    <label>
+                      <span>Inspection</span>
+                      <input type="number" name="inspectionCost" min="0" step="1" value="<%= car.inspectionCost || '' %>" placeholder="Inspection" />
+                    </label>
+                    <label>
+                      <span>Recon</span>
+                      <input type="number" name="reconTotal" min="0" step="1" value="<%= metrics.reconTotal || '' %>" placeholder="Recon" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Save costs</button>
+                  </form>
+                </td>
                 <td data-label="Recon"><%= money(metrics.reconTotal) %></td>
                 <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
                 <td data-label="Gross" class="<%= (isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><%= money(isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) %></td>

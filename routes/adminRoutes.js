@@ -611,6 +611,57 @@ router.post('/command-center/cars/:id/pricing', isAdmin, async (req, res) => {
   }
 });
 
+router.post('/command-center/cars/:id/investment', isAdmin, async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    const {
+      purchaseCost,
+      auctionFees,
+      transportCost,
+      inspectionCost,
+      reconTotal
+    } = req.body;
+
+    car.purchaseCost = purchaseCost === '' ? 0 : toNumber(purchaseCost);
+    car.auctionFees = auctionFees === '' ? 0 : toNumber(auctionFees);
+    car.transportCost = transportCost === '' ? 0 : toNumber(transportCost);
+    car.inspectionCost = inspectionCost === '' ? 0 : toNumber(inspectionCost);
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'reconTotal')) {
+      const amount = reconTotal === '' ? 0 : toNumber(reconTotal);
+      const reconExpenses = Array.isArray(car.reconExpenses) ? car.reconExpenses : [];
+      const existing = reconExpenses.find(item => item.category === 'Other' && item.description === 'Command Center recon total');
+
+      if (existing) {
+        existing.amount = amount;
+        existing.date = existing.date || new Date();
+      } else if (amount > 0) {
+        reconExpenses.push({
+          date: new Date(),
+          category: 'Other',
+          description: 'Command Center recon total',
+          amount
+        });
+      }
+
+      car.reconExpenses = reconExpenses.filter(item => {
+        return !(item.category === 'Other' && item.description === 'Command Center recon total' && toNumber(item.amount) <= 0);
+      });
+    }
+
+    await car.save();
+    res.redirect('/admin/command-center');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error updating command center investment');
+  }
+});
+
 router.get('/command-center/buying-scorecard', isAdmin, async (req, res) => {
   try {
     const scorecards = await BuyingScorecard.find().sort({ createdAt: -1 }).limit(40);

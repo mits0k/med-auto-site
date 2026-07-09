@@ -3515,6 +3515,14 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   font-size: 13px;
 }
 
+.command-investment-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.command-investment-form .command-table-button {
+  grid-column: 1 / -1;
+}
+
 .command-negative {
   color: #ff8dac;
 }

@@ -143,7 +143,6 @@
           <thead>
             <tr>
               <th>Sold Item</th>
-              <th>Type</th>
               <th>Bought For</th>
               <th>Sold For</th>
               <th>Profit</th>
@@ -168,13 +167,16 @@
                 <td data-label="Bought For">
                   <% if (item.car) { %>
                     <strong><%= money(item.boughtFor) %></strong>
-                    <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/investment" method="POST">
-                      <label>
-                        <span>Bought for</span>
-                        <input type="number" name="purchaseCost" min="0" step="1" value="<%= item.car.purchaseCost || '' %>" placeholder="Bought for" />
-                      </label>
-                      <button type="submit" class="btn btn-secondary command-table-button">Update</button>
-                    </form>
+                    <details class="command-inline-editor">
+                      <summary>Edit</summary>
+                      <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/investment" method="POST">
+                        <label>
+                          <span>Bought for</span>
+                          <input type="number" name="purchaseCost" min="0" step="1" value="<%= item.car.purchaseCost || '' %>" placeholder="Bought for" />
+                        </label>
+                        <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                      </form>
+                    </details>
                   <% } else if (item.boughtFor !== null && typeof item.boughtFor !== 'undefined') { %>
                     <strong><%= money(item.boughtFor) %></strong>
                   <% } else { %>
@@ -184,13 +186,16 @@
                 <td data-label="Sold For">
                   <% if (item.car) { %>
                     <strong><%= money(item.soldFor) %></strong>
-                    <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/pricing" method="POST">
-                      <label>
-                        <span>Sold for</span>
-                        <input type="number" name="finalSalePrice" min="0" step="1" value="<%= item.car.finalSalePrice || '' %>" placeholder="Sold for" />
-                      </label>
-                      <button type="submit" class="btn btn-secondary command-table-button">Update</button>
-                    </form>
+                    <details class="command-inline-editor">
+                      <summary>Edit</summary>
+                      <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/pricing" method="POST">
+                        <label>
+                          <span>Sold for</span>
+                          <input type="number" name="finalSalePrice" min="0" step="1" value="<%= item.car.finalSalePrice || '' %>" placeholder="Sold for" />
+                        </label>
+                        <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                      </form>
+                    </details>
                   <% } else { %>
                     <strong><%= money(item.soldFor) %></strong>
                   <% } %>

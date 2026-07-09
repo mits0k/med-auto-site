@@ -3433,7 +3433,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 .command-profit-entry-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .68fr);
   gap: 12px;
 }
 
@@ -3459,11 +3459,17 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 }
 
 .command-extra-profit-form {
-  grid-template-columns: minmax(160px, 1fr) repeat(3, minmax(110px, .45fr)) minmax(160px, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .command-tire-form {
-  grid-template-columns: minmax(120px, .65fr) minmax(120px, .65fr) minmax(160px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.command-extra-profit-form label:first-child,
+.command-extra-profit-form label:nth-child(5),
+.command-tire-form label:nth-child(3) {
+  grid-column: 1 / -1;
 }
 
 .command-extra-profit-form .btn,
@@ -3507,7 +3513,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 }
 
 .command-profit-table {
-  min-width: 760px;
+  min-width: 680px;
 }
 
 .command-filter-panel {
@@ -3600,6 +3606,25 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 .command-quick-form {
   max-width: 180px;
+}
+
+.command-inline-editor {
+  margin-top: 5px;
+}
+
+.command-inline-editor summary {
+  display: inline-flex;
+  width: fit-content;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.command-inline-editor[open] summary {
+  margin-bottom: 7px;
 }
 
 .command-negative {

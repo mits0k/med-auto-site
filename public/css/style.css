@@ -3431,20 +3431,44 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   gap: 16px;
 }
 
-.command-tire-form,
-.command-extra-profit-form {
+.command-profit-entry-grid {
   display: grid;
-  grid-template-columns: 160px 150px minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+  gap: 12px;
+}
+
+.command-profit-entry {
+  display: grid;
   gap: 10px;
-  align-items: end;
   padding: 12px;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 8px;
   background: rgba(7, 11, 17, .68);
 }
 
+.command-profit-entry h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.command-tire-form,
 .command-extra-profit-form {
-  grid-template-columns: minmax(180px, 1fr) 140px 140px 140px minmax(180px, 1fr) auto;
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.command-extra-profit-form {
+  grid-template-columns: minmax(160px, 1fr) repeat(3, minmax(110px, .45fr)) minmax(160px, 1fr);
+}
+
+.command-tire-form {
+  grid-template-columns: minmax(120px, .65fr) minmax(120px, .65fr) minmax(160px, 1fr);
+}
+
+.command-extra-profit-form .btn,
+.command-tire-form .btn {
+  grid-column: 1 / -1;
 }
 
 .command-tire-form label,
@@ -3812,8 +3836,9 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .command-profit-entry-grid,
   .command-extra-profit-form {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .command-filters .btn {
@@ -3849,10 +3874,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
     grid-template-columns: 1fr;
   }
 
-  .command-tire-form {
-    grid-template-columns: 1fr;
-  }
-
+  .command-tire-form,
   .command-extra-profit-form {
     grid-template-columns: 1fr;
   }

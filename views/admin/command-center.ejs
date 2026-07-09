@@ -6,9 +6,7 @@
   const number = value => Math.round(Number(value || 0)).toLocaleString();
   const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];
   const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
-  const recentSoldRows = Array.isArray(profit.recentRows) ? profit.recentRows : [];
-  const tireRows = Array.isArray(profit.tireRows) ? profit.tireRows : [];
-  const offsiteCarRows = Array.isArray(profit.offsiteCarRows) ? profit.offsiteCarRows : [];
+  const profitRows = Array.isArray(profit.profitRows) ? profit.profitRows : [];
   const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
   const isCommandSold = car => Boolean(car && (car.sold || car.commandCenterSold));
 %>
@@ -91,108 +89,117 @@
       <div class="admin-stat"><span>Sold ROI</span><strong><%= percent(profit.averageRoi) %></strong></div>
     </div>
 
-    <form class="command-extra-profit-form" action="/admin/command-center/offsite-car-profit" method="POST">
-      <label>
-        <span>Car</span>
-        <input type="text" name="vehicleLabel" placeholder="Example: Civic beater" />
-      </label>
-      <label>
-        <span>Bought for</span>
-        <input type="number" name="purchaseCost" min="0" step="1" placeholder="Bought for" />
-      </label>
-      <label>
-        <span>Sold for</span>
-        <input type="number" name="salePrice" min="0" step="1" placeholder="Sold for" required />
-      </label>
-      <label>
-        <span>Date</span>
-        <input type="date" name="date" />
-      </label>
-      <label>
-        <span>Note</span>
-        <input type="text" name="note" placeholder="Cousin / off-site sale" />
-      </label>
-      <button type="submit" class="btn btn-primary">Add Off-site Car Profit</button>
-    </form>
-
-    <% if (offsiteCarRows.length > 0) { %>
-      <div class="command-tire-list">
-        <% offsiteCarRows.forEach(item => { %>
-          <span><%= item.date ? new Date(item.date).toLocaleDateString() : '-' %> · <strong><%= money(item.profit) %></strong><%= item.vehicleLabel ? ` · ${item.vehicleLabel}` : '' %></span>
-        <% }) %>
+    <div class="command-profit-entry-grid">
+      <div class="command-profit-entry">
+        <h3>Off-site car</h3>
+        <form class="command-extra-profit-form" action="/admin/command-center/offsite-car-profit" method="POST">
+          <label>
+            <span>Car</span>
+            <input type="text" name="vehicleLabel" placeholder="Example: Civic beater" />
+          </label>
+          <label>
+            <span>Bought for</span>
+            <input type="number" name="purchaseCost" min="0" step="1" placeholder="Bought for" />
+          </label>
+          <label>
+            <span>Sold for</span>
+            <input type="number" name="salePrice" min="0" step="1" placeholder="Sold for" required />
+          </label>
+          <label>
+            <span>Date</span>
+            <input type="date" name="date" />
+          </label>
+          <label>
+            <span>Note</span>
+            <input type="text" name="note" placeholder="Cousin / off-site sale" />
+          </label>
+          <button type="submit" class="btn btn-primary">Add Off-site Car</button>
+        </form>
       </div>
-    <% } %>
 
-    <form class="command-tire-form" action="/admin/command-center/tire-profit" method="POST">
-      <label>
-        <span>Tire profit</span>
-        <input type="number" name="amount" min="0" step="1" placeholder="Amount made" required />
-      </label>
-      <label>
-        <span>Date</span>
-        <input type="date" name="date" />
-      </label>
-      <label>
-        <span>Note</span>
-        <input type="text" name="note" placeholder="Example: winter tires" />
-      </label>
-      <button type="submit" class="btn btn-primary">Add Tire Profit</button>
-    </form>
-
-    <% if (tireRows.length > 0) { %>
-      <div class="command-tire-list">
-        <% tireRows.forEach(item => { %>
-          <span><%= item.date ? new Date(item.date).toLocaleDateString() : '-' %> · <strong><%= money(item.amount) %></strong><%= item.note ? ` · ${item.note}` : '' %></span>
-        <% }) %>
+      <div class="command-profit-entry">
+        <h3>Tires</h3>
+        <form class="command-tire-form" action="/admin/command-center/tire-profit" method="POST">
+          <label>
+            <span>Profit</span>
+            <input type="number" name="amount" min="0" step="1" placeholder="Amount made" required />
+          </label>
+          <label>
+            <span>Date</span>
+            <input type="date" name="date" />
+          </label>
+          <label>
+            <span>Note</span>
+            <input type="text" name="note" placeholder="Example: winter tires" />
+          </label>
+          <button type="submit" class="btn btn-primary">Add Tires</button>
+        </form>
       </div>
-    <% } %>
+    </div>
 
-    <% if (recentSoldRows.length > 0) { %>
+    <% if (profitRows.length > 0) { %>
       <div class="admin-table-wrap command-profit-table-wrap">
         <table class="admin-table command-table command-profit-table">
           <thead>
             <tr>
-              <th>Sold Vehicle</th>
+              <th>Sold Item</th>
+              <th>Type</th>
               <th>Bought For</th>
               <th>Sold For</th>
               <th>Profit</th>
-              <th>ROI</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            <% recentSoldRows.forEach(({ car, metrics }) => { %>
+            <% profitRows.forEach(item => { %>
               <tr>
-                <td data-label="Sold Vehicle">
-                  <strong><%= metrics.label || 'Vehicle' %></strong>
-                  <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit sale details</a>
+                <td data-label="Sold Item">
+                  <strong><%= item.label || 'Sold item' %></strong>
+                  <% if (item.date) { %>
+                    <span class="admin-cell-meta"><%= new Date(item.date).toLocaleDateString() %></span>
+                  <% } %>
+                  <% if (item.note && item.type !== 'Tires') { %>
+                    <span class="admin-cell-meta"><%= item.note %></span>
+                  <% } %>
+                  <% if (item.car) { %>
+                    <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= item.car._id %>/edit">Edit sale details</a>
+                  <% } %>
                 </td>
                 <td data-label="Bought For">
-                  <strong><%= money(metrics.totalInvested) %></strong>
-                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
-                    <label>
-                      <span>Bought for</span>
-                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Bought for" />
-                    </label>
-                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
-                  </form>
+                  <% if (item.car) { %>
+                    <strong><%= money(item.boughtFor) %></strong>
+                    <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/investment" method="POST">
+                      <label>
+                        <span>Bought for</span>
+                        <input type="number" name="purchaseCost" min="0" step="1" value="<%= item.car.purchaseCost || '' %>" placeholder="Bought for" />
+                      </label>
+                      <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                    </form>
+                  <% } else if (item.boughtFor !== null && typeof item.boughtFor !== 'undefined') { %>
+                    <strong><%= money(item.boughtFor) %></strong>
+                  <% } else { %>
+                    <span class="admin-muted">-</span>
+                  <% } %>
                 </td>
                 <td data-label="Sold For">
-                  <strong><%= money(car.finalSalePrice) %></strong>
-                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
-                    <label>
-                      <span>Sold for</span>
-                      <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="Sold for" />
-                    </label>
-                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
-                  </form>
+                  <% if (item.car) { %>
+                    <strong><%= money(item.soldFor) %></strong>
+                    <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= item.car._id %>/pricing" method="POST">
+                      <label>
+                        <span>Sold for</span>
+                        <input type="number" name="finalSalePrice" min="0" step="1" value="<%= item.car.finalSalePrice || '' %>" placeholder="Sold for" />
+                      </label>
+                      <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                    </form>
+                  <% } else { %>
+                    <strong><%= money(item.soldFor) %></strong>
+                  <% } %>
                 </td>
-                <td data-label="Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><strong><%= money(metrics.soldGross) %></strong></td>
-                <td data-label="ROI"><%= percent(metrics.soldRoi) %></td>
+                <td data-label="Profit" class="<%= item.profit < 0 ? 'command-negative' : '' %>"><strong><%= money(item.profit) %></strong></td>
                 <td data-label="Status">
-                  <span class="status-badge status-sold"><%= car.sold ? 'Public Sold' : 'Command Sold' %></span>
-                  <% if (car.commandCenterSold && !car.sold) { %>
-                    <form action="/admin/command-center/cars/<%= car._id %>/toggle-sold" method="POST">
+                  <span class="status-badge <%= item.type === 'Tires' ? 'status-available' : 'status-sold' %>"><%= item.type %></span>
+                  <% if (item.car && item.car.commandCenterSold && !item.car.sold) { %>
+                    <form action="/admin/command-center/cars/<%= item.car._id %>/toggle-sold" method="POST">
                       <button type="submit" class="btn btn-muted command-table-button">Put Back Unsold</button>
                     </form>
                   <% } %>
@@ -203,7 +210,7 @@
         </table>
       </div>
     <% } else { %>
-      <p class="admin-muted">No sold cars with sale details yet. Mark a car sold and fill in final sale price to start tracking profit.</p>
+      <p class="admin-muted">No sold items yet. Add a car sale, off-site car, or tire profit to start tracking.</p>
     <% } %>
   </div>
 

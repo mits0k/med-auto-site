@@ -519,7 +519,41 @@ router.get('/command-center', isAdmin, async (req, res) => {
       offsiteCarRows: offsiteCarProfits.map(item => ({
         ...item,
         profit: getOffsiteProfit(item)
-      }))
+      })),
+      profitRows: [
+        ...dashboard.soldProfit.recentRows.map(row => ({
+          type: row.car.sold ? 'Public Sold' : 'Command Sold',
+          date: row.car.saleDate || row.car.updatedAt,
+          label: row.metrics.label || 'Vehicle',
+          boughtFor: row.metrics.totalInvested,
+          soldFor: toNumber(row.car.finalSalePrice) || row.metrics.privateAskingPrice,
+          profit: row.metrics.soldGross,
+          roi: row.metrics.soldRoi,
+          car: row.car
+        })),
+        ...offsiteCarProfits.map(item => ({
+          type: 'Off-site Car',
+          date: item.date,
+          label: item.vehicleLabel || 'Off-site car',
+          boughtFor: toNumber(item.purchaseCost),
+          soldFor: toNumber(item.salePrice),
+          profit: getOffsiteProfit(item),
+          roi: toNumber(item.purchaseCost) > 0 ? getOffsiteProfit(item) / toNumber(item.purchaseCost) : 0,
+          note: item.note
+        })),
+        ...tireProfits.map(item => ({
+          type: 'Tires',
+          date: item.date,
+          label: item.note || 'Tire sale',
+          boughtFor: null,
+          soldFor: toNumber(item.amount),
+          profit: toNumber(item.amount),
+          roi: 0,
+          note: item.note
+        }))
+      ]
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+        .slice(0, 20)
     };
 
     let rows = tableDashboard.rows;

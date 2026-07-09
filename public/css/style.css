@@ -3465,7 +3465,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 }
 
 .command-table {
-  min-width: 1040px;
+  min-width: 1120px;
 }
 
 .command-table td {
@@ -3476,6 +3476,43 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 .command-row-link,
 .command-conflict {
   display: block;
+}
+
+.command-table-button {
+  width: 100%;
+  min-height: 34px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.command-table-button + .command-table-button,
+.command-table td form + form {
+  margin-top: 7px;
+}
+
+.command-price-form {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.command-price-form label {
+  display: grid;
+  gap: 4px;
+}
+
+.command-price-form span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.command-price-form input {
+  min-height: 34px;
+  padding: 8px 9px;
+  font-size: 13px;
 }
 
 .command-negative {

@@ -8,6 +8,7 @@
   const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
   const recentSoldRows = Array.isArray(profit.recentRows) ? profit.recentRows : [];
   const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
+  const isCommandSold = car => Boolean(car && (car.sold || car.commandCenterSold));
 %>
 
 <section class="container admin-shell admin-page command-center-page">
@@ -145,6 +146,7 @@
               <th>Days</th>
               <th>Engagement</th>
               <th>Deal / IMV</th>
+              <th>Command Sale</th>
               <th>Target</th>
             </tr>
           </thead>
@@ -164,12 +166,30 @@
                     </div>
                   </div>
                 </td>
-                <td data-label="Asking"><strong><%= car.sold ? money(car.finalSalePrice || car.price) : money(car.price) %></strong></td>
+                <td data-label="Asking">
+                  <strong><%= isCommandSold(car) ? money(car.finalSalePrice || metrics.privateAskingPrice) : money(metrics.privateAskingPrice) %></strong>
+                  <form class="command-price-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
+                    <label>
+                      <span>Private price</span>
+                      <input type="number" name="commandCenterPrice" min="0" step="1" value="<%= car.commandCenterPrice || '' %>" placeholder="<%= car.price ? Math.round(car.price) : 'Private' %>" />
+                    </label>
+                    <label>
+                      <span>Sale price</span>
+                      <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="<%= metrics.privateAskingPrice ? Math.round(metrics.privateAskingPrice) : 'Sold for' %>" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Save</button>
+                  </form>
+                  <% if (car.price) { %>
+                    <span class="admin-cell-meta">Website: <%= money(car.price) %></span>
+                  <% } else { %>
+                    <span class="admin-cell-meta">No website price</span>
+                  <% } %>
+                </td>
                 <td data-label="Cost"><%= money(car.purchaseCost) %></td>
                 <td data-label="Recon"><%= money(metrics.reconTotal) %></td>
                 <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
-                <td data-label="Gross" class="<%= (car.sold ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><%= money(car.sold ? metrics.soldGross : metrics.potentialGross) %></td>
-                <td data-label="ROI"><%= percent(car.sold ? metrics.soldRoi : metrics.roi) %></td>
+                <td data-label="Gross" class="<%= (isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><%= money(isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) %></td>
+                <td data-label="ROI"><%= percent(isCommandSold(car) ? metrics.soldRoi : metrics.roi) %></td>
                 <td data-label="Days"><%= metrics.daysInStock %></td>
                 <td data-label="Engagement">
                   <span class="command-mini-stat"><%= car.cargurus?.saves || 0 %> saves</span>
@@ -179,6 +199,23 @@
                 <td data-label="Deal / IMV">
                   <strong><%= car.cargurus?.dealRating || 'No rating' %></strong>
                   <span class="admin-cell-meta"><%= car.cargurus?.imv ? money(car.cargurus.imv) : 'No IMV' %></span>
+                </td>
+                <td data-label="Command Sale">
+                  <% if (car.sold) { %>
+                    <span class="status-badge status-sold">Public Sold</span>
+                  <% } else if (car.commandCenterSold) { %>
+                    <span class="status-badge status-sold">Command Sold</span>
+                  <% } else { %>
+                    <form action="/admin/command-center/cars/<%= car._id %>/toggle-sold" method="POST">
+                      <button type="submit" class="btn btn-info command-table-button">Mark Sold</button>
+                    </form>
+                  <% } %>
+
+                  <% if (car.commandCenterSold && !car.sold) { %>
+                    <form action="/admin/command-center/cars/<%= car._id %>/toggle-sold" method="POST">
+                      <button type="submit" class="btn btn-muted command-table-button">Undo</button>
+                    </form>
+                  <% } %>
                 </td>
                 <td data-label="Target">
                   <strong><%= metrics.recommendation.targetPrice ? money(metrics.recommendation.targetPrice) : '-' %></strong>

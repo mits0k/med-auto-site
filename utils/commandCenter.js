@@ -60,6 +60,10 @@ function isOnOrAfter(date, start) {
   return !Number.isNaN(value.getTime()) && value >= start;
 }
 
+function isCommandCenterSold(car) {
+  return Boolean(car.sold || car.commandCenterSold);
+}
+
 function getReconTotal(car) {
   return (car.reconExpenses || []).reduce((sum, item) => sum + toNumber(item.amount), 0);
 }
@@ -72,13 +76,17 @@ function getTotalInvested(car) {
     getReconTotal(car);
 }
 
+function getPrivateAskingPrice(car) {
+  return toNumber(car.commandCenterPrice) || toNumber(car.price);
+}
+
 function getPotentialGross(car) {
   const totalInvested = getTotalInvested(car);
-  return totalInvested > 0 ? toNumber(car.price) - totalInvested : 0;
+  return totalInvested > 0 ? getPrivateAskingPrice(car) - totalInvested : 0;
 }
 
 function getSoldGross(car) {
-  return toNumber(car.finalSalePrice) - getTotalInvested(car);
+  return (toNumber(car.finalSalePrice) || getPrivateAskingPrice(car)) - getTotalInvested(car);
 }
 
 function getRoi(gross, invested) {
@@ -219,6 +227,7 @@ function getVehicleMetrics(car, appointmentsByCar = {}) {
     roi,
     soldGross,
     soldRoi,
+    privateAskingPrice: getPrivateAskingPrice(car),
     daysInStock: getDaysInStock(car),
     leadCounts,
     appointments: toNumber(appointmentsByCar[String(car._id)]) + leadCounts.appointments,
@@ -270,9 +279,9 @@ function buildDashboard(cars, appointments = []) {
     car,
     metrics: getVehicleMetrics(car, appointmentsByCar)
   }));
-  const activeRows = rows.filter(row => !row.car.sold);
-  const soldRows = rows.filter(row => row.car.sold);
-  const soldThisMonth = rows.filter(row => row.car.sold && isThisMonth(row.car.saleDate || row.car.updatedAt, now));
+  const activeRows = rows.filter(row => !isCommandCenterSold(row.car));
+  const soldRows = rows.filter(row => isCommandCenterSold(row.car));
+  const soldThisMonth = rows.filter(row => isCommandCenterSold(row.car) && isThisMonth(row.car.saleDate || row.car.updatedAt, now));
   const leadsThisMonth = rows.reduce((sum, row) => {
     return sum + (row.car.leads || []).filter(lead => isThisMonth(lead.date, now)).length;
   }, 0);
@@ -345,5 +354,7 @@ module.exports = {
   getBuyingScorecardMetrics,
   getRecommendation,
   getVehicleMetrics,
+  getPrivateAskingPrice,
+  isCommandCenterSold,
   toNumber
 };

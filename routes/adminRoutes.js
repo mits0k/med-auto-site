@@ -18,7 +18,9 @@ const {
   LEAD_STAGES,
   buildDashboard,
   getBuyingScorecardMetrics,
+  getPrivateAskingPrice,
   getVehicleMetrics,
+  isCommandCenterSold,
   toNumber
 } = require('../utils/commandCenter');
 
@@ -478,7 +480,11 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const sort = req.query.sort || 'days';
     const status = req.query.status || 'active';
     const search = String(req.query.search || '').trim().toLowerCase();
-    const filter = status === 'sold' ? { sold: true } : status === 'all' ? {} : { sold: { $ne: true } };
+    const filter = status === 'sold'
+      ? { $or: [{ sold: true }, { commandCenterSold: true }] }
+      : status === 'all'
+        ? {}
+        : { sold: { $ne: true }, commandCenterSold: { $ne: true } };
     const allCars = await Car.find().sort(displaySort);
     const cars = await Car.find(filter).sort(displaySort);
     const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
@@ -503,8 +509,8 @@ router.get('/command-center', isAdmin, async (req, res) => {
     rows.sort((a, b) => {
       if (sort === 'roi') return b.metrics.roi - a.metrics.roi;
       if (sort === 'gross') {
-        const aGross = a.car.sold ? a.metrics.soldGross : a.metrics.potentialGross;
-        const bGross = b.car.sold ? b.metrics.soldGross : b.metrics.potentialGross;
+        const aGross = isCommandCenterSold(a.car) ? a.metrics.soldGross : a.metrics.potentialGross;
+        const bGross = isCommandCenterSold(b.car) ? b.metrics.soldGross : b.metrics.potentialGross;
         return bGross - aGross;
       }
       if (sort === 'days') return b.metrics.daysInStock - a.metrics.daysInStock;
@@ -540,7 +546,7 @@ router.get('/command-center', isAdmin, async (req, res) => {
 
 router.get('/command-center/weekly', isAdmin, async (req, res) => {
   try {
-    const cars = await Car.find({ sold: { $ne: true } }).sort(displaySort);
+    const cars = await Car.find({ sold: { $ne: true }, commandCenterSold: { $ne: true } }).sort(displaySort);
     const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
     const dashboard = buildDashboard(cars, appointments);
     const groups = ACTION_GROUPS.map(group => ({
@@ -552,6 +558,52 @@ router.get('/command-center/weekly', isAdmin, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).send('Error loading weekly action center');
+  }
+});
+
+router.post('/command-center/cars/:id/toggle-sold', isAdmin, async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    car.commandCenterSold = !car.commandCenterSold;
+
+    if (car.commandCenterSold) {
+      if (!car.saleDate) car.saleDate = new Date();
+      if (!car.finalSalePrice && getPrivateAskingPrice(car)) car.finalSalePrice = getPrivateAskingPrice(car);
+      if (!car.adminStatus || car.adminStatus === 'Retail Ready') car.adminStatus = 'Sold';
+    } else if (car.adminStatus === 'Sold' && !car.sold) {
+      car.adminStatus = 'Retail Ready';
+    }
+
+    await car.save();
+    res.redirect('/admin/command-center');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error updating command center sale status');
+  }
+});
+
+router.post('/command-center/cars/:id/pricing', isAdmin, async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+
+    if (!car) {
+      return res.status(404).send('Car not found');
+    }
+
+    const { commandCenterPrice, finalSalePrice } = req.body;
+    car.commandCenterPrice = commandCenterPrice === '' ? undefined : toNumber(commandCenterPrice);
+    car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
+
+    await car.save();
+    res.redirect('/admin/command-center');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error updating command center pricing');
   }
 });
 

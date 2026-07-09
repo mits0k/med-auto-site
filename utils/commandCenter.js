@@ -1,4 +1,5 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const PROFIT_TRACKING_START = new Date('2026-07-09T16:07:26Z');
 
 const LEAD_SOURCES = [
   'CarGurus',
@@ -51,6 +52,12 @@ function isThisMonth(date, now = new Date()) {
   if (!date) return false;
   const value = new Date(date);
   return value.getFullYear() === now.getFullYear() && value.getMonth() === now.getMonth();
+}
+
+function isOnOrAfter(date, start) {
+  if (!date) return false;
+  const value = new Date(date);
+  return !Number.isNaN(value.getTime()) && value >= start;
 }
 
 function getReconTotal(car) {
@@ -264,6 +271,7 @@ function buildDashboard(cars, appointments = []) {
     metrics: getVehicleMetrics(car, appointmentsByCar)
   }));
   const activeRows = rows.filter(row => !row.car.sold);
+  const soldRows = rows.filter(row => row.car.sold);
   const soldThisMonth = rows.filter(row => row.car.sold && isThisMonth(row.car.saleDate || row.car.updatedAt, now));
   const leadsThisMonth = rows.reduce((sum, row) => {
     return sum + (row.car.leads || []).filter(lead => isThisMonth(lead.date, now)).length;
@@ -282,10 +290,35 @@ function buildDashboard(cars, appointments = []) {
   const avgDays = activeRows.length
     ? activeRows.reduce((sum, row) => sum + row.metrics.daysInStock, 0) / activeRows.length
     : 0;
+  const trackedSoldRows = soldRows.filter(row => isOnOrAfter(row.car.saleDate, PROFIT_TRACKING_START));
+  const soldWithSalePrice = trackedSoldRows.filter(row => toNumber(row.car.finalSalePrice) > 0);
+  const soldProfitTotal = soldWithSalePrice.reduce((sum, row) => sum + row.metrics.soldGross, 0);
+  const soldRevenueTotal = soldWithSalePrice.reduce((sum, row) => sum + toNumber(row.car.finalSalePrice), 0);
+  const soldInvestedTotal = soldWithSalePrice.reduce((sum, row) => sum + row.metrics.totalInvested, 0);
+  const soldProfitThisMonth = soldThisMonth
+    .filter(row => isOnOrAfter(row.car.saleDate, PROFIT_TRACKING_START))
+    .filter(row => toNumber(row.car.finalSalePrice) > 0)
+    .reduce((sum, row) => sum + row.metrics.soldGross, 0);
+  const recentSoldRows = trackedSoldRows
+    .slice()
+    .sort((a, b) => new Date(b.car.saleDate || b.car.updatedAt || 0) - new Date(a.car.saleDate || a.car.updatedAt || 0))
+    .slice(0, 8);
 
   return {
     appointmentsByCar,
     rows,
+    soldProfit: {
+      trackingStart: PROFIT_TRACKING_START,
+      totalProfit: soldProfitTotal,
+      totalRevenue: soldRevenueTotal,
+      totalInvested: soldInvestedTotal,
+      profitThisMonth: soldProfitThisMonth,
+      soldUnits: soldWithSalePrice.length,
+      soldUnitsThisMonth: soldThisMonth.length,
+      averageGross: soldWithSalePrice.length ? soldProfitTotal / soldWithSalePrice.length : 0,
+      averageRoi: soldInvestedTotal > 0 ? soldProfitTotal / soldInvestedTotal : 0,
+      recentRows: recentSoldRows
+    },
     kpis: {
       totalVehicles: cars.length,
       capitalTiedUp: totalInvested,

@@ -479,11 +479,13 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const status = req.query.status || 'active';
     const search = String(req.query.search || '').trim().toLowerCase();
     const filter = status === 'sold' ? { sold: true } : status === 'all' ? {} : { sold: { $ne: true } };
+    const allCars = await Car.find().sort(displaySort);
     const cars = await Car.find(filter).sort(displaySort);
     const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
-    const dashboard = buildDashboard(cars, appointments);
+    const dashboard = buildDashboard(allCars, appointments);
+    const tableDashboard = buildDashboard(cars, appointments);
 
-    let rows = dashboard.rows;
+    let rows = tableDashboard.rows;
 
     if (search) {
       rows = rows.filter(row => {
@@ -500,7 +502,11 @@ router.get('/command-center', isAdmin, async (req, res) => {
 
     rows.sort((a, b) => {
       if (sort === 'roi') return b.metrics.roi - a.metrics.roi;
-      if (sort === 'gross') return b.metrics.potentialGross - a.metrics.potentialGross;
+      if (sort === 'gross') {
+        const aGross = a.car.sold ? a.metrics.soldGross : a.metrics.potentialGross;
+        const bGross = b.car.sold ? b.metrics.soldGross : b.metrics.potentialGross;
+        return bGross - aGross;
+      }
       if (sort === 'days') return b.metrics.daysInStock - a.metrics.daysInStock;
       if (sort === 'capital') return b.metrics.totalInvested - a.metrics.totalInvested;
       if (sort === 'leads') return b.metrics.leadCounts.total - a.metrics.leadCounts.total;
@@ -522,6 +528,7 @@ router.get('/command-center', isAdmin, async (req, res) => {
       rows,
       leadFunnel,
       kpis: dashboard.kpis,
+      soldProfit: dashboard.soldProfit,
       ACTION_GROUPS,
       filters: { sort, status, search }
     });

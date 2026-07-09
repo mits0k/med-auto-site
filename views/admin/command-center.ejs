@@ -5,6 +5,9 @@
   const percent = value => `${Math.round(Number(value || 0) * 100)}%`;
   const number = value => Math.round(Number(value || 0)).toLocaleString();
   const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];
+  const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
+  const recentSoldRows = Array.isArray(profit.recentRows) ? profit.recentRows : [];
+  const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
 %>
 
 <section class="container admin-shell admin-page command-center-page">
@@ -68,6 +71,57 @@
     </form>
   </div>
 
+  <div class="admin-panel command-profit-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Sold Profit Tracker</h2>
+        <p>Recorded gross from cars sold on or after <%= profitStart %> with final sale price and cost details filled in.</p>
+      </div>
+    </div>
+
+    <div class="command-profit-grid" aria-label="Sold profit summary">
+      <div class="admin-stat"><span>Total Gross Profit</span><strong><%= money(profit.totalProfit) %></strong></div>
+      <div class="admin-stat"><span>This Month</span><strong><%= money(profit.profitThisMonth) %></strong></div>
+      <div class="admin-stat"><span>Sold Units</span><strong><%= number(profit.soldUnits) %></strong></div>
+      <div class="admin-stat"><span>Average Gross</span><strong><%= money(profit.averageGross) %></strong></div>
+      <div class="admin-stat"><span>Sold ROI</span><strong><%= percent(profit.averageRoi) %></strong></div>
+    </div>
+
+    <% if (recentSoldRows.length > 0) { %>
+      <div class="admin-table-wrap command-profit-table-wrap">
+        <table class="admin-table command-table command-profit-table">
+          <thead>
+            <tr>
+              <th>Sold Vehicle</th>
+              <th>Sold Date</th>
+              <th>Sale Price</th>
+              <th>Invested</th>
+              <th>Gross Profit</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentSoldRows.forEach(({ car, metrics }) => { %>
+              <tr>
+                <td data-label="Sold Vehicle">
+                  <strong><%= metrics.label || 'Vehicle' %></strong>
+                  <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit sale details</a>
+                </td>
+                <td data-label="Sold Date"><%= car.saleDate ? new Date(car.saleDate).toLocaleDateString() : '-' %></td>
+                <td data-label="Sale Price"><strong><%= money(car.finalSalePrice) %></strong></td>
+                <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
+                <td data-label="Gross Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.soldGross) %></td>
+                <td data-label="ROI"><%= percent(metrics.soldRoi) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="admin-muted">No sold cars with sale details yet. Mark a car sold and fill in final sale price to start tracking profit.</p>
+    <% } %>
+  </div>
+
   <div class="admin-panel">
     <div class="admin-panel-header">
       <div>
@@ -110,12 +164,12 @@
                     </div>
                   </div>
                 </td>
-                <td data-label="Asking"><strong><%= money(car.price) %></strong></td>
+                <td data-label="Asking"><strong><%= car.sold ? money(car.finalSalePrice || car.price) : money(car.price) %></strong></td>
                 <td data-label="Cost"><%= money(car.purchaseCost) %></td>
                 <td data-label="Recon"><%= money(metrics.reconTotal) %></td>
                 <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
-                <td data-label="Gross" class="<%= metrics.potentialGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.potentialGross) %></td>
-                <td data-label="ROI"><%= percent(metrics.roi) %></td>
+                <td data-label="Gross" class="<%= (car.sold ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><%= money(car.sold ? metrics.soldGross : metrics.potentialGross) %></td>
+                <td data-label="ROI"><%= percent(car.sold ? metrics.soldRoi : metrics.roi) %></td>
                 <td data-label="Days"><%= metrics.daysInStock %></td>
                 <td data-label="Engagement">
                   <span class="command-mini-stat"><%= car.cargurus?.saves || 0 %> saves</span>

@@ -3420,6 +3420,21 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   min-height: 98px;
 }
 
+.command-profit-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.command-profit-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.command-profit-table {
+  min-width: 820px;
+}
+
 .command-filter-panel {
   padding: 16px;
 }
@@ -3685,6 +3700,10 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .command-profit-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .command-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3706,6 +3725,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 @media (max-width: 768px) {
   .command-kpi-grid,
+  .command-profit-grid,
   .command-summary-strip,
   .scorecard-layout,
   .weekly-item,

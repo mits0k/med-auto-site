@@ -12,6 +12,7 @@ const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
 const BuyingScorecard = require('../models/BuyingScorecard');
 const CarGurusImportLog = require('../models/CarGurusImportLog');
+const TireProfit = require('../models/TireProfit');
 const {
   ACTION_GROUPS,
   LEAD_SOURCES,
@@ -488,8 +489,24 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const allCars = await Car.find().sort(displaySort);
     const cars = await Car.find(filter).sort(displaySort);
     const appointments = await Appointment.find({ date: { $gte: new Date() } }).select('car date carLabel').lean();
+    const allTireProfits = await TireProfit.find().lean();
+    const tireProfits = await TireProfit.find().sort({ date: -1, createdAt: -1 }).limit(8).lean();
     const dashboard = buildDashboard(allCars, appointments);
     const tableDashboard = buildDashboard(cars, appointments);
+    const now = new Date();
+    const tireProfitTotal = allTireProfits.reduce((sum, item) => sum + toNumber(item.amount), 0);
+    const tireProfitThisMonth = allTireProfits
+      .filter(item => item.date && item.date.getFullYear() === now.getFullYear() && item.date.getMonth() === now.getMonth())
+      .reduce((sum, item) => sum + toNumber(item.amount), 0);
+    const soldProfit = {
+      ...dashboard.soldProfit,
+      carProfit: dashboard.soldProfit.totalProfit,
+      tireProfit: tireProfitTotal,
+      tireProfitThisMonth,
+      totalProfit: dashboard.soldProfit.totalProfit + tireProfitTotal,
+      profitThisMonth: dashboard.soldProfit.profitThisMonth + tireProfitThisMonth,
+      tireRows: tireProfits
+    };
 
     let rows = tableDashboard.rows;
 
@@ -534,13 +551,32 @@ router.get('/command-center', isAdmin, async (req, res) => {
       rows,
       leadFunnel,
       kpis: dashboard.kpis,
-      soldProfit: dashboard.soldProfit,
+      soldProfit,
       ACTION_GROUPS,
       filters: { sort, status, search }
     });
   } catch (e) {
     console.error(e);
     res.status(500).send('Error loading command center');
+  }
+});
+
+router.post('/command-center/tire-profit', isAdmin, async (req, res) => {
+  try {
+    const amount = toNumber(req.body.amount);
+
+    if (amount > 0) {
+      await new TireProfit({
+        amount,
+        date: parseDate(req.body.date) || new Date(),
+        note: String(req.body.note || '').trim()
+      }).save();
+    }
+
+    res.redirect('/admin/command-center');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error saving tire profit');
   }
 });
 
@@ -619,21 +655,24 @@ router.post('/command-center/cars/:id/investment', isAdmin, async (req, res) => 
       return res.status(404).send('Car not found');
     }
 
-    const {
-      purchaseCost,
-      auctionFees,
-      transportCost,
-      inspectionCost,
-      reconTotal
-    } = req.body;
+    if (Object.prototype.hasOwnProperty.call(req.body, 'purchaseCost')) {
+      car.purchaseCost = req.body.purchaseCost === '' ? 0 : toNumber(req.body.purchaseCost);
+    }
 
-    car.purchaseCost = purchaseCost === '' ? 0 : toNumber(purchaseCost);
-    car.auctionFees = auctionFees === '' ? 0 : toNumber(auctionFees);
-    car.transportCost = transportCost === '' ? 0 : toNumber(transportCost);
-    car.inspectionCost = inspectionCost === '' ? 0 : toNumber(inspectionCost);
+    if (Object.prototype.hasOwnProperty.call(req.body, 'auctionFees')) {
+      car.auctionFees = req.body.auctionFees === '' ? 0 : toNumber(req.body.auctionFees);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'transportCost')) {
+      car.transportCost = req.body.transportCost === '' ? 0 : toNumber(req.body.transportCost);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'inspectionCost')) {
+      car.inspectionCost = req.body.inspectionCost === '' ? 0 : toNumber(req.body.inspectionCost);
+    }
 
     if (Object.prototype.hasOwnProperty.call(req.body, 'reconTotal')) {
-      const amount = reconTotal === '' ? 0 : toNumber(reconTotal);
+      const amount = req.body.reconTotal === '' ? 0 : toNumber(req.body.reconTotal);
       const reconExpenses = Array.isArray(car.reconExpenses) ? car.reconExpenses : [];
       const existing = reconExpenses.find(item => item.category === 'Other' && item.description === 'Command Center recon total');
 

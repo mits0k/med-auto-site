@@ -3431,8 +3431,51 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   gap: 16px;
 }
 
+.command-tire-form {
+  display: grid;
+  grid-template-columns: 160px 150px minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  background: rgba(7, 11, 17, .68);
+}
+
+.command-tire-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.command-tire-form span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.command-tire-form input {
+  min-height: 40px;
+}
+
+.command-tire-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.command-tire-list span {
+  padding: 7px 9px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px;
+  background: #0c1018;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .command-profit-table {
-  min-width: 820px;
+  min-width: 760px;
 }
 
 .command-filter-panel {
@@ -3465,7 +3508,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 }
 
 .command-table {
-  min-width: 1120px;
+  min-width: 860px;
 }
 
 .command-table td {
@@ -3521,6 +3564,10 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 .command-investment-form .command-table-button {
   grid-column: 1 / -1;
+}
+
+.command-quick-form {
+  max-width: 180px;
 }
 
 .command-negative {
@@ -3753,6 +3800,10 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .command-tire-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .command-filters .btn {
     width: 100%;
   }
@@ -3783,6 +3834,10 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   }
 
   .command-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .command-tire-form {
     grid-template-columns: 1fr;
   }
 

@@ -7,6 +7,7 @@
   const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];
   const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
   const recentSoldRows = Array.isArray(profit.recentRows) ? profit.recentRows : [];
+  const tireRows = Array.isArray(profit.tireRows) ? profit.tireRows : [];
   const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
   const isCommandSold = car => Boolean(car && (car.sold || car.commandCenterSold));
 %>
@@ -81,12 +82,36 @@
     </div>
 
     <div class="command-profit-grid" aria-label="Sold profit summary">
-      <div class="admin-stat"><span>Total Gross Profit</span><strong><%= money(profit.totalProfit) %></strong></div>
+      <div class="admin-stat"><span>Total Profit</span><strong><%= money(profit.totalProfit) %></strong></div>
       <div class="admin-stat"><span>This Month</span><strong><%= money(profit.profitThisMonth) %></strong></div>
       <div class="admin-stat"><span>Sold Units</span><strong><%= number(profit.soldUnits) %></strong></div>
-      <div class="admin-stat"><span>Average Gross</span><strong><%= money(profit.averageGross) %></strong></div>
+      <div class="admin-stat"><span>Tire Profit</span><strong><%= money(profit.tireProfit) %></strong></div>
       <div class="admin-stat"><span>Sold ROI</span><strong><%= percent(profit.averageRoi) %></strong></div>
     </div>
+
+    <form class="command-tire-form" action="/admin/command-center/tire-profit" method="POST">
+      <label>
+        <span>Tire profit</span>
+        <input type="number" name="amount" min="0" step="1" placeholder="Amount made" required />
+      </label>
+      <label>
+        <span>Date</span>
+        <input type="date" name="date" />
+      </label>
+      <label>
+        <span>Note</span>
+        <input type="text" name="note" placeholder="Example: winter tires" />
+      </label>
+      <button type="submit" class="btn btn-primary">Add Tire Profit</button>
+    </form>
+
+    <% if (tireRows.length > 0) { %>
+      <div class="command-tire-list">
+        <% tireRows.forEach(item => { %>
+          <span><%= item.date ? new Date(item.date).toLocaleDateString() : '-' %> · <strong><%= money(item.amount) %></strong><%= item.note ? ` · ${item.note}` : '' %></span>
+        <% }) %>
+      </div>
+    <% } %>
 
     <% if (recentSoldRows.length > 0) { %>
       <div class="admin-table-wrap command-profit-table-wrap">
@@ -94,11 +119,11 @@
           <thead>
             <tr>
               <th>Sold Vehicle</th>
-              <th>Sold Date</th>
-              <th>Sale Price</th>
-              <th>Invested</th>
-              <th>Gross Profit</th>
+              <th>Bought For</th>
+              <th>Sold For</th>
+              <th>Profit</th>
               <th>ROI</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -108,45 +133,36 @@
                   <strong><%= metrics.label || 'Vehicle' %></strong>
                   <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit sale details</a>
                 </td>
-                <td data-label="Sold Date"><%= car.saleDate ? new Date(car.saleDate).toLocaleDateString() : '-' %></td>
-                <td data-label="Sale Price">
-                  <strong><%= money(car.finalSalePrice) %></strong>
-                  <form class="command-price-form command-sale-price-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
+                <td data-label="Bought For">
+                  <strong><%= money(metrics.totalInvested) %></strong>
+                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
                     <label>
-                      <span>Sale price</span>
+                      <span>Bought for</span>
+                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Bought for" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
+                  </form>
+                </td>
+                <td data-label="Sold For">
+                  <strong><%= money(car.finalSalePrice) %></strong>
+                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
+                    <label>
+                      <span>Sold for</span>
                       <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="Sold for" />
                     </label>
                     <button type="submit" class="btn btn-secondary command-table-button">Update</button>
                   </form>
                 </td>
-                <td data-label="Invested">
-                  <strong><%= money(metrics.totalInvested) %></strong>
-                  <form class="command-price-form command-investment-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
-                    <label>
-                      <span>Paid</span>
-                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Paid" />
-                    </label>
-                    <label>
-                      <span>Fees</span>
-                      <input type="number" name="auctionFees" min="0" step="1" value="<%= car.auctionFees || '' %>" placeholder="Fees" />
-                    </label>
-                    <label>
-                      <span>Transport</span>
-                      <input type="number" name="transportCost" min="0" step="1" value="<%= car.transportCost || '' %>" placeholder="Transport" />
-                    </label>
-                    <label>
-                      <span>Inspection</span>
-                      <input type="number" name="inspectionCost" min="0" step="1" value="<%= car.inspectionCost || '' %>" placeholder="Inspection" />
-                    </label>
-                    <label>
-                      <span>Recon</span>
-                      <input type="number" name="reconTotal" min="0" step="1" value="<%= metrics.reconTotal || '' %>" placeholder="Recon" />
-                    </label>
-                    <button type="submit" class="btn btn-secondary command-table-button">Update</button>
-                  </form>
-                </td>
-                <td data-label="Gross Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><%= money(metrics.soldGross) %></td>
+                <td data-label="Profit" class="<%= metrics.soldGross < 0 ? 'command-negative' : '' %>"><strong><%= money(metrics.soldGross) %></strong></td>
                 <td data-label="ROI"><%= percent(metrics.soldRoi) %></td>
+                <td data-label="Status">
+                  <span class="status-badge status-sold"><%= car.sold ? 'Public Sold' : 'Command Sold' %></span>
+                  <% if (car.commandCenterSold && !car.sold) { %>
+                    <form action="/admin/command-center/cars/<%= car._id %>/toggle-sold" method="POST">
+                      <button type="submit" class="btn btn-muted command-table-button">Put Back Unsold</button>
+                    </form>
+                  <% } %>
+                </td>
               </tr>
             <% }) %>
           </tbody>
@@ -160,8 +176,8 @@
   <div class="admin-panel">
     <div class="admin-panel-header">
       <div>
-        <h2>Profitability Workbench</h2>
-        <p>Private admin-only view of cost basis, engagement, and rule-based recommendations.</p>
+        <h2>Profit Workbench</h2>
+        <p>Quick private view of what you bought it for, what you sold it for, profit, and ROI.</p>
       </div>
     </div>
 
@@ -171,17 +187,11 @@
           <thead>
             <tr>
               <th>Vehicle</th>
-              <th>Asking</th>
-              <th>Cost</th>
-              <th>Recon</th>
-              <th>Invested</th>
-              <th>Gross</th>
+              <th>Bought For</th>
+              <th>Sold / Asking</th>
+              <th>Profit</th>
               <th>ROI</th>
-              <th>Days</th>
-              <th>Engagement</th>
-              <th>Deal / IMV</th>
               <th>Command Sale</th>
-              <th>Target</th>
             </tr>
           </thead>
           <tbody>
@@ -200,17 +210,30 @@
                     </div>
                   </div>
                 </td>
-                <td data-label="Asking">
+                <td data-label="Bought For">
+                  <strong><%= money(metrics.totalInvested) %></strong>
+                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
+                    <label>
+                      <span>Bought for</span>
+                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Bought for" />
+                    </label>
+                    <button type="submit" class="btn btn-secondary command-table-button">Save</button>
+                  </form>
+                </td>
+                <td data-label="Sold / Asking">
                   <strong><%= isCommandSold(car) ? money(car.finalSalePrice || metrics.privateAskingPrice) : money(metrics.privateAskingPrice) %></strong>
-                  <form class="command-price-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
-                    <label>
-                      <span>Private price</span>
-                      <input type="number" name="commandCenterPrice" min="0" step="1" value="<%= car.commandCenterPrice || '' %>" placeholder="<%= car.price ? Math.round(car.price) : 'Private' %>" />
-                    </label>
-                    <label>
-                      <span>Sale price</span>
-                      <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="<%= metrics.privateAskingPrice ? Math.round(metrics.privateAskingPrice) : 'Sold for' %>" />
-                    </label>
+                  <form class="command-price-form command-quick-form" action="/admin/command-center/cars/<%= car._id %>/pricing" method="POST">
+                    <% if (isCommandSold(car)) { %>
+                      <label>
+                        <span>Sold for</span>
+                        <input type="number" name="finalSalePrice" min="0" step="1" value="<%= car.finalSalePrice || '' %>" placeholder="Sold for" />
+                      </label>
+                    <% } else { %>
+                      <label>
+                        <span>Private ask</span>
+                        <input type="number" name="commandCenterPrice" min="0" step="1" value="<%= car.commandCenterPrice || '' %>" placeholder="<%= car.price ? Math.round(car.price) : 'Private ask' %>" />
+                      </label>
+                    <% } %>
                     <button type="submit" class="btn btn-secondary command-table-button">Save</button>
                   </form>
                   <% if (car.price) { %>
@@ -219,46 +242,8 @@
                     <span class="admin-cell-meta">No website price</span>
                   <% } %>
                 </td>
-                <td data-label="Cost">
-                  <strong><%= money(car.purchaseCost) %></strong>
-                  <form class="command-price-form command-investment-form" action="/admin/command-center/cars/<%= car._id %>/investment" method="POST">
-                    <label>
-                      <span>Paid</span>
-                      <input type="number" name="purchaseCost" min="0" step="1" value="<%= car.purchaseCost || '' %>" placeholder="Paid" />
-                    </label>
-                    <label>
-                      <span>Fees</span>
-                      <input type="number" name="auctionFees" min="0" step="1" value="<%= car.auctionFees || '' %>" placeholder="Fees" />
-                    </label>
-                    <label>
-                      <span>Transport</span>
-                      <input type="number" name="transportCost" min="0" step="1" value="<%= car.transportCost || '' %>" placeholder="Transport" />
-                    </label>
-                    <label>
-                      <span>Inspection</span>
-                      <input type="number" name="inspectionCost" min="0" step="1" value="<%= car.inspectionCost || '' %>" placeholder="Inspection" />
-                    </label>
-                    <label>
-                      <span>Recon</span>
-                      <input type="number" name="reconTotal" min="0" step="1" value="<%= metrics.reconTotal || '' %>" placeholder="Recon" />
-                    </label>
-                    <button type="submit" class="btn btn-secondary command-table-button">Save costs</button>
-                  </form>
-                </td>
-                <td data-label="Recon"><%= money(metrics.reconTotal) %></td>
-                <td data-label="Invested"><%= money(metrics.totalInvested) %></td>
-                <td data-label="Gross" class="<%= (isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><%= money(isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) %></td>
+                <td data-label="Profit" class="<%= (isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) < 0 ? 'command-negative' : '' %>"><strong><%= money(isCommandSold(car) ? metrics.soldGross : metrics.potentialGross) %></strong></td>
                 <td data-label="ROI"><%= percent(isCommandSold(car) ? metrics.soldRoi : metrics.roi) %></td>
-                <td data-label="Days"><%= metrics.daysInStock %></td>
-                <td data-label="Engagement">
-                  <span class="command-mini-stat"><%= car.cargurus?.saves || 0 %> saves</span>
-                  <span class="command-mini-stat"><%= metrics.leadCounts.total %> leads</span>
-                  <span class="command-mini-stat"><%= metrics.appointments %> appts</span>
-                </td>
-                <td data-label="Deal / IMV">
-                  <strong><%= car.cargurus?.dealRating || 'No rating' %></strong>
-                  <span class="admin-cell-meta"><%= car.cargurus?.imv ? money(car.cargurus.imv) : 'No IMV' %></span>
-                </td>
                 <td data-label="Command Sale">
                   <% if (car.sold) { %>
                     <span class="status-badge status-sold">Public Sold</span>
@@ -272,13 +257,9 @@
 
                   <% if (car.commandCenterSold && !car.sold) { %>
                     <form action="/admin/command-center/cars/<%= car._id %>/toggle-sold" method="POST">
-                      <button type="submit" class="btn btn-muted command-table-button">Undo</button>
+                      <button type="submit" class="btn btn-muted command-table-button">Put Back Unsold</button>
                     </form>
                   <% } %>
-                </td>
-                <td data-label="Target">
-                  <strong><%= metrics.recommendation.targetPrice ? money(metrics.recommendation.targetPrice) : '-' %></strong>
-                  <a class="admin-cell-meta command-row-link" href="/admin/cars/<%= car._id %>/edit">Edit financials</a>
                 </td>
               </tr>
             <% }) %>

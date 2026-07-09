@@ -445,9 +445,8 @@ function buildScorecardFromBody(body) {
 
 router.get('/command-center', isAdmin, async (req, res) => {
   try {
-    const sort = req.query.sort || 'action';
+    const sort = req.query.sort || 'days';
     const status = req.query.status || 'active';
-    const action = req.query.action || 'all';
     const search = String(req.query.search || '').trim().toLowerCase();
     const filter = status === 'sold' ? { sold: true } : status === 'all' ? {} : { sold: { $ne: true } };
     const cars = await Car.find(filter).sort(displaySort);
@@ -467,10 +466,6 @@ router.get('/command-center', isAdmin, async (req, res) => {
         ].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(search);
       });
-    }
-
-    if (action !== 'all') {
-      rows = rows.filter(row => row.metrics.recommendation.group === action || row.metrics.recommendation.action === action);
     }
 
     rows.sort((a, b) => {
@@ -498,7 +493,7 @@ router.get('/command-center', isAdmin, async (req, res) => {
       leadFunnel,
       kpis: dashboard.kpis,
       ACTION_GROUPS,
-      filters: { sort, status, action, search }
+      filters: { sort, status, search }
     });
   } catch (e) {
     console.error(e);

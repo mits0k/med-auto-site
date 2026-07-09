@@ -49,19 +49,8 @@
       </label>
 
       <label>
-        <span>Action</span>
-        <select name="action">
-          <option value="all">All actions</option>
-          <% ACTION_GROUPS.forEach(group => { %>
-            <option value="<%= group %>" <%= filters.action === group ? 'selected' : '' %>><%= group %></option>
-          <% }) %>
-        </select>
-      </label>
-
-      <label>
         <span>Sort</span>
         <select name="sort">
-          <option value="action" <%= filters.sort === 'action' ? 'selected' : '' %>>Recommended action</option>
           <option value="days" <%= filters.sort === 'days' ? 'selected' : '' %>>Days in stock</option>
           <option value="gross" <%= filters.sort === 'gross' ? 'selected' : '' %>>Potential gross</option>
           <option value="roi" <%= filters.sort === 'roi' ? 'selected' : '' %>>ROI</option>
@@ -102,7 +91,6 @@
               <th>Days</th>
               <th>Engagement</th>
               <th>Deal / IMV</th>
-              <th>Action</th>
               <th>Target</th>
             </tr>
           </thead>
@@ -137,10 +125,6 @@
                 <td data-label="Deal / IMV">
                   <strong><%= car.cargurus?.dealRating || 'No rating' %></strong>
                   <span class="admin-cell-meta"><%= car.cargurus?.imv ? money(car.cargurus.imv) : 'No IMV' %></span>
-                </td>
-                <td data-label="Action">
-                  <span class="status-badge command-action-badge"><%= metrics.recommendation.action %></span>
-                  <span class="admin-cell-meta"><%= metrics.recommendation.why %></span>
                 </td>
                 <td data-label="Target">
                   <strong><%= metrics.recommendation.targetPrice ? money(metrics.recommendation.targetPrice) : '-' %></strong>

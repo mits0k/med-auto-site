@@ -1,0 +1,61 @@
+<%- include('../partials/header') %>
+
+<section class="form-card command-pin-card">
+  <p class="admin-form-eyebrow">Private Access</p>
+  <h1 class="form-title"><%= mode === 'setup' ? 'Create Command Center PIN' : 'Command Center Locked' %></h1>
+  <p class="admin-muted">
+    <%= mode === 'setup'
+      ? 'Choose a private PIN before opening the Command Center.'
+      : 'Enter your PIN to open the Command Center.' %>
+  </p>
+
+  <% if (error) { %>
+    <div class="stack-s" style="color:#ffb3c7;"><strong><%= error %></strong></div>
+  <% } %>
+
+  <form method="POST" action="/admin/command-center/pin" class="form" autocomplete="off">
+    <input type="hidden" name="redirectTo" value="<%= redirectTo %>" />
+
+    <div>
+      <label class="label">PIN</label>
+      <input
+        type="password"
+        name="pin"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        minlength="4"
+        maxlength="12"
+        placeholder="Enter PIN"
+        autocomplete="new-password"
+        required
+      />
+    </div>
+
+    <% if (mode === 'setup') { %>
+      <div>
+        <label class="label">Confirm PIN</label>
+        <input
+          type="password"
+          name="confirmPin"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          minlength="4"
+          maxlength="12"
+          placeholder="Confirm PIN"
+          autocomplete="new-password"
+          required
+        />
+      </div>
+    <% } %>
+
+    <button type="submit" class="btn btn-primary btn-block">
+      <%= mode === 'setup' ? 'Save PIN and Open' : 'Unlock Command Center' %>
+    </button>
+  </form>
+
+  <div class="row" style="margin-top:10px;">
+    <a href="/admin/dashboard" class="btn btn-muted">Back to Dashboard</a>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

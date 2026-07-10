@@ -14,6 +14,7 @@ const BuyingScorecard = require('../models/BuyingScorecard');
 const CarGurusImportLog = require('../models/CarGurusImportLog');
 const TireProfit = require('../models/TireProfit');
 const OffsiteCarProfit = require('../models/OffsiteCarProfit');
+const CommandCenterPin = require('../models/CommandCenterPin');
 const {
   ACTION_GROUPS,
   LEAD_SOURCES,
@@ -72,6 +73,30 @@ const csvUpload = multer({
 function isAdmin(req, res, next) {
   if (req.session && req.session.admin) return next();
   return res.redirect('/admin/login');
+}
+
+function getSafeCommandCenterRedirect(value) {
+  const target = String(value || '/admin/command-center');
+
+  if (!target.startsWith('/admin/command-center') || target.startsWith('/admin/command-center/pin')) {
+    return '/admin/command-center';
+  }
+
+  return target;
+}
+
+async function getCommandCenterPin() {
+  return CommandCenterPin.findOne({ key: 'command-center' });
+}
+
+async function requireCommandCenterPin(req, res, next) {
+  if (req.session && req.session.commandCenterUnlocked) return next();
+
+  const pinRecord = await getCommandCenterPin();
+  const mode = pinRecord ? 'unlock' : 'setup';
+  const redirect = encodeURIComponent(req.originalUrl || '/admin/command-center');
+
+  return res.redirect(`/admin/command-center/pin?mode=${mode}&redirect=${redirect}`);
 }
 
 const displaySort = {
@@ -169,6 +194,78 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
+
+router.get('/command-center/pin', isAdmin, async (req, res) => {
+  try {
+    const pinRecord = await getCommandCenterPin();
+    const mode = pinRecord ? 'unlock' : 'setup';
+
+    res.render('admin/command-center-pin', {
+      error: null,
+      mode,
+      redirectTo: getSafeCommandCenterRedirect(req.query.redirect)
+    });
+  } catch (e) {
+    console.error('Command center PIN page error:', e);
+    res.status(500).send('Error loading command center PIN page');
+  }
+});
+
+router.post('/command-center/pin', isAdmin, async (req, res) => {
+  try {
+    const pinRecord = await getCommandCenterPin();
+    const mode = pinRecord ? 'unlock' : 'setup';
+    const redirectTo = getSafeCommandCenterRedirect(req.body.redirectTo);
+    const pin = String(req.body.pin || '').trim();
+    const confirmPin = String(req.body.confirmPin || '').trim();
+
+    if (!/^\d{4,12}$/.test(pin)) {
+      return res.status(400).render('admin/command-center-pin', {
+        error: 'Use a PIN between 4 and 12 numbers.',
+        mode,
+        redirectTo
+      });
+    }
+
+    if (!pinRecord) {
+      if (pin !== confirmPin) {
+        return res.status(400).render('admin/command-center-pin', {
+          error: 'The PINs did not match.',
+          mode,
+          redirectTo
+        });
+      }
+
+      const pinHash = await bcrypt.hash(pin, 12);
+      await CommandCenterPin.findOneAndUpdate(
+        { key: 'command-center' },
+        { $setOnInsert: { key: 'command-center', pinHash } },
+        { upsert: true, new: true }
+      );
+
+      req.session.commandCenterUnlocked = true;
+      return req.session.save(() => res.redirect(redirectTo));
+    }
+
+    const ok = await bcrypt.compare(pin, pinRecord.pinHash);
+
+    if (!ok) {
+      return res.status(401).render('admin/command-center-pin', {
+        error: 'Incorrect PIN.',
+        mode,
+        redirectTo
+      });
+    }
+
+    req.session.commandCenterUnlocked = true;
+    return req.session.save(() => res.redirect(redirectTo));
+  } catch (e) {
+    console.error('Command center PIN error:', e);
+    res.status(500).send('Error checking command center PIN');
+  }
+});
+
+router.use('/command-center', isAdmin, requireCommandCenterPin);
 
 // ===== DASHBOARD =====
 router.get('/dashboard', isAdmin, async (req, res) => {

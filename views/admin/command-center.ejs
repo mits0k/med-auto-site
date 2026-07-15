@@ -1,7 +1,15 @@
 <%- include('../partials/header') %>
 
 <%
-  const money = value => `$${Math.round(Number(value || 0)).toLocaleString()}`;
+  const money = value => {
+    const amount = Math.round(Number(value || 0));
+    const privateAmount = amount / 1000;
+    const formatted = privateAmount.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3
+    });
+    return formatted;
+  };
   const percent = value => `${Math.round(Number(value || 0) * 100)}%`;
   const number = value => Math.round(Number(value || 0)).toLocaleString();
   const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];

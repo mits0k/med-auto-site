@@ -594,15 +594,88 @@ router.get('/command-center', isAdmin, async (req, res) => {
     const dashboard = buildDashboard(allCars, appointments);
     const tableDashboard = buildDashboard(cars, appointments);
     const now = new Date();
+    const trackingStart = dashboard.soldProfit.trackingStart;
+    const isSameMonth = (date, reference = now) => {
+      if (!date) return false;
+      const value = new Date(date);
+      return !Number.isNaN(value.getTime()) &&
+        value.getFullYear() === reference.getFullYear() &&
+        value.getMonth() === reference.getMonth();
+    };
+    const isOnOrAfterDate = (date, start) => {
+      if (!date) return false;
+      const value = new Date(date);
+      return !Number.isNaN(value.getTime()) && value >= start;
+    };
+    const getMonthKey = date => {
+      const value = new Date(date);
+      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const getMonthLabel = date => new Date(date).toLocaleString('en-US', { month: 'long' });
     const tireProfitTotal = allTireProfits.reduce((sum, item) => sum + toNumber(item.amount), 0);
     const tireProfitThisMonth = allTireProfits
-      .filter(item => item.date && item.date.getFullYear() === now.getFullYear() && item.date.getMonth() === now.getMonth())
+      .filter(item => isSameMonth(item.date))
       .reduce((sum, item) => sum + toNumber(item.amount), 0);
     const getOffsiteProfit = item => toNumber(item.salePrice) - toNumber(item.purchaseCost);
     const offsiteCarProfitTotal = allOffsiteCarProfits.reduce((sum, item) => sum + getOffsiteProfit(item), 0);
     const offsiteCarProfitThisMonth = allOffsiteCarProfits
-      .filter(item => item.date && item.date.getFullYear() === now.getFullYear() && item.date.getMonth() === now.getMonth())
+      .filter(item => isSameMonth(item.date))
       .reduce((sum, item) => sum + getOffsiteProfit(item), 0);
+    const carProfitRows = dashboard.rows
+      .filter(row => isCommandCenterSold(row.car))
+      .filter(row => isOnOrAfterDate(row.car.saleDate, trackingStart))
+      .filter(row => toNumber(row.car.finalSalePrice) > 0)
+      .map(row => ({
+        type: row.car.sold ? 'Public Sold' : 'Command Sold',
+        date: row.car.saleDate || row.car.updatedAt,
+        label: row.metrics.label || 'Vehicle',
+        boughtFor: row.metrics.totalInvested,
+        soldFor: toNumber(row.car.finalSalePrice) || row.metrics.privateAskingPrice,
+        profit: row.metrics.soldGross,
+        roi: row.metrics.soldRoi,
+        car: row.car
+      }));
+    const offsiteProfitRows = allOffsiteCarProfits.map(item => ({
+      type: 'Off-site Car',
+      date: item.date,
+      label: item.vehicleLabel || 'Off-site car',
+      boughtFor: toNumber(item.purchaseCost),
+      soldFor: toNumber(item.salePrice),
+      profit: getOffsiteProfit(item),
+      roi: toNumber(item.purchaseCost) > 0 ? getOffsiteProfit(item) / toNumber(item.purchaseCost) : 0,
+      note: item.note
+    }));
+    const tireProfitRows = allTireProfits.map(item => ({
+      type: 'Tires',
+      date: item.date,
+      label: item.note || 'Tire sale',
+      boughtFor: null,
+      soldFor: toNumber(item.amount),
+      profit: toNumber(item.amount),
+      roi: 0,
+      note: item.note
+    }));
+    const allProfitRows = [
+      ...carProfitRows,
+      ...offsiteProfitRows,
+      ...tireProfitRows
+    ].filter(item => item.date && isOnOrAfterDate(item.date, trackingStart));
+    const monthlyProfitMap = allProfitRows.reduce((months, item) => {
+      const key = getMonthKey(item.date);
+      const month = months[key] || {
+        key,
+        label: getMonthLabel(item.date),
+        date: new Date(new Date(item.date).getFullYear(), new Date(item.date).getMonth(), 1),
+        profit: 0,
+        units: 0
+      };
+      month.profit += toNumber(item.profit);
+      month.units += 1;
+      months[key] = month;
+      return months;
+    }, {});
+    const monthlyProfitRows = Object.values(monthlyProfitMap)
+      .sort((a, b) => b.date - a.date);
     const soldProfit = {
       ...dashboard.soldProfit,
       carProfit: dashboard.soldProfit.totalProfit,
@@ -617,38 +690,9 @@ router.get('/command-center', isAdmin, async (req, res) => {
         ...item,
         profit: getOffsiteProfit(item)
       })),
-      profitRows: [
-        ...dashboard.soldProfit.recentRows.map(row => ({
-          type: row.car.sold ? 'Public Sold' : 'Command Sold',
-          date: row.car.saleDate || row.car.updatedAt,
-          label: row.metrics.label || 'Vehicle',
-          boughtFor: row.metrics.totalInvested,
-          soldFor: toNumber(row.car.finalSalePrice) || row.metrics.privateAskingPrice,
-          profit: row.metrics.soldGross,
-          roi: row.metrics.soldRoi,
-          car: row.car
-        })),
-        ...offsiteCarProfits.map(item => ({
-          type: 'Off-site Car',
-          date: item.date,
-          label: item.vehicleLabel || 'Off-site car',
-          boughtFor: toNumber(item.purchaseCost),
-          soldFor: toNumber(item.salePrice),
-          profit: getOffsiteProfit(item),
-          roi: toNumber(item.purchaseCost) > 0 ? getOffsiteProfit(item) / toNumber(item.purchaseCost) : 0,
-          note: item.note
-        })),
-        ...tireProfits.map(item => ({
-          type: 'Tires',
-          date: item.date,
-          label: item.note || 'Tire sale',
-          boughtFor: null,
-          soldFor: toNumber(item.amount),
-          profit: toNumber(item.amount),
-          roi: 0,
-          note: item.note
-        }))
-      ]
+      monthlyProfitRows,
+      profitRows: allProfitRows
+        .filter(item => isSameMonth(item.date))
         .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
         .slice(0, 20)
     };
@@ -681,20 +725,8 @@ router.get('/command-center', isAdmin, async (req, res) => {
       return a.metrics.recommendation.group.localeCompare(b.metrics.recommendation.group) || b.metrics.daysInStock - a.metrics.daysInStock;
     });
 
-    const leadFunnel = rows
-      .flatMap(row => (row.car.leads || []).map(lead => ({
-        vehicle: row.metrics.label,
-        source: lead.source || 'other',
-        stage: lead.stage || 'New Lead',
-        date: lead.date,
-        customerName: lead.customerName,
-        notes: lead.notes
-      })))
-      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-
     res.render('admin/command-center', {
       rows,
-      leadFunnel,
       kpis: dashboard.kpis,
       soldProfit,
       ACTION_GROUPS,

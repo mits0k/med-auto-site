@@ -12,9 +12,9 @@
   };
   const percent = value => `${Math.round(Number(value || 0) * 100)}%`;
   const number = value => Math.round(Number(value || 0)).toLocaleString();
-  const funnelRows = Array.isArray(typeof leadFunnel !== 'undefined' ? leadFunnel : null) ? leadFunnel : [];
   const profit = typeof soldProfit !== 'undefined' && soldProfit ? soldProfit : {};
   const profitRows = Array.isArray(profit.profitRows) ? profit.profitRows : [];
+  const monthlyProfitRows = Array.isArray(profit.monthlyProfitRows) ? profit.monthlyProfitRows : [];
   const profitStart = profit.trackingStart ? new Date(profit.trackingStart).toLocaleDateString() : 'today';
   const isCommandSold = car => Boolean(car && (car.sold || car.commandCenterSold));
 %>
@@ -84,7 +84,7 @@
     <div class="admin-panel-header">
       <div>
         <h2>Sold Profit Tracker</h2>
-        <p>Recorded gross from cars sold on or after <%= profitStart %> with final sale price and cost details filled in.</p>
+        <p>This month resets automatically on the 1st. Older totals stay in the monthly history below.</p>
       </div>
     </div>
 
@@ -223,7 +223,7 @@
         </table>
       </div>
     <% } else { %>
-      <p class="admin-muted">No sold items yet. Add a car sale, off-site car, or tire profit to start tracking.</p>
+      <p class="admin-muted">No sold items this month yet. Add a car sale, off-site car, or tire profit to start tracking.</p>
     <% } %>
   </div>
 
@@ -331,33 +331,27 @@
   <div class="admin-panel">
     <div class="admin-panel-header">
       <div>
-        <h2>Lead Funnel</h2>
-        <p>Recent buyer activity by vehicle, source, and stage.</p>
+        <h2>Monthly Profit History</h2>
+        <p>Private month-by-month totals since <%= profitStart %>.</p>
       </div>
     </div>
 
-    <% if (funnelRows.length > 0) { %>
+    <% if (monthlyProfitRows.length > 0) { %>
       <div class="admin-table-wrap">
-        <table class="admin-table command-table command-funnel-table">
+        <table class="admin-table command-table command-monthly-profit-table">
           <thead>
             <tr>
-              <th>Vehicle</th>
-              <th>Source</th>
-              <th>Stage</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Notes</th>
+              <th>Month</th>
+              <th>Made</th>
+              <th>Items Sold</th>
             </tr>
           </thead>
           <tbody>
-            <% funnelRows.slice(0, 20).forEach(lead => { %>
+            <% monthlyProfitRows.forEach(month => { %>
               <tr>
-                <td data-label="Vehicle"><strong><%= lead.vehicle %></strong></td>
-                <td data-label="Source"><%= lead.source %></td>
-                <td data-label="Stage"><span class="status-badge command-action-badge"><%= lead.stage %></span></td>
-                <td data-label="Customer"><%= lead.customerName || '-' %></td>
-                <td data-label="Date"><%= lead.date ? new Date(lead.date).toLocaleDateString() : '-' %></td>
-                <td data-label="Notes"><%= lead.notes || '-' %></td>
+                <td data-label="Month"><strong><%= month.label %></strong></td>
+                <td data-label="Made"><strong><%= money(month.profit) %></strong></td>
+                <td data-label="Items Sold"><%= number(month.units) %></td>
               </tr>
             <% }) %>
           </tbody>
@@ -365,8 +359,8 @@
       </div>
     <% } else { %>
       <div class="admin-empty">
-        <h2>No leads logged yet</h2>
-        <p>Add leads inside a vehicle editor to track source, stage, appointments, show-ups, and sales.</p>
+        <h2>No monthly profit yet</h2>
+        <p>Add a sold car, off-site car, or tire profit to start the monthly history.</p>
       </div>
     <% } %>
   </div>

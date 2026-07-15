@@ -659,7 +659,7 @@ router.get('/command-center', isAdmin, async (req, res) => {
       ...carProfitRows,
       ...offsiteProfitRows,
       ...tireProfitRows
-    ].filter(item => item.date && isOnOrAfterDate(item.date, trackingStart));
+    ].filter(item => item.date);
     const monthlyProfitMap = allProfitRows.reduce((months, item) => {
       const key = getMonthKey(item.date);
       const month = months[key] || {

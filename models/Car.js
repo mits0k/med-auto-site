@@ -41,16 +41,11 @@ const carSchema = new mongoose.Schema({
   model: String,
   year: Number,
   price: Number,
-  commandCenterPrice: Number,
   trim: String,
   stockNumber: String,
 
   // NEW
   sold: {
-    type: Boolean,
-    default: false
-  },
-  commandCenterSold: {
     type: Boolean,
     default: false
   },

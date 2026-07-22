@@ -1,5 +1,4 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const PROFIT_TRACKING_START = new Date('2026-07-09T16:07:26Z');
 
 const LEAD_SOURCES = [
   'CarGurus',
@@ -26,16 +25,6 @@ const LEAD_STAGES = [
   'No Show'
 ];
 
-const ACTION_GROUPS = [
-  'Close Active Buyer',
-  'Hold',
-  'Follow Up Leads',
-  'Refresh Listing',
-  'Price Review',
-  'Urgent Aging Review',
-  'Wholesale Review'
-];
-
 function toNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : 0;
@@ -46,22 +35,6 @@ function daysBetween(start, end = new Date()) {
   const date = new Date(start);
   if (Number.isNaN(date.getTime())) return 0;
   return Math.max(0, Math.floor((end - date) / MS_PER_DAY));
-}
-
-function isThisMonth(date, now = new Date()) {
-  if (!date) return false;
-  const value = new Date(date);
-  return value.getFullYear() === now.getFullYear() && value.getMonth() === now.getMonth();
-}
-
-function isOnOrAfter(date, start) {
-  if (!date) return false;
-  const value = new Date(date);
-  return !Number.isNaN(value.getTime()) && value >= start;
-}
-
-function isCommandCenterSold(car) {
-  return Boolean(car.sold || car.commandCenterSold);
 }
 
 function getReconTotal(car) {
@@ -76,17 +49,17 @@ function getTotalInvested(car) {
     getReconTotal(car);
 }
 
-function getPrivateAskingPrice(car) {
-  return toNumber(car.commandCenterPrice) || toNumber(car.price);
+function getAskingPrice(car) {
+  return toNumber(car.price);
 }
 
 function getPotentialGross(car) {
   const totalInvested = getTotalInvested(car);
-  return totalInvested > 0 ? getPrivateAskingPrice(car) - totalInvested : 0;
+  return totalInvested > 0 ? getAskingPrice(car) - totalInvested : 0;
 }
 
 function getSoldGross(car) {
-  return (toNumber(car.finalSalePrice) || getPrivateAskingPrice(car)) - getTotalInvested(car);
+  return (toNumber(car.finalSalePrice) || getAskingPrice(car)) - getTotalInvested(car);
 }
 
 function getRoi(gross, invested) {
@@ -124,6 +97,17 @@ function hasActiveBuyer(car, appointmentsByCar = {}) {
     activeStatus.includes('appointment') ||
     activeStatus.includes('saturday') ||
     hasUpcomingAppointment(car, appointmentsByCar);
+}
+
+function getActionGroupForOverride(action) {
+  const value = String(action || '').toLowerCase();
+  if (value.includes('active') || value.includes('close buyer') || value.includes('interest')) return 'Close Active Buyer';
+  if (value.includes('convert') || value.includes('follow')) return 'Follow Up Leads';
+  if (value.includes('refresh')) return 'Refresh Listing';
+  if (value.includes('urgent') || value.includes('aging')) return 'Urgent Aging Review';
+  if (value.includes('wholesale')) return 'Wholesale Review';
+  if (value.includes('market') || value.includes('price') || value.includes('move') || value.includes('imv')) return 'Price Review';
+  return 'Hold';
 }
 
 function getRecommendation(car, appointmentsByCar = {}) {
@@ -198,17 +182,6 @@ function getRecommendation(car, appointmentsByCar = {}) {
   return { action, why, nextStep, targetPrice, group };
 }
 
-function getActionGroupForOverride(action) {
-  const value = String(action || '').toLowerCase();
-  if (value.includes('active') || value.includes('close buyer') || value.includes('interest')) return 'Close Active Buyer';
-  if (value.includes('convert') || value.includes('follow')) return 'Follow Up Leads';
-  if (value.includes('refresh')) return 'Refresh Listing';
-  if (value.includes('urgent') || value.includes('aging')) return 'Urgent Aging Review';
-  if (value.includes('wholesale')) return 'Wholesale Review';
-  if (value.includes('market') || value.includes('price') || value.includes('move') || value.includes('imv')) return 'Price Review';
-  return 'Hold';
-}
-
 function getVehicleMetrics(car, appointmentsByCar = {}) {
   const reconTotal = getReconTotal(car);
   const totalInvested = getTotalInvested(car);
@@ -227,7 +200,7 @@ function getVehicleMetrics(car, appointmentsByCar = {}) {
     roi,
     soldGross,
     soldRoi,
-    privateAskingPrice: getPrivateAskingPrice(car),
+    privateAskingPrice: getAskingPrice(car),
     daysInStock: getDaysInStock(car),
     leadCounts,
     appointments: toNumber(appointmentsByCar[String(car._id)]) + leadCounts.appointments,
@@ -236,125 +209,9 @@ function getVehicleMetrics(car, appointmentsByCar = {}) {
   };
 }
 
-function getBuyingScorecardMetrics(scorecard) {
-  const allInCost = toNumber(scorecard.proposedPurchasePrice) +
-    toNumber(scorecard.auctionFees) +
-    toNumber(scorecard.transport) +
-    toNumber(scorecard.estimatedRecon);
-  const expectedGross = toNumber(scorecard.expectedRetail) - allInCost;
-  const expectedRoi = getRoi(expectedGross, allInCost);
-  const expectedDays = Math.max(1, toNumber(scorecard.expectedDaysToSell) || 45);
-  const expectedGrossPerDay = expectedGross / expectedDays;
-  const capitalEfficiencyScore = expectedRoi * (45 / expectedDays) * 100;
-  let decision = 'Review Carefully';
-
-  if (expectedGross < 1500 || expectedRoi < 0.12) {
-    decision = expectedGross <= 0 ? 'Pass' : 'Renegotiate';
-  } else if (capitalEfficiencyScore >= 28 && expectedGross >= 2500) {
-    decision = 'Strong Buy';
-  } else if (capitalEfficiencyScore >= 18 && expectedGross >= 2000) {
-    decision = 'Good Buy';
-  }
-
-  return {
-    allInCost,
-    expectedGross,
-    expectedRoi,
-    expectedGrossPerDay,
-    capitalEfficiencyScore,
-    decision
-  };
-}
-
-function buildDashboard(cars, appointments = []) {
-  const now = new Date();
-  const appointmentsByCar = {};
-  appointments.forEach(appointment => {
-    if (!appointment.car) return;
-    const key = String(appointment.car);
-    appointmentsByCar[key] = (appointmentsByCar[key] || 0) + 1;
-  });
-
-  const rows = cars.map(car => ({
-    car,
-    metrics: getVehicleMetrics(car, appointmentsByCar)
-  }));
-  const activeRows = rows.filter(row => !isCommandCenterSold(row.car));
-  const soldRows = rows.filter(row => isCommandCenterSold(row.car));
-  const soldThisMonth = rows.filter(row => isCommandCenterSold(row.car) && isThisMonth(row.car.saleDate || row.car.updatedAt, now));
-  const leadsThisMonth = rows.reduce((sum, row) => {
-    return sum + (row.car.leads || []).filter(lead => isThisMonth(lead.date, now)).length;
-  }, 0);
-  const appointmentsThisMonth = appointments.filter(appointment => isThisMonth(appointment.date, now)).length;
-  const salesThisMonth = soldThisMonth.length + rows.reduce((sum, row) => {
-    return sum + (row.car.leads || []).filter(lead => lead.stage === 'Sold' && isThisMonth(lead.date, now)).length;
-  }, 0);
-  const totalInvested = activeRows.reduce((sum, row) => sum + row.metrics.totalInvested, 0);
-  const totalAsking = activeRows.reduce((sum, row) => sum + toNumber(row.car.price), 0);
-  const potentialGross = activeRows.reduce((sum, row) => sum + row.metrics.potentialGross, 0);
-  const roiRows = activeRows.filter(row => row.metrics.totalInvested > 0);
-  const avgRoi = roiRows.length
-    ? roiRows.reduce((sum, row) => sum + row.metrics.roi, 0) / roiRows.length
-    : 0;
-  const avgDays = activeRows.length
-    ? activeRows.reduce((sum, row) => sum + row.metrics.daysInStock, 0) / activeRows.length
-    : 0;
-  const trackedSoldRows = soldRows.filter(row => isOnOrAfter(row.car.saleDate, PROFIT_TRACKING_START));
-  const soldWithSalePrice = trackedSoldRows.filter(row => toNumber(row.car.finalSalePrice) > 0);
-  const soldProfitTotal = soldWithSalePrice.reduce((sum, row) => sum + row.metrics.soldGross, 0);
-  const soldRevenueTotal = soldWithSalePrice.reduce((sum, row) => sum + toNumber(row.car.finalSalePrice), 0);
-  const soldInvestedTotal = soldWithSalePrice.reduce((sum, row) => sum + row.metrics.totalInvested, 0);
-  const soldProfitThisMonth = soldThisMonth
-    .filter(row => isOnOrAfter(row.car.saleDate, PROFIT_TRACKING_START))
-    .filter(row => toNumber(row.car.finalSalePrice) > 0)
-    .reduce((sum, row) => sum + row.metrics.soldGross, 0);
-  const recentSoldRows = trackedSoldRows
-    .slice()
-    .sort((a, b) => new Date(b.car.saleDate || b.car.updatedAt || 0) - new Date(a.car.saleDate || a.car.updatedAt || 0))
-    .slice(0, 8);
-
-  return {
-    appointmentsByCar,
-    rows,
-    soldProfit: {
-      trackingStart: PROFIT_TRACKING_START,
-      totalProfit: soldProfitTotal,
-      totalRevenue: soldRevenueTotal,
-      totalInvested: soldInvestedTotal,
-      profitThisMonth: soldProfitThisMonth,
-      soldUnits: soldWithSalePrice.length,
-      soldUnitsThisMonth: soldThisMonth.length,
-      averageGross: soldWithSalePrice.length ? soldProfitTotal / soldWithSalePrice.length : 0,
-      averageRoi: soldInvestedTotal > 0 ? soldProfitTotal / soldInvestedTotal : 0,
-      recentRows: recentSoldRows
-    },
-    kpis: {
-      totalVehicles: cars.length,
-      capitalTiedUp: totalInvested,
-      totalAskingValue: totalAsking,
-      potentialGross,
-      averageRoi: avgRoi,
-      averageDaysInStock: avgDays,
-      over30: activeRows.filter(row => row.metrics.daysInStock >= 30).length,
-      over45: activeRows.filter(row => row.metrics.daysInStock >= 45).length,
-      over60: activeRows.filter(row => row.metrics.daysInStock >= 60).length,
-      leadsThisMonth,
-      appointmentsThisMonth,
-      salesThisMonth,
-      leadToSaleConversion: leadsThisMonth > 0 ? salesThisMonth / leadsThisMonth : 0
-    }
-  };
-}
-
 module.exports = {
-  ACTION_GROUPS,
   LEAD_SOURCES,
   LEAD_STAGES,
-  buildDashboard,
-  getBuyingScorecardMetrics,
-  getRecommendation,
   getVehicleMetrics,
-  getPrivateAskingPrice,
-  isCommandCenterSold,
   toNumber
 };

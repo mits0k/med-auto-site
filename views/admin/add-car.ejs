@@ -217,6 +217,7 @@
 
     let selectedFiles = [];
     let dragEl = null;
+    let nextFileId = 1;
 
     function fileToImage(file) {
       return new Promise((resolve, reject) => {
@@ -253,11 +254,11 @@
     function renderPreviews() {
       previewList.innerHTML = '';
 
-      selectedFiles.forEach((file, index) => {
+      selectedFiles.forEach((entry, index) => {
         const li = document.createElement('li');
         li.className = 'dnd-item';
         li.draggable = true;
-        li.dataset.index = String(index);
+        li.dataset.fileId = entry.id;
 
         const handle = document.createElement('div');
         handle.className = 'dnd-handle';
@@ -270,22 +271,58 @@
         removeBtn.title = 'Remove photo';
 
         removeBtn.addEventListener('click', () => {
-          selectedFiles.splice(index, 1);
+          selectedFiles = selectedFiles.filter(fileEntry => fileEntry.id !== entry.id);
+          URL.revokeObjectURL(entry.url);
           renderPreviews();
         });
 
         const img = document.createElement('img');
         img.alt = `selected image ${index + 1}`;
-        img.src = URL.createObjectURL(file);
+        img.src = entry.url;
 
         const label = document.createElement('span');
         label.className = 'dnd-label';
         label.textContent = String(index + 1);
 
+        const controls = document.createElement('div');
+        controls.className = 'dnd-controls';
+
+        const moveLeft = document.createElement('button');
+        moveLeft.type = 'button';
+        moveLeft.className = 'dnd-move-btn';
+        moveLeft.textContent = '‹';
+        moveLeft.title = 'Move photo earlier';
+        moveLeft.disabled = index === 0;
+
+        const moveRight = document.createElement('button');
+        moveRight.type = 'button';
+        moveRight.className = 'dnd-move-btn';
+        moveRight.textContent = '›';
+        moveRight.title = 'Move photo later';
+        moveRight.disabled = index === selectedFiles.length - 1;
+
+        moveLeft.addEventListener('click', () => {
+          if (index === 0) return;
+          const moved = selectedFiles.splice(index, 1)[0];
+          selectedFiles.splice(index - 1, 0, moved);
+          renderPreviews();
+        });
+
+        moveRight.addEventListener('click', () => {
+          if (index >= selectedFiles.length - 1) return;
+          const moved = selectedFiles.splice(index, 1)[0];
+          selectedFiles.splice(index + 1, 0, moved);
+          renderPreviews();
+        });
+
+        controls.appendChild(moveLeft);
+        controls.appendChild(moveRight);
+
         li.appendChild(handle);
         li.appendChild(removeBtn);
         li.appendChild(img);
         li.appendChild(label);
+        li.appendChild(controls);
         previewList.appendChild(li);
       });
 
@@ -300,6 +337,7 @@
           dragEl = item;
           item.classList.add('dragging');
           e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', item.dataset.fileId || '');
         });
 
         item.addEventListener('dragover', (e) => {
@@ -307,30 +345,63 @@
           const over = item;
           if (!dragEl || over === dragEl) return;
 
-          const from = Number(dragEl.dataset.index);
-          const to = Number(over.dataset.index);
-
           const rect = over.getBoundingClientRect();
           const before = (e.clientY - rect.top) < rect.height / 2;
 
-          const moved = selectedFiles.splice(from, 1)[0];
-          selectedFiles.splice(before ? to : to + 1, 0, moved);
+          items.forEach(li => li.classList.remove('drop-target'));
+          over.classList.add('drop-target');
 
-          renderPreviews();
+          if (before) previewList.insertBefore(dragEl, over);
+          else previewList.insertBefore(dragEl, over.nextSibling);
+        });
+
+        item.addEventListener('dragleave', () => {
+          item.classList.remove('drop-target');
+        });
+
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          syncSelectedFilesFromDom();
         });
 
         item.addEventListener('dragend', () => {
+          items.forEach(li => li.classList.remove('drop-target'));
           dragEl = null;
+          syncSelectedFilesFromDom();
+          updateLabels();
         });
       });
     }
 
+    function getPreviewItems() {
+      return Array.from(previewList.querySelectorAll('.dnd-item'));
+    }
+
+    function updateLabels() {
+      getPreviewItems().forEach((li, index) => {
+        const label = li.querySelector('.dnd-label');
+        if (label) label.textContent = String(index + 1);
+      });
+    }
+
+    function syncSelectedFilesFromDom() {
+      const byId = new Map(selectedFiles.map(entry => [entry.id, entry]));
+      selectedFiles = getPreviewItems()
+        .map(li => byId.get(li.dataset.fileId))
+        .filter(Boolean);
+    }
+
     fileInput.addEventListener('change', () => {
       const incoming = Array.from(fileInput.files || []);
-      selectedFiles.push(...incoming);
+      selectedFiles.push(...incoming.map(file => ({
+        id: `new-${nextFileId++}`,
+        file,
+        url: URL.createObjectURL(file)
+      })));
 
       if (selectedFiles.length > 30) {
         alert('You can upload up to 30 photos at once.');
+        selectedFiles.slice(30).forEach(entry => URL.revokeObjectURL(entry.url));
         selectedFiles = selectedFiles.slice(0, 30);
       }
 
@@ -346,6 +417,7 @@
       }
 
       e.preventDefault();
+      syncSelectedFilesFromDom();
       submitBtn.disabled = true;
       submitBtn.textContent = 'Uploading…';
 
@@ -356,8 +428,8 @@
           if (key !== 'images') fd.append(key, value);
         });
 
-        for (const f of selectedFiles) {
-          const small = await compressImage(f, 1600, 0.8);
+        for (const entry of selectedFiles) {
+          const small = await compressImage(entry.file, 1600, 0.8);
           fd.append('images', small, small.name);
         }
 

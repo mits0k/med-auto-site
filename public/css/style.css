@@ -2845,6 +2845,33 @@ input[type="number"] {
   height: 112px;
 }
 
+.admin-photo-section .dnd-controls {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  gap: 5px;
+}
+
+.admin-photo-section .dnd-move-btn {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+  background: rgba(8, 10, 12, .72);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-photo-section .dnd-move-btn:disabled {
+  opacity: .32;
+  cursor: not-allowed;
+}
+
 .admin-form-actions {
   justify-content: flex-end;
   padding-top: 2px;

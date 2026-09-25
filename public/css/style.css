@@ -724,6 +724,51 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   text-align:center;
 }
 
+.admin-move-controls {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.admin-move-controls form {
+  margin: 0;
+}
+
+.admin-move-btn {
+  min-width: 64px;
+  min-height: 36px;
+  padding: 9px 11px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.admin-move-btn:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-order-details {
+  width: 100%;
+  color: var(--muted);
+}
+
+.admin-order-details summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #9fadbd;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-order-details[open] {
+  display: grid;
+  gap: 8px;
+}
+
 .admin-icon-btn{
   min-width:54px;
 }

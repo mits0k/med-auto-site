@@ -3,6 +3,8 @@
 <%
   const availableCount = cars.filter(car => !car.sold).length;
   const soldCount = cars.length - availableCount;
+  const availableOrderIds = cars.filter(car => !car.sold).map(car => String(car._id));
+  const soldOrderIds = cars.filter(car => car.sold).map(car => String(car._id));
 %>
 
 <section class="container admin-shell admin-page">
@@ -43,10 +45,10 @@
       <div class="admin-panel-header">
         <div>
           <h2>Vehicle Listings</h2>
-          <p>Type the position number you want, then save once. Lower numbers appear first.</p>
+          <p>Use Move Up or Move Down to arrange the cars. Available and sold cars stay in their own groups.</p>
         </div>
 
-        <button type="submit" form="inventoryOrderForm" class="btn btn-primary">Save Order</button>
+        <button type="submit" form="inventoryOrderForm" class="btn btn-secondary">Save Typed Positions</button>
       </div>
 
       <div class="admin-table-wrap">
@@ -64,6 +66,12 @@
 
           <tbody>
             <% cars.forEach((car, index) => { %>
+              <%
+                const groupIds = car.sold ? soldOrderIds : availableOrderIds;
+                const groupIndex = groupIds.indexOf(String(car._id));
+                const canMoveUp = groupIndex > 0;
+                const canMoveDown = groupIndex > -1 && groupIndex < groupIds.length - 1;
+              %>
               <tr>
                 <td>
                   <div class="admin-vehicle-cell">
@@ -91,18 +99,31 @@
 
                 <td>
                   <div class="admin-display-cell">
-                    <label class="admin-order-label">
-                      <span>Position</span>
-                      <input
-                        form="inventoryOrderForm"
-                        class="admin-order-input"
-                        type="number"
-                        name="order[<%= car._id %>]"
-                        value="<%= index + 1 %>"
-                        min="1"
-                        step="1"
-                      />
-                    </label>
+                    <div class="admin-move-controls" aria-label="Move <%= car.make %> <%= car.model %>">
+                      <form action="/admin/cars/<%= car._id %>/move" method="POST">
+                        <input type="hidden" name="direction" value="up" />
+                        <button type="submit" class="btn btn-secondary admin-move-btn" <%= canMoveUp ? '' : 'disabled' %>>Up</button>
+                      </form>
+                      <form action="/admin/cars/<%= car._id %>/move" method="POST">
+                        <input type="hidden" name="direction" value="down" />
+                        <button type="submit" class="btn btn-secondary admin-move-btn" <%= canMoveDown ? '' : 'disabled' %>>Down</button>
+                      </form>
+                    </div>
+                    <details class="admin-order-details">
+                      <summary>Position <%= index + 1 %></summary>
+                      <label class="admin-order-label">
+                        <span>Type position</span>
+                        <input
+                          form="inventoryOrderForm"
+                          class="admin-order-input"
+                          type="number"
+                          name="order[<%= car._id %>]"
+                          value="<%= index + 1 %>"
+                          min="1"
+                          step="1"
+                        />
+                      </label>
+                    </details>
                     <% if (car.isFeatured && !car.sold) { %>
                       <span class="status-badge status-featured">Homepage</span>
                     <% } %>

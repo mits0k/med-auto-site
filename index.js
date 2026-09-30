@@ -54,8 +54,7 @@ app.use((req, res, next) => {
     return req.session.save(() => res.redirect(303, destination));
   }
 
-  const browserLanguage = String(req.headers['accept-language'] || '').toLowerCase();
-  const publicLanguage = req.session.language || (browserLanguage.startsWith('fr') ? 'fr' : 'en');
+  const publicLanguage = req.session.language || 'fr';
   const isAdminPath = req.path.startsWith('/admin');
   const language = isAdminPath ? 'en' : publicLanguage;
   const queryFor = targetLanguage => {

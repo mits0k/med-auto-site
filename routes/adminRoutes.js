@@ -551,38 +551,68 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     car.fuel = fuel;
     car.bodyStyle = bodyStyle;
     car.vin = vin;
-    car.purchaseCost = toNumber(purchaseCost);
-    car.purchaseDate = parseDate(purchaseDate);
-    car.auctionSource = auctionSource;
-    car.auctionFees = toNumber(auctionFees);
-    car.transportCost = toNumber(transportCost);
-    car.inspectionCost = toNumber(inspectionCost);
-    car.adminStatus = adminStatus || 'Retail Ready';
-    car.privateNotes = privateNotes;
-    car.activeBuyerStatus = activeBuyerStatus;
-    car.recommendationOverride = recommendationOverride;
-    car.recommendationNote = recommendationNote;
-    car.saleDate = parseDate(saleDate);
-    car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
-    car.cargurus = car.cargurus || {};
-    car.cargurus.saves = toNumber(cargurusSaves);
-    car.cargurus.imv = cargurusImv === '' ? undefined : toNumber(cargurusImv);
-    car.cargurus.dealRating = cargurusDealRating || '';
-    car.cargurus.daysOnMarket = cargurusDaysOnMarket === '' ? undefined : toNumber(cargurusDaysOnMarket);
+    const hasPrivateFinancialFields = [
+      'purchaseCost',
+      'purchaseDate',
+      'auctionSource',
+      'auctionFees',
+      'transportCost',
+      'inspectionCost',
+      'adminStatus',
+      'privateNotes',
+      'activeBuyerStatus',
+      'recommendationOverride',
+      'recommendationNote',
+      'saleDate',
+      'finalSalePrice'
+    ].some(field => Object.prototype.hasOwnProperty.call(req.body, field));
+
+    if (hasPrivateFinancialFields) {
+      car.purchaseCost = toNumber(purchaseCost);
+      car.purchaseDate = parseDate(purchaseDate);
+      car.auctionSource = auctionSource;
+      car.auctionFees = toNumber(auctionFees);
+      car.transportCost = toNumber(transportCost);
+      car.inspectionCost = toNumber(inspectionCost);
+      car.adminStatus = adminStatus || 'Retail Ready';
+      car.privateNotes = privateNotes;
+      car.activeBuyerStatus = activeBuyerStatus;
+      car.recommendationOverride = recommendationOverride;
+      car.recommendationNote = recommendationNote;
+      car.saleDate = parseDate(saleDate);
+      car.finalSalePrice = finalSalePrice === '' ? undefined : toNumber(finalSalePrice);
+    }
+
+    const hasMarketFields = [
+      'cargurusSaves',
+      'cargurusImv',
+      'cargurusDealRating',
+      'cargurusDaysOnMarket'
+    ].some(field => Object.prototype.hasOwnProperty.call(req.body, field));
+
+    if (hasMarketFields) {
+      car.cargurus = car.cargurus || {};
+      car.cargurus.saves = toNumber(cargurusSaves);
+      car.cargurus.imv = cargurusImv === '' ? undefined : toNumber(cargurusImv);
+      car.cargurus.dealRating = cargurusDealRating || '';
+      car.cargurus.daysOnMarket = cargurusDaysOnMarket === '' ? undefined : toNumber(cargurusDaysOnMarket);
+    }
 
     const reconDates = formArray(req.body.reconDate);
     const reconCategories = formArray(req.body.reconCategory);
     const reconDescriptions = formArray(req.body.reconDescription);
     const reconAmounts = formArray(req.body.reconAmount);
 
-    car.reconExpenses = reconAmounts
-      .map((amount, index) => ({
-        date: parseDate(reconDates[index]),
-        category: String(reconCategories[index] || '').trim(),
-        description: String(reconDescriptions[index] || '').trim(),
-        amount: toNumber(amount)
-      }))
-      .filter(item => item.amount > 0 || item.category || item.description || item.date);
+    if (Object.prototype.hasOwnProperty.call(req.body, 'reconAmount')) {
+      car.reconExpenses = reconAmounts
+        .map((amount, index) => ({
+          date: parseDate(reconDates[index]),
+          category: String(reconCategories[index] || '').trim(),
+          description: String(reconDescriptions[index] || '').trim(),
+          amount: toNumber(amount)
+        }))
+        .filter(item => item.amount > 0 || item.category || item.description || item.date);
+    }
 
     const leadDates = formArray(req.body.leadDate);
     const leadSources = formArray(req.body.leadSource);
@@ -591,16 +621,18 @@ router.post('/cars/:id/edit', isAdmin, upload.array('newImages', 30), async (req
     const leadContacts = formArray(req.body.leadContact);
     const leadNotes = formArray(req.body.leadNotes);
 
-    car.leads = leadSources
-      .map((source, index) => ({
-        date: parseDate(leadDates[index]) || new Date(),
-        source: String(source || '').trim(),
-        stage: String(leadStages[index] || '').trim(),
-        customerName: String(leadCustomers[index] || '').trim(),
-        contact: String(leadContacts[index] || '').trim(),
-        notes: String(leadNotes[index] || '').trim()
-      }))
-      .filter(item => item.source || item.stage || item.customerName || item.contact || item.notes);
+    if (Object.prototype.hasOwnProperty.call(req.body, 'leadSource')) {
+      car.leads = leadSources
+        .map((source, index) => ({
+          date: parseDate(leadDates[index]) || new Date(),
+          source: String(source || '').trim(),
+          stage: String(leadStages[index] || '').trim(),
+          customerName: String(leadCustomers[index] || '').trim(),
+          contact: String(leadContacts[index] || '').trim(),
+          notes: String(leadNotes[index] || '').trim()
+        }))
+        .filter(item => item.source || item.stage || item.customerName || item.contact || item.notes);
+    }
 
     if (oldPrice !== nextPrice && nextPrice > 0) {
       car.priceHistory.push({

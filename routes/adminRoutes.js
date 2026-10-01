@@ -733,10 +733,14 @@ router.post('/cars/order', isAdmin, async (req, res) => {
 
 router.post('/cars/:id/move', isAdmin, async (req, res) => {
   try {
+    const wantsJson = req.get('accept')?.includes('application/json') || req.get('x-requested-with') === 'fetch';
 
     const targetCar = await Car.findById(req.params.id);
 
     if (!targetCar) {
+      if (wantsJson) {
+        return res.status(404).json({ ok: false, message: 'Car not found' });
+      }
       return res.status(404).send('Car not found');
     }
 
@@ -745,12 +749,18 @@ router.post('/cars/:id/move', isAdmin, async (req, res) => {
     const index = cars.findIndex(car => String(car._id) === String(targetCar._id));
 
     if (index === -1) {
+      if (wantsJson) {
+        return res.status(404).json({ ok: false, message: 'Car not found in display order' });
+      }
       return res.redirect('/admin/dashboard');
     }
 
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
 
     if (swapIndex < 0 || swapIndex >= cars.length) {
+      if (wantsJson) {
+        return res.json({ ok: true, moved: false });
+      }
       return res.redirect('/admin/dashboard');
     }
 
@@ -765,6 +775,16 @@ router.post('/cars/:id/move', isAdmin, async (req, res) => {
       current.save(),
       swapWith.save()
     ]);
+
+    if (wantsJson) {
+      return res.json({
+        ok: true,
+        moved: true,
+        direction,
+        carId: String(current._id),
+        swapWithId: String(swapWith._id)
+      });
+    }
 
     res.redirect('/admin/dashboard');
 

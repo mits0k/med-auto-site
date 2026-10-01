@@ -72,7 +72,7 @@
                 const canMoveUp = groupIndex > 0;
                 const canMoveDown = groupIndex > -1 && groupIndex < groupIds.length - 1;
               %>
-              <tr>
+              <tr data-car-id="<%= car._id %>" data-sold="<%= car.sold ? 'true' : 'false' %>">
                 <td>
                   <div class="admin-vehicle-cell">
                     <% if (car.images && car.images.length > 0) { %>
@@ -100,11 +100,11 @@
                 <td>
                   <div class="admin-display-cell">
                     <div class="admin-move-controls" aria-label="Move <%= car.make %> <%= car.model %>">
-                      <form action="/admin/cars/<%= car._id %>/move" method="POST">
+                      <form action="/admin/cars/<%= car._id %>/move" method="POST" data-move-car-form>
                         <input type="hidden" name="direction" value="up" />
                         <button type="submit" class="btn btn-secondary admin-move-btn" <%= canMoveUp ? '' : 'disabled' %>>Up</button>
                       </form>
-                      <form action="/admin/cars/<%= car._id %>/move" method="POST">
+                      <form action="/admin/cars/<%= car._id %>/move" method="POST" data-move-car-form>
                         <input type="hidden" name="direction" value="down" />
                         <button type="submit" class="btn btn-secondary admin-move-btn" <%= canMoveDown ? '' : 'disabled' %>>Down</button>
                       </form>
@@ -184,5 +184,88 @@
 
   <% } %>
 </section>
+
+<script>
+  (() => {
+    const tableBody = document.querySelector('.admin-table tbody');
+    const moveForms = document.querySelectorAll('[data-move-car-form]');
+
+    if (!tableBody || moveForms.length === 0) return;
+
+    function rowsInGroup(soldValue) {
+      return Array.from(tableBody.querySelectorAll(`tr[data-sold="${soldValue}"]`));
+    }
+
+    function updateMoveState() {
+      ['false', 'true'].forEach(soldValue => {
+        const rows = rowsInGroup(soldValue);
+
+        rows.forEach((row, index) => {
+          const upButton = row.querySelector('input[value="up"]')?.closest('form')?.querySelector('button');
+          const downButton = row.querySelector('input[value="down"]')?.closest('form')?.querySelector('button');
+          const summary = row.querySelector('.admin-order-details summary');
+          const positionInput = row.querySelector('.admin-order-input');
+          const pagePosition = Array.from(tableBody.children).indexOf(row) + 1;
+
+          if (upButton) upButton.disabled = index === 0;
+          if (downButton) downButton.disabled = index === rows.length - 1;
+          if (summary) summary.textContent = `Position ${pagePosition}`;
+          if (positionInput) positionInput.value = pagePosition;
+        });
+      });
+    }
+
+    moveForms.forEach(form => {
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        const row = form.closest('tr[data-car-id]');
+        const direction = form.querySelector('input[name="direction"]')?.value === 'down' ? 'down' : 'up';
+        const button = form.querySelector('button');
+
+        if (!row || !button || button.disabled) return;
+
+        const groupRows = rowsInGroup(row.dataset.sold);
+        const currentIndex = groupRows.indexOf(row);
+        const swapRow = direction === 'up' ? groupRows[currentIndex - 1] : groupRows[currentIndex + 1];
+
+        if (!swapRow) return;
+
+        button.disabled = true;
+
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-Requested-With': 'fetch'
+            },
+            body: new URLSearchParams(new FormData(form))
+          });
+
+          if (!response.ok) throw new Error('Move failed');
+
+          const result = await response.json();
+          if (!result.ok || !result.moved) return;
+
+          if (direction === 'up') {
+            tableBody.insertBefore(row, swapRow);
+          } else {
+            tableBody.insertBefore(swapRow, row);
+          }
+
+          updateMoveState();
+        } catch (error) {
+          form.submit();
+        } finally {
+          updateMoveState();
+        }
+      });
+    });
+
+    updateMoveState();
+  })();
+</script>
 
 <%- include('../partials/footer') %>

@@ -20,7 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
     navLinks.querySelectorAll("a").forEach(a => {
       const linkPath = new URL(a.href, window.location.origin).pathname.replace(/\/$/, "") || "/";
       const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
-      if (linkPath === currentPath) a.setAttribute("aria-current", "page");
+      const isSectionLink = linkPath !== "/" && currentPath.startsWith(`${linkPath}/`);
+      if (linkPath === currentPath || isSectionLink) a.setAttribute("aria-current", "page");
       a.addEventListener("click", closeNav);
     });
 

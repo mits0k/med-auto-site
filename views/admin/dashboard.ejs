@@ -19,8 +19,44 @@
       <a href="/admin/add-car" class="btn btn-success">Add New Car</a>
       <a href="/admin/appointments" class="btn btn-secondary">Appointments</a>
       <a href="/admin/trade-ins" class="btn btn-secondary">Trade-Ins</a>
+      <a href="/admin/part-requests" class="btn btn-secondary">Part Requests</a>
     </div>
   </div>
+
+  <% if (tireSalesUpdate === 'enabled') { %>
+    <div class="form-alert admin-service-alert">Tire sales are live again.</div>
+  <% } else if (tireSalesUpdate === 'paused') { %>
+    <div class="form-alert admin-service-alert">Tire sales are paused and hidden from customers.</div>
+  <% } else if (tireSalesUpdate === 'error') { %>
+    <div class="form-alert form-alert-error">The tire sales setting could not be updated. Please try again.</div>
+  <% } %>
+
+  <section class="admin-panel admin-service-control" aria-labelledby="tire-sales-control-title">
+    <div>
+      <span class="admin-kicker">Website Controls</span>
+      <h2 id="tire-sales-control-title">Tire Sales</h2>
+      <p>
+        <%= tireSalesEnabled
+          ? 'Customers can browse tires and place e-transfer orders.'
+          : 'Tires are hidden and new tire orders are blocked. Existing requests are preserved.' %>
+      </p>
+    </div>
+    <div class="admin-service-control-actions">
+      <span class="status-badge <%= tireSalesEnabled ? 'status-new' : 'status-sold' %>">
+        <%= tireSalesEnabled ? 'Live' : 'Paused' %>
+      </span>
+      <form action="/admin/tire-sales/toggle" method="POST">
+        <input type="hidden" name="enabled" value="<%= tireSalesEnabled ? 'false' : 'true' %>" />
+        <button
+          type="submit"
+          class="btn <%= tireSalesEnabled ? 'btn-danger' : 'btn-success' %>"
+          <%= tireSalesEnabled ? 'onclick="return confirm(\'Pause tire sales? Customers will no longer be able to browse tires or place orders.\');"' : '' %>
+        >
+          <%= tireSalesEnabled ? 'Pause Tire Sales' : 'Enable Tire Sales' %>
+        </button>
+      </form>
+    </div>
+  </section>
 
   <div class="admin-stats" aria-label="Inventory summary">
     <div class="admin-stat">

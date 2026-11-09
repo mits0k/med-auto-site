@@ -98,6 +98,78 @@ body{
 .nav a:hover{color:var(--text)}
 .nav a[aria-current="page"]{color:#fff}
 .nav a.pill{padding:8px 14px;border:1px solid rgba(255,255,255,.1);border-radius:999px}
+.nav-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-dropdown-trigger::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  opacity: .75;
+}
+
+.nav-dropdown::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 100%;
+  height: 18px;
+}
+.nav-submenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 20;
+  display: grid;
+  min-width: 205px;
+  gap: 4px;
+  padding: 8px;
+  background: #101318;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 18px 35px rgba(0,0,0,.24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -4px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.nav-dropdown:hover .nav-submenu,
+.nav-dropdown:focus-within .nav-submenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+.nav-submenu a,
+.nav-submenu span {
+  display: block;
+  padding: 10px 11px;
+  border-radius: 4px;
+  color: #c8ced5;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.nav-submenu a:hover,
+.nav-submenu a:focus-visible {
+  background: #171c22;
+  color: #fff;
+}
+.nav-submenu span {
+  color: #747e89;
+}
 
 /* ====== BUTTONS ====== */
 .btn{
@@ -1580,6 +1652,12 @@ thead tr{background:linear-gradient(90deg,rgba(79,140,255,.15),rgba(155,92,246,.
   background: rgba(255, 191, 71, 0.18);
   color: #ffd47d;
   border: 1px solid rgba(255, 191, 71, 0.35);
+}
+
+.status-cancelled {
+  background: rgba(170, 177, 188, 0.14);
+  color: #c8ced8;
+  border: 1px solid rgba(170, 177, 188, 0.34);
 }
 
 /* ===== TRADE-IN ADMIN PHOTOS ===== */
@@ -3142,6 +3220,18 @@ h1, h2, h3, .wm-title {
   height: 1px;
   background: #fff;
 }
+.nav-links .nav-dropdown > .nav-dropdown-trigger[aria-current="page"]::after {
+  top: auto;
+  right: 0;
+  bottom: -10px;
+  left: 0;
+  width: auto;
+  height: 1px;
+  border: 0;
+  background: #fff;
+  opacity: 1;
+  transform: none;
+}
 
 .btn {
   min-height: 44px;
@@ -3207,6 +3297,139 @@ h1, h2, h3, .wm-title {
 .billboard .hero-actions .btn-secondary:hover { border-color: #fff; }
 .hero-text-link { margin-left: 8px; color: #aeb5bd; font-size: 12px; text-decoration: none; }
 .hero-text-link span { color: #fff; border-bottom: 1px solid rgba(255,255,255,.55); }
+
+.home-tires-section {
+  padding-top: 72px;
+}
+
+.home-tires-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+  min-height: 310px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background:
+    radial-gradient(circle at 86% 50%, rgba(84, 130, 174, .18), transparent 34%),
+    #11151a;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+
+.home-tires-card:hover {
+  border-color: #718092;
+}
+
+.home-tires-copy {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  max-width: 690px;
+  padding: 52px 58px;
+}
+
+.home-tires-copy h2 {
+  max-width: 620px;
+  margin: 0;
+  color: #f4f3ef;
+  font-size: clamp(31px, 4vw, 48px);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.home-tires-copy p {
+  max-width: 570px;
+  margin: 18px 0 0;
+  color: #aeb6bf;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.home-tires-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .025em;
+}
+
+.home-tires-action svg {
+  width: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  transition: transform .2s ease;
+}
+
+.home-tires-card:hover .home-tires-action svg {
+  transform: translateX(4px);
+}
+
+.home-tires-visual {
+  position: relative;
+  min-height: 310px;
+}
+
+.home-tire-ring {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 210px;
+  aspect-ratio: 1;
+  border: 28px solid #20262d;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #080a0c, 0 18px 50px rgba(0,0,0,.4);
+  transform: translateY(-50%);
+}
+
+.home-tire-ring::before {
+  content: "";
+  position: absolute;
+  inset: -22px;
+  border: 2px dashed rgba(153, 169, 184, .23);
+  border-radius: 50%;
+}
+
+.home-tire-ring-back {
+  right: -42px;
+  opacity: .48;
+  transform: translateY(-50%) scale(.82);
+}
+
+.home-tire-ring-front {
+  right: 76px;
+}
+
+.home-tire-ring-front span {
+  width: 78px;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, #11151a 0 13%, #8291a0 14% 19%, #252c33 20% 43%, #697683 44% 48%, #171c21 49%);
+  border: 1px solid #778491;
+  border-radius: 50%;
+}
+
+.home-tires-visual small {
+  position: absolute;
+  right: 26px;
+  bottom: 22px;
+  padding: 7px 10px;
+  color: #b9c6d2;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  background: rgba(8, 11, 14, .74);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 3px;
+}
 
 .section { padding-top: 90px; padding-bottom: 90px; }
 .section + .section { padding-top: 35px; }
@@ -3307,6 +3530,560 @@ h1, h2, h3, .wm-title {
 .vehicle-card-link { grid-column: 2; grid-row: 3; align-self: end; color: #8faac4; font-size: 11px; font-weight: 600; }
 .sold-badge { border-radius: 3px; background: #1e2126; border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
 
+.parts-page {
+  padding-top: 70px;
+  padding-bottom: 92px;
+}
+
+.parts-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: end;
+  padding: 34px;
+  background:
+    linear-gradient(135deg, rgba(18, 23, 29, .96), rgba(10, 13, 17, .98)),
+    radial-gradient(circle at top right, rgba(83, 126, 166, .24), transparent 34%);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.parts-hero h1 {
+  margin: 8px 0 0;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.04;
+}
+
+.parts-hero p {
+  max-width: 650px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.parts-category-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.parts-category-panel-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.parts-category-panel-head p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.parts-category-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.parts-category-card {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 13px;
+  background: #0c0f12;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.parts-category-card.active {
+  border-color: rgba(111, 150, 187, .58);
+  background: #151b23;
+}
+
+.parts-category-card.is-disabled {
+  opacity: .58;
+}
+
+.parts-category-card span,
+.part-card-kicker,
+.part-specs dt {
+  color: #8f98a3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.parts-category-card strong {
+  color: #f2f1ed;
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.parts-category-card span {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+  letter-spacing: .05em;
+}
+
+.parts-category-dropdown {
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.parts-category-dropdown summary {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.parts-category-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.parts-category-dropdown summary > span:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.parts-category-dropdown summary strong {
+  color: #f2f1ed;
+  font-family: "Manrope", sans-serif;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.parts-category-chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid #8faac4;
+  border-bottom: 2px solid #8faac4;
+  transform: rotate(45deg);
+  transition: transform .18s ease;
+}
+
+.parts-category-dropdown[open] .parts-category-chevron {
+  transform: translateY(4px) rotate(225deg);
+}
+
+.parts-category-list {
+  display: grid;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.parts-category-row {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  background: #0c0f12;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 5px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.parts-category-row.active {
+  border-color: rgba(111, 150, 187, .58);
+  background: #151b23;
+}
+
+.parts-category-row.is-disabled {
+  opacity: .58;
+}
+
+.parts-category-row strong {
+  color: #f2f1ed;
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+}
+
+.parts-category-row span {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  color: #8f98a3;
+  background: rgba(255,255,255,.05);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.parts-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.35fr) minmax(150px, .8fr) auto auto;
+  gap: 10px;
+  align-items: end;
+  padding: 18px;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.parts-category-select {
+  min-width: 0;
+}
+
+.parts-filters label > span {
+  display: block;
+  margin: 0 0 7px;
+  color: #8f98a3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.parts-filters select,
+.parts-filters input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 34px 10px 12px;
+  border-radius: 4px;
+  background-color: #0c0f12;
+  font-size: 13px;
+}
+
+.parts-filters .parts-size-select {
+  color: #f2f1ed;
+  font-weight: 700;
+}
+
+.parts-filters input {
+  padding-right: 12px;
+}
+
+.parts-results-summary {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  width: fit-content;
+  padding: 8px 12px;
+  color: #aeb7c2;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.parts-results-summary strong {
+  color: #f2f1ed;
+  font-size: 18px;
+}
+
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.part-card {
+  overflow: hidden;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.part-card-media {
+  display: grid;
+  min-height: 158px;
+  place-items: center;
+  background:
+    radial-gradient(circle, transparent 44%, rgba(255,255,255,.10) 45%, rgba(255,255,255,.10) 54%, transparent 55%),
+    linear-gradient(145deg, #171d24, #090c10);
+  color: rgba(242, 241, 237, .74);
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.part-card-media img {
+  width: 100%;
+  height: 176px;
+  object-fit: contain;
+  padding: 14px;
+  background: #f5f5f2;
+}
+
+.part-card-body {
+  display: grid;
+  gap: 13px;
+  padding: 18px;
+}
+
+.part-card-body h2 {
+  margin: 0;
+  color: #f2f1ed;
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.part-card-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.part-pickup-note {
+  padding: 10px 11px;
+  border: 1px solid rgba(143, 170, 196, .34);
+  border-radius: 5px;
+  background: rgba(143, 170, 196, .10);
+  color: #c9d8e5;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.part-specs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.part-specs div {
+  padding: 11px;
+  background: #0c0f12;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 5px;
+}
+
+.part-specs dd {
+  margin: 5px 0 0;
+  color: #d6dbe0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.part-card-link {
+  color: #8faac4;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.part-card-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.part-checkout-form {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+}
+
+.part-checkout-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.part-checkout-form span {
+  color: #8f98a3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.part-checkout-form input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 9px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.part-card-actions .btn {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.parts-payment-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .65fr);
+  gap: 24px;
+  padding: 26px;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.parts-payment-panel h2 {
+  margin: 8px 0 0;
+  color: #f2f1ed;
+  font-size: 28px;
+}
+
+.parts-payment-panel p {
+  max-width: 620px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.parts-payment-panel ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: checkout;
+}
+
+.parts-payment-panel li {
+  counter-increment: checkout;
+  position: relative;
+  min-height: 42px;
+  padding: 12px 12px 12px 48px;
+  background: #0c0f12;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 5px;
+  color: #cdd3d9;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.parts-payment-panel li::before {
+  content: counter(checkout);
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #426f9d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.parts-empty {
+  margin-top: 0;
+}
+
+.parts-checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.parts-order-summary,
+.parts-checkout-form,
+.parts-confirmation-card {
+  padding: 24px;
+  background: #111418;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.parts-order-summary img { width: 100%; max-height: 230px; object-fit: contain; margin-bottom: 18px; background: #f5f5f2; border-radius: 5px; }
+.parts-order-summary h2 { margin: 7px 0 18px; }
+.parts-checkout-totals { display: grid; gap: 9px; margin: 0; }
+.parts-checkout-totals div { display: flex; justify-content: space-between; gap: 20px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.parts-checkout-totals dt, .parts-checkout-totals dd { margin: 0; }
+.parts-checkout-totals .total { color: #fff; font-size: 18px; font-weight: 800; }
+
+.parts-checkout-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.parts-checkout-form label { display: grid; grid-template-rows: auto auto; align-self: start; gap: 7px; }
+.parts-checkout-form label > span { color: #b7c0c9; font-size: 12px; font-weight: 700; }
+.parts-checkout-form small { color: var(--muted); font-weight: 400; }
+.parts-checkout-form input, .parts-checkout-form textarea {
+  width: 100%;
+  color-scheme: dark;
+  color: #f2f1ed;
+  background: #0c0f12;
+  border-color: rgba(255,255,255,.14);
+  -webkit-text-fill-color: #f2f1ed;
+}
+.parts-checkout-form input { height: 46px; min-height: 46px; }
+.parts-checkout-form input:-webkit-autofill,
+.parts-checkout-form input:-webkit-autofill:hover,
+.parts-checkout-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f2f1ed;
+  box-shadow: 0 0 0 1000px #0c0f12 inset;
+  caret-color: #f2f1ed;
+}
+.parts-checkout-form .full { grid-column: 1 / -1; }
+.parts-transfer-preview { padding: 14px; background: rgba(66,111,157,.13); border: 1px solid rgba(143,170,196,.34); border-radius: 5px; }
+.parts-transfer-preview p { margin: 5px 0 0; color: var(--muted); line-height: 1.5; }
+
+.parts-confirmation-card { max-width: 760px; margin: 0 auto; text-align: center; }
+.parts-confirmation-card h1 { margin: 10px 0; }
+.parts-confirmation-card > p { color: var(--muted); }
+.parts-transfer-details { display: grid; gap: 10px; margin: 26px 0 18px; text-align: left; }
+.parts-transfer-details div { display: grid; gap: 5px; padding: 15px; background: #0c0f12; border: 1px solid var(--line); border-radius: 5px; }
+.parts-transfer-details span { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.parts-transfer-details strong { overflow-wrap: anywhere; color: #fff; font-size: 17px; }
+.parts-transfer-details .parts-transfer-total { border-color: rgba(111,150,187,.7); background: rgba(66,111,157,.14); }
+.parts-transfer-details .parts-transfer-total strong { font-size: 22px; }
+.parts-order-item { margin: 18px 0 !important; }
+.parts-paused-page { min-height: 58vh; align-content: center; }
+.parts-paused-card { padding: clamp(30px, 6vw, 64px); }
+.parts-paused-actions { display: flex; justify-content: center; gap: 10px; margin-top: 26px; }
+
+.admin-service-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 20px;
+  padding: 24px;
+}
+.admin-service-control h2 { margin: 5px 0 8px; }
+.admin-service-control p { max-width: 650px; margin: 0; color: var(--muted); }
+.admin-service-control-actions { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+.admin-service-control-actions form { margin: 0; }
+.admin-service-alert { color: #d9f8e5; background: rgba(45, 137, 84, .16); border-color: rgba(75, 184, 121, .35); }
+
+@media (max-width: 760px) {
+  .parts-checkout-layout, .parts-checkout-form { grid-template-columns: 1fr; }
+  .parts-checkout-form .full { grid-column: auto; }
+}
+
+@media (max-width: 600px) {
+  .parts-paused-actions,
+  .admin-service-control,
+  .admin-service-control-actions { align-items: stretch; flex-direction: column; }
+  .parts-paused-actions .btn,
+  .admin-service-control-actions .btn { width: 100%; text-align: center; }
+}
+
 .pager { margin-top: 28px; }
 .pagination-btn { border-radius: 4px; background: transparent; }
 .pagination-btn.active { background: #426f9d; box-shadow: none; }
@@ -3384,8 +4161,13 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
 
 @media (max-width: 1024px) {
   .vehicle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parts-category-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .inventory-filters { grid-template-columns: repeat(3, 1fr); }
+  .parts-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parts-category-select { grid-column: 1 / -1; }
   .inventory-filters .btn, .inventory-filters > a { width: 100%; text-align: center; }
+  .parts-filters .btn, .parts-filters > a { width: 100%; text-align: center; }
 }
 
 @media (max-width: 900px) {
@@ -3393,6 +4175,26 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   .nav { min-height: 64px; }
   .nav-toggle { display: flex; min-height: 40px; border-radius: 4px; background: transparent; }
   .nav-links { top: 100%; left: 18px; right: 18px; padding: 8px; background: #101318; border-radius: 0 0 6px 6px; }
+  .nav-dropdown {
+    display: grid;
+    gap: 4px;
+  }
+  .nav-submenu {
+    position: static;
+    min-width: 0;
+    padding: 0 0 0 12px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+  .nav-submenu a,
+  .nav-submenu span {
+    padding: 8px 12px;
+    border-left: 1px solid rgba(255,255,255,.1);
+  }
   .nav-links a[aria-current="page"]::after { display: none; }
   .nav-links a[aria-current="page"] { background: #171c22; box-shadow: inset 2px 0 #668bae; }
   .billboard.home-hero, .home-hero .billboard-inner { min-height: 620px; }
@@ -3436,6 +4238,28 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   .inventory-filters { grid-template-columns: 1fr; padding: 14px; }
   .vehicle-grid { grid-template-columns: 1fr; }
   .vehicle-caption { min-height: 120px; }
+  .parts-page { padding-top: 45px; padding-bottom: 65px; }
+  .parts-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    padding: 22px;
+  }
+  .parts-hero .btn { width: 100%; }
+  .parts-category-strip,
+  .parts-filters,
+  .parts-grid,
+  .part-specs,
+  .part-card-actions,
+  .parts-payment-panel {
+    grid-template-columns: 1fr;
+  }
+  .parts-category-select { grid-column: auto; }
+  .part-card-actions .part-card-link {
+    justify-self: start;
+  }
+  .part-checkout-form {
+    grid-template-columns: 1fr;
+  }
   .car-detail-page { padding-top: 45px; padding-bottom: 65px; }
   .form-card, .booking-page { width: calc(100% - 24px); margin: 35px auto 65px; padding: 22px; border-radius: 6px; }
   .form-page-heading h1 { font-size: 29px; }
@@ -3566,9 +4390,7 @@ input:focus, textarea:focus, select:focus { border-color: #6f96bb; box-shadow: 0
   font-size: 13px;
 }
 
-
 @media (max-width: 1180px) {
-
   .command-edit-row,
   .command-lead-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3641,6 +4463,145 @@ textarea:focus-visible {
   }
 }
 
+/* =========================================================
+   SITE-WIDE REFINEMENT
+========================================================= */
+:root {
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --content-narrow: 760px;
+}
+
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::selection { color: #fff; background: #426f9d; }
+
+p { line-height: 1.65; }
+a, button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+.page-heading,
+.form-page-heading,
+.parts-hero > div { max-width: var(--content-narrow); }
+
+.page-heading h1,
+.form-page-heading h1,
+.parts-hero h1,
+.parts-confirmation-card h1 {
+  text-wrap: balance;
+}
+
+.page-heading p,
+.form-page-heading p,
+.parts-hero p,
+.parts-confirmation-card > p {
+  max-width: 650px;
+  text-wrap: pretty;
+}
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn:disabled { cursor: not-allowed; opacity: .55; }
+
+input:not([type="hidden"]):not([type="file"]),
+select,
+textarea {
+  width: 100%;
+  color: #f2f1ed;
+  background-color: #0c0f12;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: var(--radius-sm);
+  color-scheme: dark;
+  -webkit-text-fill-color: #f2f1ed;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+input:not([type="hidden"]):not([type="file"]):hover,
+select:hover,
+textarea:hover { border-color: rgba(255,255,255,.24); }
+
+input::placeholder,
+textarea::placeholder { color: #747d87; opacity: 1; }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #f2f1ed;
+  box-shadow: 0 0 0 1000px #0c0f12 inset;
+  caret-color: #f2f1ed;
+}
+
+.form-card,
+.booking-page,
+.contact-card,
+.admin-panel,
+.parts-hero,
+.parts-filters,
+.part-card,
+.parts-payment-panel,
+.parts-order-summary,
+.parts-checkout-form,
+.parts-confirmation-card,
+.desc-panel {
+  border-color: rgba(255,255,255,.11);
+}
+
+.contact-card,
+.part-card,
+.vehicle-card {
+  transition: transform .18s ease, border-color .18s ease, background-color .18s ease;
+}
+
+.contact-card:hover,
+.part-card:hover { border-color: rgba(143,170,196,.32); }
+
+.contact-card p { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 10px; margin: 12px 0; }
+.contact-card p strong { color: #747e89; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.contact-card p a { overflow-wrap: anywhere; text-decoration: none; }
+.contact-card p a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+
+.form-card,
+.booking-page { box-shadow: 0 22px 55px rgba(0,0,0,.18); }
+.professional-form,
+.trade-page .form { gap: 16px; }
+.professional-form textarea,
+.trade-page textarea { min-height: 118px; resize: vertical; }
+
+.inventory-filters,
+.parts-filters { box-shadow: 0 14px 35px rgba(0,0,0,.12); }
+
+.part-card { display: flex; flex-direction: column; }
+.part-card-body { flex: 1; align-content: start; }
+.part-card-actions { margin-top: auto; }
+.part-specs div { min-height: 65px; }
+.parts-results-summary { margin-top: 2px; }
+.parts-payment-panel { scroll-margin-top: 110px; }
+
+.parts-checkout-form textarea { min-height: 92px; resize: vertical; }
+.parts-transfer-preview { border-radius: var(--radius-sm); }
+
+.admin-table tbody tr { transition: background-color .16s ease; }
+.admin-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.admin-actions { align-items: stretch; }
+.admin-actions .btn { width: 100%; }
+
+@media (max-width: 768px) {
+  .topbar .divider { display: none; }
+  .page-heading p,
+  .form-page-heading p,
+  .parts-hero p { font-size: 14px; }
+  .contact-card { padding: 23px; }
+  .contact-card p { grid-template-columns: 1fr; gap: 3px; }
+  .parts-checkout-layout { gap: 14px; }
+  .parts-order-summary,
+  .parts-checkout-form,
+  .parts-confirmation-card { padding: 20px; }
+  .parts-checkout-form { gap: 14px; }
+  .parts-checkout-form label { grid-column: 1 / -1; }
+  .admin-panel { border-radius: var(--radius-md); }
+}
+
 /* Language switch */
 .nav-links { margin-left: auto; }
 .language-switch {
@@ -3670,6 +4631,65 @@ textarea:focus-visible {
 
 @media (max-width: 420px) {
   .language-switch { gap: 4px; margin-right: 8px; font-size: 10px; }
+}
+
+@media (max-width: 900px) {
+  .nav-dropdown {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .nav-dropdown::after {
+    display: none;
+  }
+
+  .nav-dropdown-trigger {
+    display: flex !important;
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .nav-submenu {
+    position: static !important;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 4px 0 0;
+    padding: 3px 0 3px 14px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none !important;
+    box-sizing: border-box;
+  }
+
+  .nav-dropdown:hover .nav-submenu,
+  .nav-dropdown:focus-within .nav-submenu {
+    transform: none !important;
+  }
+
+  .nav-submenu a,
+  .nav-submenu span {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border-left: 1px solid rgba(255,255,255,.1);
+    border-radius: 5px;
+    white-space: normal;
+  }
+
+  .nav-submenu a[aria-current="page"] {
+    background: #171c22;
+    box-shadow: inset 2px 0 #668bae;
+  }
 }
 /* Public-site responsive refinement */
 .contact-short { display: none; }
@@ -3970,6 +4990,13 @@ textarea:focus-visible {
 .lightbox-counter { position: absolute; bottom: 22px; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .05em; }
 
 @media (max-width: 900px) {
+  .home-tires-section { padding-top: 52px; }
+  .home-tires-card { grid-template-columns: minmax(0, 1fr) 250px; }
+  .home-tires-copy { padding: 42px 36px; }
+  .home-tire-ring { width: 178px; border-width: 24px; }
+  .home-tire-ring-front { right: 34px; }
+  .home-tire-ring-back { right: -74px; }
+
   .car-detail-hero { grid-template-columns: 1fr; gap: 18px; }
   .car-summary { position: static; grid-row: 1; padding: 24px; text-align: center; }
   .car-summary .section-eyebrow,
@@ -4026,6 +5053,18 @@ textarea:focus-visible {
 }
 
 @media (max-width: 600px) {
+  .home-tires-section { padding-top: 34px; }
+  .home-tires-card { grid-template-columns: 1fr; min-height: 0; }
+  .home-tires-copy { padding: 32px 24px 22px; }
+  .home-tires-copy h2 { font-size: clamp(29px, 9vw, 38px); }
+  .home-tires-copy p { margin-top: 14px; font-size: 14px; }
+  .home-tires-action { margin-top: 21px; }
+  .home-tires-visual { min-height: 155px; overflow: hidden; }
+  .home-tire-ring { top: 42%; width: 150px; border-width: 20px; }
+  .home-tire-ring-front { right: 21%; }
+  .home-tire-ring-back { right: -18px; }
+  .home-tires-visual small { right: 15px; bottom: 14px; }
+
   .billboard.home-hero,
   .home-hero .billboard-inner { min-height: clamp(425px, calc(100svh - 250px), 510px); }
   .billboard.home-hero .bb-copy {

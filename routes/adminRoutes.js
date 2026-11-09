@@ -10,6 +10,12 @@ const bcrypt = require('bcryptjs');
 const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
+const PartRequest = require('../models/PartRequest');
+const { calculateQuebecTaxes } = require('../utils/quebecTaxes');
+const {
+  getTireSalesEnabled,
+  setTireSalesEnabled
+} = require('../utils/tireSalesSettings');
 const {
   LEAD_SOURCES,
   LEAD_STAGES,
@@ -20,6 +26,12 @@ const {
 // ===== Admin creds from env =====
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || '';
+
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  const { Resend } = require('resend');
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 // ===== Ensure uploads dir exists =====
 const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -158,13 +170,29 @@ router.get('/dashboard', isAdmin, async (req, res) => {
       cars = await normalizeDisplayOrder();
     }
 
-    res.render('admin/dashboard', { cars });
+    const tireSalesEnabled = await getTireSalesEnabled();
+
+    res.render('admin/dashboard', {
+      cars,
+      tireSalesEnabled,
+      tireSalesUpdate: req.query.tireSales || ''
+    });
 
   } catch (e) {
 
     console.error(e);
     res.status(500).send('Server error');
 
+  }
+});
+
+router.post('/tire-sales/toggle', isAdmin, async (req, res) => {
+  try {
+    const tireSalesEnabled = await setTireSalesEnabled(req.body.enabled === 'true');
+    res.redirect(`/admin/dashboard?tireSales=${tireSalesEnabled ? 'enabled' : 'paused'}`);
+  } catch (error) {
+    console.error('Error updating tire sales setting:', error);
+    res.redirect('/admin/dashboard?tireSales=error');
   }
 });
 
@@ -199,6 +227,93 @@ router.post('/appointments/:id/delete', isAdmin, async (req, res) => {
     console.error(e);
     res.status(500).send('Error deleting appointment');
 
+  }
+});
+
+// ===============================
+// PART REQUESTS
+// ===============================
+
+router.get('/part-requests', isAdmin, async (req, res) => {
+  try {
+    const partRequests = await PartRequest.find().sort({ createdAt: -1 });
+
+    res.render('admin/part-requests', {
+      partRequests,
+      updateStatus: req.query.updated || ''
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Server error');
+  }
+});
+
+router.post('/part-requests/:id/status', isAdmin, async (req, res) => {
+  try {
+    const partRequest = await PartRequest.findById(req.params.id);
+
+    if (!partRequest) {
+      return res.status(404).send('Part request not found');
+    }
+
+    if (partRequest.status === 'Payment Received' && partRequest.customerNotifiedAt) {
+      return res.redirect('/admin/part-requests?updated=already-received');
+    }
+
+    if (partRequest.status !== 'Payment Received') {
+      partRequest.status = 'Payment Received';
+      partRequest.paymentMethod = 'E-Transfer';
+      partRequest.paymentReceivedAt = new Date();
+      await partRequest.save();
+    }
+
+    if (!partRequest.customerEmail || !resend) {
+      return res.redirect('/admin/part-requests?updated=received-no-email');
+    }
+
+    try {
+      const taxSummary = calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1));
+      const total = (taxSummary.totalCents / 100).toFixed(2);
+      const emailResult = await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+        to: partRequest.customerEmail,
+        subject: 'Payment received — your tires will be ready',
+        text: [
+          `Hi ${partRequest.customerName},`,
+          '',
+          'We received your e-transfer. Thank you!',
+          `Your order for ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) will be ready for pickup at MED AUTO.`,
+          `Order: ${partRequest._id}`,
+          `Total: $${total} CAD`,
+          '',
+          'We will contact you if we need to confirm any pickup details.',
+          '',
+          'MED AUTO',
+          '2046 Avenue Chartier, Dorval, QC H9P 1H2',
+          '(514) 463-4503'
+        ].join('\n')
+      });
+      if (emailResult.error) throw new Error(emailResult.error.message || 'Resend rejected the email');
+      partRequest.customerNotifiedAt = new Date();
+      await partRequest.save();
+      return res.redirect('/admin/part-requests?updated=received');
+    } catch (emailError) {
+      console.error('Tire payment confirmation email failed:', emailError);
+      return res.redirect('/admin/part-requests?updated=email-failed');
+    }
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error updating part request');
+  }
+});
+
+router.post('/part-requests/:id/delete', isAdmin, async (req, res) => {
+  try {
+    await PartRequest.findByIdAndDelete(req.params.id);
+    res.redirect('/admin/part-requests');
+  } catch (e) {
+    console.error(e);
+    res.status(500).send('Error deleting part request');
   }
 });
 

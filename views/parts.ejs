@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+
+<%
+  const formatPrice = cents => new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'CAD',
+    maximumFractionDigits: 0
+  }).format(Number(cents || 0) / 100);
+  const normalizeSize = value => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const searchedSize = normalizeSize(selectedSizeSearch);
+  const hasSearchedSize = searchedSize.length > 0;
+  const visibleTires = tires.filter(tire => {
+    const sizeMatches = hasSearchedSize && normalizeSize(tire.size).includes(searchedSize);
+    const seasonMatches = selectedSeason === 'all' || tire.season === selectedSeason;
+    return sizeMatches && seasonMatches;
+  });
+%>
+
+<section class="container stack-l parts-page">
+  <header class="parts-hero">
+    <div>
+      <span class="section-eyebrow"><%= t('Parts department') %></span>
+      <h1><%= t('Tires for your next drive') %></h1>
+      <p><%= t('Search by tire size, order by e-transfer, then pick up at MED AUTO after payment is confirmed.') %></p>
+    </div>
+    <a class="btn btn-muted" href="#payment-preview"><%= t('How e-transfer works') %></a>
+  </header>
+
+  <form method="GET" action="/parts" class="parts-filters">
+    <label>
+      <span><%= t('Tire size') %></span>
+      <select name="size" class="parts-size-select">
+        <option value="" <%= !selectedSizeSearch ? 'selected' : '' %>><%= t('Choose tire size') %></option>
+        <% tireSizes.forEach(size => { %>
+          <option value="<%= size %>" <%= selectedSizeSearch === size ? 'selected' : '' %>><%= size %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label>
+      <span><%= t('Season') %></span>
+      <select name="season">
+        <option value="all" <%= selectedSeason === 'all' ? 'selected' : '' %>><%= t('All seasons') %></option>
+        <% tireSeasons.forEach(season => { %>
+          <option value="<%= season %>" <%= selectedSeason === season ? 'selected' : '' %>><%= t(season) %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <button class="btn btn-primary" type="submit"><%= t('Search') %></button>
+    <a class="btn btn-muted" href="/parts"><%= t('Reset') %></a>
+  </form>
+
+  <% if (requestStatus === 'missing-info') { %>
+    <div class="form-alert form-alert-error"><%= t('Please choose a quantity before reserving tires.') %></div>
+  <% } else if (requestStatus === 'error') { %>
+    <div class="form-alert form-alert-error"><%= t('The tire request could not be sent. Please call us and we will help you.') %></div>
+  <% } %>
+
+  <% if (!hasSearchedSize) { %>
+    <div class="admin-empty parts-empty parts-search-empty">
+      <h2><%= t('Search a tire size to see matches') %></h2>
+      <p><%= t('Choose a size from the dropdown and click Search. The page starts empty so customers only see the tires they asked for.') %></p>
+    </div>
+  <% } else if (visibleTires.length > 0) { %>
+    <div class="parts-results-summary">
+      <strong><%= visibleTires.length %></strong>
+      <span><%= t('matching tires found') %></span>
+    </div>
+    <div class="parts-grid">
+      <% visibleTires.forEach(tire => { %>
+        <article class="part-card">
+          <div class="part-card-media" aria-hidden="true">
+            <% if (tire.imageUrl) { %>
+              <img src="<%= tire.imageUrl %>" alt="" loading="lazy" />
+            <% } else { %>
+              <span><%= tire.size %></span>
+            <% } %>
+          </div>
+          <div class="part-card-body">
+            <span class="part-card-kicker"><%= t(tire.season) %> · <%= t(tire.condition) %></span>
+            <h2><%= tire.brand %> <%= tire.model %></h2>
+            <dl class="part-specs">
+              <div>
+                <dt><%= t('Size') %></dt>
+                <dd><%= tire.size %></dd>
+              </div>
+              <div>
+                <dt><%= t('Availability') %></dt>
+                <dd><%= tire.stockQuantity ? `${tire.stockQuantity} ${t('left')}` : t(tire.availability) %></dd>
+              </div>
+              <div>
+                <dt><%= t('MED price') %></dt>
+                <dd><%= formatPrice(tire.priceCents) %> <small><%= t('before tax') %></small></dd>
+              </div>
+            </dl>
+            <div class="part-pickup-note"><%= t('Pickup only at MED AUTO after stock is confirmed.') %></div>
+            <div class="part-card-actions">
+              <form action="/parts/checkout" method="GET" class="part-checkout-form part-request-form">
+                <input type="hidden" name="tireId" value="<%= tire.id %>" />
+                <label>
+                  <span><%= t('Qty') %></span>
+                  <input type="number" name="quantity" value="4" min="1" max="<%= Math.min(8, tire.stockQuantity || 8) %>" />
+                </label>
+                <button class="btn btn-primary" type="submit"><%= t('Checkout with e-transfer') %></button>
+              </form>
+              <a class="part-card-link" href="/contact"><%= t('Check fitment') %></a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="admin-empty parts-empty">
+      <h2><%= t('No tires match this filter') %></h2>
+      <p><%= t('Try another size or contact us for a supplier lookup.') %></p>
+    </div>
+  <% } %>
+
+  <section id="payment-preview" class="parts-payment-panel">
+    <div>
+      <span class="section-eyebrow"><%= t('How it works') %></span>
+      <h2><%= t('Simple e-transfer checkout') %></h2>
+      <p><%= t('Customers place an order and send an e-transfer. MED AUTO confirms payment and emails when the tires will be ready for pickup.') %></p>
+    </div>
+    <ol>
+      <li><%= t('Customer chooses tires and completes checkout.') %></li>
+      <li><%= t('Customer sends the e-transfer using the order number.') %></li>
+      <li><%= t('MED AUTO confirms the payment and sends an automatic email.') %></li>
+      <li><%= t('Customer picks up the tires at MED AUTO.') %></li>
+    </ol>
+  </section>
+</section>
+
+<%- include('partials/footer') %>

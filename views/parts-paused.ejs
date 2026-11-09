@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+
+<section class="container stack-l parts-page parts-paused-page">
+  <div class="parts-confirmation-card parts-paused-card">
+    <span class="section-eyebrow"><%= t('Tire ordering paused') %></span>
+    <h1><%= t('Tire ordering is temporarily unavailable') %></h1>
+    <p><%= t('Please contact MED AUTO and our team will be happy to help with your tire request.') %></p>
+    <div class="parts-paused-actions">
+      <a class="btn btn-primary" href="tel:+15144634503"><%= t('Call Tom') %></a>
+      <a class="btn btn-muted" href="/contact"><%= t('Contact') %></a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

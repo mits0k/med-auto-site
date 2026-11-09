@@ -10,6 +10,9 @@ const sharp = require('sharp');
 const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
+const PartRequest = require('../models/PartRequest');
+const dodoPreviewTires = require('../data/dodo-preview-tires.json');
+const { calculateQuebecTaxes } = require('../utils/quebecTaxes');
 
 const displaySort = {
   sold: 1,
@@ -64,6 +67,26 @@ async function processAndSaveTradeImage(fileBuffer) {
     .toFile(outPath);
 
   return publicUrl;
+}
+
+const partsCategories = [
+  { id: 'tires', label: 'Tires', status: 'Available now' }
+];
+
+function getPartsCatalog() {
+  const tireSizes = [...new Set(dodoPreviewTires.map(tire => tire.size))]
+    .filter(Boolean)
+    .sort();
+  const tireSeasons = [...new Set(dodoPreviewTires.map(tire => tire.season))]
+    .filter(Boolean)
+    .sort();
+
+  return {
+    partsCategories,
+    tireSizes,
+    tireSeasons,
+    tires: dodoPreviewTires
+  };
 }
 
 // Home
@@ -144,6 +167,142 @@ router.get('/inventory', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.send(req.t('Error loading cars'));
+  }
+});
+
+// Parts
+router.get('/parts', async (req, res) => {
+  if (res.locals.tireSalesEnabled === false) {
+    return res.status(503).render('parts-paused');
+  }
+
+  const { partsCategories, tireSizes, tireSeasons, tires } = getPartsCatalog();
+
+  res.render('parts', {
+    partsCategories,
+    tires,
+    tireSizes,
+    tireSeasons,
+    selectedCategory: req.query.category || 'tires',
+    selectedSizeSearch: String(req.query.size || '').trim(),
+    selectedSeason: req.query.season || 'all',
+    paymentStatus: req.query.payment || '',
+    requestStatus: req.query.request || ''
+  });
+});
+
+router.get('/parts/checkout', (req, res) => {
+  if (res.locals.tireSalesEnabled === false) {
+    return res.status(503).render('parts-paused');
+  }
+
+  const { tires } = getPartsCatalog();
+  const tire = tires.find(item => item.id === req.query.tireId);
+
+  if (!tire) return res.redirect('/parts?request=missing-item');
+  const quantity = Math.max(1, Math.min(8, Number(tire.stockQuantity || 8), Number(req.query.quantity || 4)));
+
+  res.render('parts-checkout', {
+    tire,
+    quantity,
+    error: null,
+    form: {},
+    etransferEmail: process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com'
+  });
+});
+
+router.get('/parts/order-confirmation', (req, res) => {
+  if (!req.session.partOrderConfirmation) return res.redirect('/parts');
+  res.render('parts-order-confirmation', req.session.partOrderConfirmation);
+});
+
+router.post('/parts/request', async (req, res) => {
+  if (res.locals.tireSalesEnabled === false) {
+    return res.status(503).render('parts-paused');
+  }
+
+  try {
+    const { tires } = getPartsCatalog();
+    const tire = tires.find(item => item.id === req.body.tireId);
+    const requestedQuantity = Math.max(1, Math.min(8, Number(req.body.quantity || 4)));
+    if (!tire) {
+      return res.redirect('/parts?request=missing-item');
+    }
+    const quantity = Math.min(requestedQuantity, Number(tire.stockQuantity || 8));
+
+    const customerName = String(req.body.customerName || '').trim();
+    const customerPhone = String(req.body.customerPhone || '').trim();
+    const customerEmail = String(req.body.customerEmail || '').trim();
+    const note = String(req.body.note || '').trim();
+
+    if (!customerName || !customerPhone || !customerEmail) {
+      return res.status(400).render('parts-checkout', {
+        tire,
+        quantity,
+        error: req.t('Please enter your name, email and phone number.'),
+        form: req.body,
+        etransferEmail: process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com'
+      });
+    }
+
+    const partRequest = await new PartRequest({
+      supplierProductId: tire.productId,
+      supplierUrl: tire.sourceUrl,
+      brand: tire.brand,
+      model: tire.model,
+      size: tire.size,
+      season: tire.season,
+      quantity,
+      priceCents: tire.priceCents,
+      customerName,
+      customerPhone,
+      customerEmail,
+      note
+    }).save();
+
+    const taxSummary = calculateQuebecTaxes(Number(tire.priceCents || 0) * quantity);
+
+    if (resend && process.env.BOOKING_EMAIL_TO) {
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+        to: process.env.BOOKING_EMAIL_TO,
+        subject: `New tire request - ${tire.size} ${tire.brand}`,
+        text: [
+          'New tire e-transfer order',
+          '',
+          `Request ID: ${partRequest._id}`,
+          `Tire: ${tire.brand} ${tire.model}`,
+          `Size: ${tire.size}`,
+          `Season: ${tire.season}`,
+          `Quantity: ${quantity}`,
+          `MED price each: $${(Number(tire.priceCents || 0) / 100).toFixed(2)}`,
+          `Subtotal: $${(taxSummary.subtotalCents / 100).toFixed(2)}`,
+          `GST: $${(taxSummary.gstCents / 100).toFixed(2)}`,
+          `QST: $${(taxSummary.qstCents / 100).toFixed(2)}`,
+          `E-transfer total: $${(taxSummary.totalCents / 100).toFixed(2)}`,
+          `Dodo link: ${tire.sourceUrl || ''}`,
+          '',
+          `Customer: ${customerName}`,
+          `Phone: ${customerPhone}`,
+          `Email: ${customerEmail || 'Not provided'}`,
+          `Note: ${note || 'None'}`,
+          '',
+          'Next step: verify the e-transfer, then click Payment Received in admin.'
+        ].join('\n')
+      });
+    }
+
+    req.session.partOrderConfirmation = {
+      tire,
+      quantity,
+      orderId: String(partRequest._id),
+      totalCents: taxSummary.totalCents,
+      etransferEmail: process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com'
+    };
+    res.redirect(303, '/parts/order-confirmation');
+  } catch (err) {
+    console.error('Tire request error:', err.message);
+    res.redirect('/parts?request=error');
   }
 });
 

@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "sync:tires": "node scripts/sync-dodo-tires.js"
   },
   "engines": {
     "node": "18.x"

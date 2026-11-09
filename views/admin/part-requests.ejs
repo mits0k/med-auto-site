@@ -1,0 +1,160 @@
+<%- include('../partials/header') %>
+
+<%
+  const openCount = partRequests.filter(r => r.status !== 'Payment Received').length;
+  const receivedCount = partRequests.filter(r => r.status === 'Payment Received').length;
+  const notifiedCount = partRequests.filter(r => r.customerNotifiedAt).length;
+  const formatMoney = cents => new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD'
+  }).format(Number(cents || 0) / 100);
+  const taxTotal = request => {
+    const subtotal = Number(request.priceCents || 0) * Number(request.quantity || 1);
+    return subtotal + Math.round(subtotal * 0.05) + Math.round(subtotal * 0.09975);
+  };
+%>
+
+<section class="container admin-shell admin-page">
+  <div class="admin-hero">
+    <div>
+      <span class="admin-kicker">Parts Pipeline</span>
+      <h1>Part Requests</h1>
+      <p>Review incoming e-transfers and notify customers as soon as payment arrives.</p>
+    </div>
+
+    <div class="admin-hero-actions">
+      <a href="/admin/dashboard" class="btn btn-secondary">Dashboard</a>
+      <a href="/admin/appointments" class="btn btn-secondary">Appointments</a>
+      <a href="/admin/trade-ins" class="btn btn-secondary">Trade-Ins</a>
+    </div>
+  </div>
+
+  <% if (updateStatus === 'received') { %>
+    <div class="form-alert success-popup">
+      Payment marked received and the customer was emailed automatically.
+    </div>
+  <% } else if (updateStatus === 'received-no-email') { %>
+    <div class="form-alert form-alert-error">
+      Payment was marked received, but the email service or customer email is not configured.
+    </div>
+  <% } else if (updateStatus === 'email-failed') { %>
+    <div class="form-alert form-alert-error">
+      Payment was marked received, but the customer email could not be sent. Please contact them directly.
+    </div>
+  <% } else if (updateStatus === 'already-received') { %>
+    <div class="form-alert success-popup">That payment was already marked received.</div>
+  <% } %>
+
+  <div class="admin-stats" aria-label="Part request summary">
+    <div class="admin-stat">
+      <span>Awaiting Transfer</span>
+      <strong><%= openCount %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Payment Received</span>
+      <strong><%= receivedCount %></strong>
+    </div>
+    <div class="admin-stat">
+      <span>Customer Emailed</span>
+      <strong><%= notifiedCount %></strong>
+    </div>
+  </div>
+
+  <% if (partRequests.length > 0) { %>
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>Tire Reservations</h2>
+          <p>Check your bank account first. Click Payment Received only after the e-transfer has arrived.</p>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table admin-part-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Tire</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Supplier</th>
+              <th>Note</th>
+              <th class="admin-actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% partRequests.forEach(request => { %>
+              <tr>
+                <td>
+                  <strong><%= request.customerName %></strong>
+                  <span class="admin-cell-meta"><%= request.customerPhone %></span>
+                  <span class="admin-cell-meta"><%= request.customerEmail || 'No email' %></span>
+                </td>
+                <td>
+                  <strong><%= request.size %> <%= request.brand %></strong>
+                  <span class="admin-cell-meta"><%= request.model %></span>
+                  <span class="admin-cell-meta"><%= request.season %> · Qty <%= request.quantity || 4 %></span>
+                </td>
+                <td>
+                  <strong><%= formatMoney(taxTotal(request)) %></strong>
+                  <span class="admin-cell-meta">Total with GST + QST</span>
+                  <span class="admin-cell-meta"><%= formatMoney(request.priceCents) %> each</span>
+                  <span class="admin-cell-meta">
+                    E-transfer · Order <%= request._id %>
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge <%= request.status === 'Payment Received'
+                    ? 'status-sold'
+                    : 'status-new' %>">
+                    <%= request.status === 'Payment Received' ? 'Payment received' : 'Awaiting e-transfer' %>
+                  </span>
+                  <% if (request.customerNotifiedAt) { %><span class="admin-cell-meta">Customer emailed</span><% } %>
+                </td>
+                <td>
+                  <% if (request.supplierUrl) { %>
+                    <a href="<%= request.supplierUrl %>" target="_blank" rel="noopener">Open Dodo tire</a>
+                  <% } else { %>
+                    <span class="admin-muted">No supplier link</span>
+                  <% } %>
+                  <span class="admin-cell-meta">Product ID: <%= request.supplierProductId || 'N/A' %></span>
+                </td>
+                <td class="admin-message-cell"><%= request.note || '-' %></td>
+                <td>
+                  <div class="admin-actions">
+                    <% if (request.status !== 'Payment Received') { %>
+                      <form action="/admin/part-requests/<%= request._id %>/status" method="POST">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Have you received this e-transfer? This will email the customer.');">Payment Received</button>
+                      </form>
+                    <% } else if (!request.customerNotifiedAt) { %>
+                      <form action="/admin/part-requests/<%= request._id %>/status" method="POST">
+                        <button type="submit" class="btn btn-secondary">Retry Customer Email</button>
+                      </form>
+                    <% } else { %>
+                      <span class="admin-muted"><%= request.customerNotifiedAt ? 'Payment confirmed · email sent' : 'Payment confirmed' %></span>
+                    <% } %>
+
+                    <form
+                      action="/admin/part-requests/<%= request._id %>/delete"
+                      method="POST"
+                      onsubmit="return confirm('Delete this part request?');"
+                    >
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="admin-empty">
+      <h2>No part requests yet</h2>
+      <p>New tire reservation requests will appear here after customers submit them.</p>
+    </div>
+  <% } %>
+</section>
+
+<%- include('../partials/footer') %>

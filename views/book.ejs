@@ -84,7 +84,7 @@
           %>
 
           <% times.forEach(t => { %>
-            <option value="<%= t[0] %>" <%= time === t[0] ? 'selected' : '' %>>
+            <option value="<%= t[0] %>" <%= (typeof time !== 'undefined' && time === t[0]) ? 'selected' : '' %>>
               <%= t[1] %>
             </option>
           <% }) %>

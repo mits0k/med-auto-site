@@ -1,0 +1,34 @@
+<%- include('partials/header') %>
+
+<%
+  const formatPrice = cents => new Intl.NumberFormat(locale, {
+    style: 'currency', currency: 'CAD'
+  }).format(Number(cents || 0) / 100);
+  const subtotalCents = Number(tire.priceCents || 0) * quantity;
+  const gstCents = Math.round(subtotalCents * 0.05);
+  const qstCents = Math.round(subtotalCents * 0.09975);
+  const taxIncludedTotalCents = subtotalCents + gstCents + qstCents;
+%>
+
+<section class="container stack-l parts-page parts-confirmation-page">
+  <div class="parts-confirmation-card">
+    <span class="section-eyebrow"><%= t('Order placed') %></span>
+    <h1><%= t('Send your e-transfer to finish') %></h1>
+    <p><%= t('Your tires are not confirmed until MED AUTO receives the e-transfer.') %></p>
+
+    <div class="parts-transfer-details">
+      <div><span><%= t('Send to') %></span><strong><%= etransferEmail %></strong></div>
+      <div><span><%= t('Subtotal') %></span><strong><%= formatPrice(subtotalCents) %></strong></div>
+      <div><span><%= t('GST') %> (5%)</span><strong><%= formatPrice(gstCents) %></strong></div>
+      <div><span><%= t('QST') %> (9.975%)</span><strong><%= formatPrice(qstCents) %></strong></div>
+      <div class="parts-transfer-total"><span><%= t('E-transfer amount') %></span><strong><%= formatPrice(taxIncludedTotalCents) %></strong></div>
+      <div><span><%= t('Message / order number') %></span><strong><%= orderId %></strong></div>
+    </div>
+
+    <div class="part-pickup-note"><%= t('Once we receive the payment, we will email you to confirm that your tires will be ready for pickup.') %></div>
+    <p class="parts-order-item"><%= quantity %> × <%= tire.brand %> <%= tire.model %> · <%= tire.size %></p>
+    <a class="btn btn-primary" href="/parts"><%= t('Return to tires') %></a>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

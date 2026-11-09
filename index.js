@@ -6,6 +6,10 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 const { createTranslator } = require('./i18n');
+const {
+  getTireSalesEnabled,
+  DEFAULT_TIRE_SALES_ENABLED
+} = require('./utils/tireSalesSettings');
 
 const siteRoutes = require('./routes/siteRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -43,7 +47,7 @@ app.use(session({
 }));
 
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   const requestedLanguage = ['en', 'fr'].includes(req.query.lang) ? req.query.lang : null;
 
   if (requestedLanguage && req.method === 'GET') {
@@ -68,6 +72,13 @@ app.use((req, res, next) => {
   res.locals.locale = language === 'fr' ? 'fr-CA' : 'en-CA';
   res.locals.t = createTranslator(language);
   res.locals.showLanguageSwitch = !isAdminPath;
+  res.locals.currentPath = req.path;
+  try {
+    res.locals.tireSalesEnabled = await getTireSalesEnabled();
+  } catch (error) {
+    console.error('Error loading tire sales setting:', error.message);
+    res.locals.tireSalesEnabled = DEFAULT_TIRE_SALES_ENABLED;
+  }
   res.locals.languageUrls = { en: queryFor('en'), fr: queryFor('fr') };
   req.language = language;
   req.t = res.locals.t;

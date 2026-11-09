@@ -1,9 +1,26 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
 <head>
+  <%
+    const seoPath = typeof currentPath === 'string' ? currentPath : '/';
+    const isTirePage = seoPath === '/parts' || seoPath.startsWith('/parts/');
+    const seoTitle = isTirePage
+      ? t('Tires in Dorval and Montreal | MED AUTO')
+      : t('MED AUTO | Pre-owned vehicles and tires in Dorval');
+    const seoDescription = isTirePage
+      ? t('Shop in-stock summer, winter and all-season tires by size from MED AUTO in Dorval. See availability and order online by e-transfer.')
+      : t('MED AUTO in Dorval offers quality pre-owned vehicles, financing, trade-ins and in-stock summer, winter and all-season tires.');
+    const canonicalUrl = `https://medauto.ca${seoPath === '/' ? '/' : seoPath}`;
+  %>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><%= t('MED AUTO | Pre-owned vehicles in Dorval') %></title>
+  <title><%= seoTitle %></title>
+  <meta name="description" content="<%= seoDescription %>">
+  <link rel="canonical" href="<%= canonicalUrl %>">
+  <meta property="og:title" content="<%= seoTitle %>">
+  <meta property="og:description" content="<%= seoDescription %>">
+  <meta property="og:url" content="<%= canonicalUrl %>">
+  <meta property="og:type" content="website">
 
   <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +41,7 @@
       "@type": "AutoDealer",
       "name": "MED AUTO",
       "url": "https://medauto.ca/",
+      "description": "Pre-owned vehicle dealership and tire retailer in Dorval, Quebec.",
       "logo": "https://medauto.ca/images/med-auto-logo-512.png",
       "image": "https://medauto.ca/images/med-auto-logo-512.png",
       "telephone": "+15144634503",
@@ -37,6 +55,17 @@
       },
       "sameAs": [
         "https://instagram.com/medauto_mtl"
+      ],
+      "hasOfferCatalog": [
+        {
+          "@type": "OfferCatalog",
+          "name": "Pre-owned vehicles"
+        },
+        {
+          "@type": "OfferCatalog",
+          "name": "Summer, winter and all-season tires",
+          "url": "https://medauto.ca/parts?category=tires"
+        }
       ]
     }
   </script>
@@ -92,6 +121,14 @@
       <ul id="primary-nav" class="nav-links">
         <li><a href="/"><%= t('Home') %></a></li>
         <li><a href="/inventory"><%= t('Inventory') %></a></li>
+        <% if (typeof tireSalesEnabled === 'undefined' || tireSalesEnabled) { %>
+          <li class="nav-dropdown">
+            <a href="/parts" class="nav-dropdown-trigger"><%= t('Parts') %></a>
+            <div class="nav-submenu" aria-label="<%= t('Parts categories') %>">
+              <a href="/parts?category=tires"><%= t('Tires') %></a>
+            </div>
+          </li>
+        <% } %>
         <li><a href="/trade-in"><%= t('Sell or Trade') %></a></li>
         <li><a href="/book"><%= t('Booking') %></a></li>
         <li><a href="/contact"><%= t('Contact') %></a></li>

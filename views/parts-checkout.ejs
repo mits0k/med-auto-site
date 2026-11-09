@@ -1,0 +1,57 @@
+<%- include('partials/header') %>
+
+<%
+  const formatPrice = cents => new Intl.NumberFormat(locale, {
+    style: 'currency', currency: 'CAD'
+  }).format(Number(cents || 0) / 100);
+  const subtotalCents = Number(tire.priceCents || 0) * quantity;
+  const gstCents = Math.round(subtotalCents * 0.05);
+  const qstCents = Math.round(subtotalCents * 0.09975);
+  const totalCents = subtotalCents + gstCents + qstCents;
+%>
+
+<section class="container stack-l parts-page parts-checkout-page">
+  <header class="parts-hero">
+    <div>
+      <span class="section-eyebrow"><%= t('Secure your tire order') %></span>
+      <h1><%= t('E-transfer checkout') %></h1>
+      <p><%= t('Enter your contact details, then send the e-transfer using the instructions on the confirmation page.') %></p>
+    </div>
+    <a class="btn btn-muted" href="/parts"><%= t('Back to tires') %></a>
+  </header>
+
+  <% if (error) { %><div class="form-alert form-alert-error"><%= error %></div><% } %>
+
+  <div class="parts-checkout-layout">
+    <article class="parts-order-summary">
+      <% if (tire.imageUrl) { %><img src="<%= tire.imageUrl %>" alt="" /><% } %>
+      <span class="part-card-kicker"><%= t(tire.season) %> · <%= tire.size %></span>
+      <h2><%= tire.brand %> <%= tire.model %></h2>
+      <dl class="parts-checkout-totals">
+        <% if (tire.stockQuantity) { %><div><dt><%= t('Availability') %></dt><dd><%= tire.stockQuantity %> <%= t('left') %></dd></div><% } %>
+        <div><dt><%= t('Quantity') %></dt><dd><%= quantity %></dd></div>
+        <div><dt><%= t('Price each') %></dt><dd><%= formatPrice(tire.priceCents) %></dd></div>
+        <div><dt><%= t('Subtotal') %></dt><dd><%= formatPrice(subtotalCents) %></dd></div>
+        <div><dt><%= t('GST') %> (5%)</dt><dd><%= formatPrice(gstCents) %></dd></div>
+        <div><dt><%= t('QST') %> (9.975%)</dt><dd><%= formatPrice(qstCents) %></dd></div>
+        <div class="total"><dt><%= t('Total with taxes') %></dt><dd><%= formatPrice(totalCents) %></dd></div>
+      </dl>
+    </article>
+
+    <form action="/parts/request" method="POST" class="parts-checkout-form">
+      <input type="hidden" name="tireId" value="<%= tire.id %>" />
+      <input type="hidden" name="quantity" value="<%= quantity %>" />
+      <label><span><%= t('Name') %></span><input type="text" name="customerName" required autocomplete="name" value="<%= form.customerName || '' %>" /></label>
+      <label><span><%= t('Email') %></span><input type="email" name="customerEmail" required autocomplete="email" value="<%= form.customerEmail || '' %>" /></label>
+      <label><span><%= t('Phone') %></span><input type="tel" name="customerPhone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="(514) 555-0123" value="<%= form.customerPhone || '' %>" /></label>
+      <label><span><%= t('Note') %> <small>(<%= t('optional') %>)</small></span><textarea name="note" rows="3" placeholder="<%= t('Questions about your order') %>"><%= form.note || '' %></textarea></label>
+      <div class="parts-transfer-preview full">
+        <strong><%= t('Next: send your e-transfer') %></strong>
+        <p><%= t('After placing the order, you will see the payment email, exact total, and your order number.') %></p>
+      </div>
+      <button class="btn btn-primary full" type="submit"><%= t('Place order') %> · <%= formatPrice(totalCents) %></button>
+    </form>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

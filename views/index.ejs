@@ -36,41 +36,29 @@
   </div>
 </section>
 
-<section class="container section home-inventory-section">
-  <div class="section-heading section-heading-row">
-    <div>
-      <span class="section-eyebrow"><%= t('Just arrived') %></span>
-      <h2 class="section-title"><%= t('Latest vehicle') %></h2>
+<% if (typeof tireSalesEnabled === 'undefined' || tireSalesEnabled) { %>
+<section class="container home-tires-section" aria-labelledby="home-tires-title">
+  <a class="home-tires-card" href="/parts?category=tires">
+    <div class="home-tires-copy">
+      <span class="section-eyebrow"><%= t('Tires available now') %></span>
+      <h2 id="home-tires-title"><%= t('Find the right tires for your vehicle.') %></h2>
+      <p><%= t('Search by size, see current availability, and order online with e-transfer.') %></p>
+      <span class="home-tires-action">
+        <%= t('Shop tires') %>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h14M14 7l5 5-5 5" />
+        </svg>
+      </span>
     </div>
-    <a class="section-link" href="/inventory"><%= t('View all inventory') %></a>
-  </div>
-
-  <% if (typeof featuredCar !== 'undefined' && featuredCar) { %>
-    <a href="/inventory/<%= featuredCar._id %>" class="spotlight">
-      <div class="spotlight-media">
-        <div class="spotlight-noimg"><%= t('No image') %></div>
-        <% if (featuredCar.images && featuredCar.images.length) { %>
-          <img src="<%= featuredCar.images[0] %>" alt="<%= featuredCar.make %> <%= featuredCar.model %>" onerror="this.style.display='none'" />
-        <% } %>
-
-        <span class="spotlight-badge"><%= t('New arrival') %></span>
-        <span class="spotlight-chip"><%= featuredCar.year %></span>
-
-        <% if (typeof featuredCar.price === 'number') { %>
-          <span class="spotlight-price"><%= new Intl.NumberFormat(locale, { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(featuredCar.price) %></span>
-        <% } %>
-      </div>
-
-      <div class="spotlight-caption">
-        <h3><%= featuredCar.make %> <%= featuredCar.model %></h3>
-        <% if (typeof featuredCar.mileage === 'number') { %>
-          <span class="meta"><%= new Intl.NumberFormat(locale).format(featuredCar.mileage) %> km</span>
-        <% } %>
-      </div>
-    </a>
-  <% } else { %>
-    <p class="empty-state"><%= t('Add a car in Admin to showcase it here.') %></p>
-  <% } %>
+    <div class="home-tires-visual" aria-hidden="true">
+      <span class="home-tire-ring home-tire-ring-back"></span>
+      <span class="home-tire-ring home-tire-ring-front">
+        <span></span>
+      </span>
+      <small><%= t('Live availability') %></small>
+    </div>
+  </a>
 </section>
+<% } %>
 
 <%- include('partials/footer') %>

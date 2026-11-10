@@ -212,8 +212,11 @@ router.get('/parts/checkout', (req, res) => {
 });
 
 router.get('/parts/order-confirmation', (req, res) => {
-  if (!req.session.partOrderConfirmation) return res.redirect('/parts');
-  res.render('parts-order-confirmation', req.session.partOrderConfirmation);
+  const confirmation = req.session.partOrderConfirmation;
+  if (!confirmation) return res.redirect('/parts');
+
+  delete req.session.partOrderConfirmation;
+  res.render('parts-order-confirmation', confirmation);
 });
 
 router.post('/parts/request', async (req, res) => {

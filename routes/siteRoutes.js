@@ -293,7 +293,12 @@ router.post('/parts/request', async (req, res) => {
     }
 
     req.session.partOrderConfirmation = {
-      tire,
+      tire: {
+        brand: String(tire.brand || ''),
+        model: String(tire.model || ''),
+        size: String(tire.size || ''),
+        priceCents: Number(tire.priceCents || 0)
+      },
       quantity,
       orderId: String(partRequest._id),
       totalCents: taxSummary.totalCents,

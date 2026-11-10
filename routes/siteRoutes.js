@@ -200,7 +200,9 @@ router.get('/parts/checkout', (req, res) => {
   const tire = tires.find(item => item.id === req.query.tireId);
 
   if (!tire) return res.redirect('/parts?request=missing-item');
-  const quantity = Math.max(1, Math.min(8, Number(tire.stockQuantity || 8), Number(req.query.quantity || 4)));
+  const availableQuantity = Math.max(1, Math.floor(Number(tire.stockQuantity || 1)));
+  const requestedQuantity = Math.floor(Number(req.query.quantity || 4));
+  const quantity = Math.max(1, Math.min(availableQuantity, Number.isFinite(requestedQuantity) ? requestedQuantity : 4));
 
   res.render('parts-checkout', {
     tire,
@@ -227,11 +229,13 @@ router.post('/parts/request', async (req, res) => {
   try {
     const { tires } = getPartsCatalog();
     const tire = tires.find(item => item.id === req.body.tireId);
-    const requestedQuantity = Math.max(1, Math.min(8, Number(req.body.quantity || 4)));
     if (!tire) {
       return res.redirect('/parts?request=missing-item');
     }
-    const quantity = Math.min(requestedQuantity, Number(tire.stockQuantity || 8));
+    const availableQuantity = Math.max(1, Math.floor(Number(tire.stockQuantity || 1)));
+    const submittedQuantity = Math.floor(Number(req.body.quantity));
+    const requestedQuantity = Number.isFinite(submittedQuantity) ? submittedQuantity : 1;
+    const quantity = Math.max(1, Math.min(requestedQuantity, availableQuantity));
 
     const customerName = String(req.body.customerName || '').trim();
     const customerPhone = String(req.body.customerPhone || '').trim();

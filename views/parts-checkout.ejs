@@ -29,18 +29,18 @@
       <h2><%= tire.brand %> <%= tire.model %></h2>
       <dl class="parts-checkout-totals">
         <% if (tire.stockQuantity) { %><div><dt><%= t('Availability') %></dt><dd><%= tire.stockQuantity %> <%= t('left') %></dd></div><% } %>
-        <div><dt><%= t('Quantity') %></dt><dd><%= quantity %></dd></div>
+        <div><dt><%= t('Quantity') %></dt><dd data-order-quantity><%= quantity %></dd></div>
         <div><dt><%= t('Price each') %></dt><dd><%= formatPrice(tire.priceCents) %></dd></div>
-        <div><dt><%= t('Subtotal') %></dt><dd><%= formatPrice(subtotalCents) %></dd></div>
-        <div><dt><%= t('GST') %> (5%)</dt><dd><%= formatPrice(gstCents) %></dd></div>
-        <div><dt><%= t('QST') %> (9.975%)</dt><dd><%= formatPrice(qstCents) %></dd></div>
-        <div class="total"><dt><%= t('Total with taxes') %></dt><dd><%= formatPrice(totalCents) %></dd></div>
+        <div><dt><%= t('Subtotal') %></dt><dd data-order-subtotal><%= formatPrice(subtotalCents) %></dd></div>
+        <div><dt><%= t('GST') %> (5%)</dt><dd data-order-gst><%= formatPrice(gstCents) %></dd></div>
+        <div><dt><%= t('QST') %> (9.975%)</dt><dd data-order-qst><%= formatPrice(qstCents) %></dd></div>
+        <div class="total"><dt><%= t('Total with taxes') %></dt><dd data-order-total><%= formatPrice(totalCents) %></dd></div>
       </dl>
     </article>
 
     <form action="/parts/request" method="POST" class="parts-checkout-form">
       <input type="hidden" name="tireId" value="<%= tire.id %>" />
-      <input type="hidden" name="quantity" value="<%= quantity %>" />
+      <label class="full"><span><%= t('Quantity') %></span><input type="number" name="quantity" value="<%= quantity %>" min="1" max="<%= tire.stockQuantity || quantity %>" step="1" required data-checkout-quantity data-price-cents="<%= tire.priceCents %>" /></label>
       <label><span><%= t('Name') %></span><input type="text" name="customerName" required autocomplete="name" value="<%= form.customerName || '' %>" /></label>
       <label><span><%= t('Email') %></span><input type="email" name="customerEmail" required autocomplete="email" value="<%= form.customerEmail || '' %>" /></label>
       <label><span><%= t('Phone') %></span><input type="tel" name="customerPhone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="(514) 555-0123" value="<%= form.customerPhone || '' %>" /></label>
@@ -49,9 +49,44 @@
         <strong><%= t('Next: send your e-transfer') %></strong>
         <p><%= t('After placing the order, you will see the payment email, exact total, and your order number.') %></p>
       </div>
-      <button class="btn btn-primary full" type="submit"><%= t('Place order') %> · <%= formatPrice(totalCents) %></button>
+      <button class="btn btn-primary full" type="submit"><%= t('Place order') %> · <span data-order-button-total><%= formatPrice(totalCents) %></span></button>
     </form>
   </div>
 </section>
+
+<script>
+  (() => {
+    const quantityInput = document.querySelector('[data-checkout-quantity]');
+    if (!quantityInput) return;
+
+    const formatPrice = cents => new Intl.NumberFormat(document.documentElement.lang || 'en-CA', {
+      style: 'currency',
+      currency: 'CAD'
+    }).format(cents / 100);
+
+    const updateTotals = () => {
+      const maximum = Number(quantityInput.max || 1);
+      const quantity = Math.max(1, Math.min(maximum, Math.floor(Number(quantityInput.value) || 1)));
+      const subtotal = Number(quantityInput.dataset.priceCents || 0) * quantity;
+      const gst = Math.round(subtotal * 0.05);
+      const qst = Math.round(subtotal * 0.09975);
+      const total = subtotal + gst + qst;
+
+      document.querySelector('[data-order-quantity]').textContent = quantity;
+      document.querySelector('[data-order-subtotal]').textContent = formatPrice(subtotal);
+      document.querySelector('[data-order-gst]').textContent = formatPrice(gst);
+      document.querySelector('[data-order-qst]').textContent = formatPrice(qst);
+      document.querySelector('[data-order-total]').textContent = formatPrice(total);
+      document.querySelector('[data-order-button-total]').textContent = formatPrice(total);
+    };
+
+    quantityInput.addEventListener('input', updateTotals);
+    quantityInput.addEventListener('change', () => {
+      const maximum = Number(quantityInput.max || 1);
+      quantityInput.value = Math.max(1, Math.min(maximum, Math.floor(Number(quantityInput.value) || 1)));
+      updateTotals();
+    });
+  })();
+</script>
 
 <%- include('partials/footer') %>

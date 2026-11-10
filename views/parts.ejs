@@ -124,7 +124,7 @@
                 <input type="hidden" name="tireId" value="<%= tire.id %>" />
                 <label>
                   <span><%= t('Qty') %></span>
-                  <input type="number" name="quantity" value="4" min="1" max="<%= Math.min(8, tire.stockQuantity || 8) %>" />
+                  <input type="number" name="quantity" value="4" min="1" max="<%= tire.stockQuantity || 4 %>" step="1" required />
                 </label>
                 <button class="btn btn-primary" type="submit"><%= t('Checkout with e-transfer') %></button>
               </form>

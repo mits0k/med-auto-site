@@ -126,6 +126,8 @@ const french = {
   'Simple e-transfer checkout': 'Paiement simple par virement Interac',
   'Parts category': 'Catégorie de pièces',
   'Tire size': 'Dimension du pneu',
+  'Search tires': 'Rechercher des pneus',
+  'Search tires by size': 'Rechercher des pneus par dimension',
   'Choose tire size': 'Choisir une dimension',
   'Season': 'Saison',
   'All seasons': 'Toutes les saisons',

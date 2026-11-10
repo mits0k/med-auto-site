@@ -138,8 +138,43 @@ async function fetchCategory(category) {
 }
 
 async function main() {
+  const stockRefreshFlag = process.argv.indexOf('--stock-refresh-file');
+  const stockRefreshFile = stockRefreshFlag >= 0 ? process.argv[stockRefreshFlag + 1] : '';
   const stockFileFlag = process.argv.indexOf('--stock-file');
   const stockFile = stockFileFlag >= 0 ? process.argv[stockFileFlag + 1] : '';
+
+  if (stockRefreshFile) {
+    const currentCatalog = JSON.parse(fs.readFileSync(OUTPUT_FILE, 'utf8'));
+    const liveInventory = JSON.parse(fs.readFileSync(path.resolve(stockRefreshFile), 'utf8'));
+    const stockCheckedAt = new Date().toISOString();
+    const liveByModel = new Map(
+      liveInventory.map(product => [`${product.season}::${product.model}`, product])
+    );
+
+    const refreshedCatalog = currentCatalog
+      .map(product => {
+        const liveProduct = liveByModel.get(`${product.season}::${product.model}`);
+        if (!liveProduct) return null;
+
+        const stockQuantity = Number(liveProduct.stockQuantity || 0);
+        if (stockQuantity < MINIMUM_STOCK) return null;
+
+        return {
+          ...product,
+          availability: `${stockQuantity} available`,
+          stockQuantity,
+          warehouseStock: liveProduct.warehouseStock || {},
+          stockCheckedAt,
+          note: `Live Dodo stock: ${stockQuantity}. Public Dodo price plus $5 MED Auto markup`
+        };
+      })
+      .filter(Boolean);
+
+    fs.writeFileSync(OUTPUT_FILE, `${JSON.stringify(refreshedCatalog, null, 2)}\n`);
+    console.log(`Refreshed ${refreshedCatalog.length} existing tires with ${MINIMUM_STOCK}+ live stock in ${OUTPUT_FILE}`);
+    console.log(`Removed ${currentCatalog.length - refreshedCatalog.length} tires that are unavailable, below minimum stock, or no longer listed`);
+    return;
+  }
 
   if (stockFile) {
     const liveInventory = JSON.parse(fs.readFileSync(path.resolve(stockFile), 'utf8'));

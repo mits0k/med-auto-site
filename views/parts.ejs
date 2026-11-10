@@ -26,28 +26,57 @@
     <a class="btn btn-muted" href="#payment-preview"><%= t('How e-transfer works') %></a>
   </header>
 
-  <form method="GET" action="/parts" class="parts-filters">
-    <label>
-      <span><%= t('Tire size') %></span>
-      <select name="size" class="parts-size-select">
-        <option value="" <%= !selectedSizeSearch ? 'selected' : '' %>><%= t('Choose tire size') %></option>
-        <% tireSizes.forEach(size => { %>
-          <option value="<%= size %>" <%= selectedSizeSearch === size ? 'selected' : '' %>><%= size %></option>
-        <% }) %>
-      </select>
-    </label>
+  <form method="GET" action="/parts" class="parts-filters parts-search-panel">
+    <div class="parts-search-intro">
+      <h2><%= t('Search tires by size') %></h2>
+    </div>
 
-    <label>
-      <span><%= t('Season') %></span>
-      <select name="season">
-        <option value="all" <%= selectedSeason === 'all' ? 'selected' : '' %>><%= t('All seasons') %></option>
+    <div class="parts-filter-field">
+      <span class="parts-field-label"><%= t('Tire size') %></span>
+      <input type="hidden" name="size" value="<%= selectedSizeSearch %>" data-filter-input />
+      <details class="parts-option-picker" data-filter-picker>
+        <summary><span data-filter-label><%= selectedSizeSearch || t('Choose tire size') %></span></summary>
+        <div class="parts-option-menu" role="listbox" aria-label="<%= t('Tire size') %>">
+          <% tireSizes.forEach(size => { %>
+            <button
+              type="button"
+              class="parts-filter-option <%= selectedSizeSearch === size ? 'selected' : '' %>"
+              data-filter-value="<%= size %>"
+              role="option"
+              aria-selected="<%= selectedSizeSearch === size ? 'true' : 'false' %>"
+            ><%= size %></button>
+          <% }) %>
+        </div>
+      </details>
+    </div>
+
+    <div class="parts-filter-field">
+      <span class="parts-field-label"><%= t('Season') %></span>
+      <input type="hidden" name="season" value="<%= selectedSeason %>" data-filter-input />
+      <details class="parts-option-picker" data-filter-picker>
+        <summary><span data-filter-label><%= selectedSeason === 'all' ? t('All seasons') : t(selectedSeason) %></span></summary>
+        <div class="parts-option-menu" role="listbox" aria-label="<%= t('Season') %>">
+          <button
+            type="button"
+            class="parts-filter-option <%= selectedSeason === 'all' ? 'selected' : '' %>"
+            data-filter-value="all"
+            role="option"
+            aria-selected="<%= selectedSeason === 'all' ? 'true' : 'false' %>"
+          ><%= t('All seasons') %></button>
         <% tireSeasons.forEach(season => { %>
-          <option value="<%= season %>" <%= selectedSeason === season ? 'selected' : '' %>><%= t(season) %></option>
+          <button
+            type="button"
+            class="parts-filter-option <%= selectedSeason === season ? 'selected' : '' %>"
+            data-filter-value="<%= season %>"
+            role="option"
+            aria-selected="<%= selectedSeason === season ? 'true' : 'false' %>"
+          ><%= t(season) %></button>
         <% }) %>
-      </select>
-    </label>
+        </div>
+      </details>
+    </div>
 
-    <button class="btn btn-primary" type="submit"><%= t('Search') %></button>
+    <button class="btn btn-primary parts-search-button" type="submit"><%= t('Search tires') %></button>
     <a class="btn btn-muted" href="/parts"><%= t('Reset') %></a>
   </form>
 
@@ -57,12 +86,7 @@
     <div class="form-alert form-alert-error"><%= t('The tire request could not be sent. Please call us and we will help you.') %></div>
   <% } %>
 
-  <% if (!hasSearchedSize) { %>
-    <div class="admin-empty parts-empty parts-search-empty">
-      <h2><%= t('Search a tire size to see matches') %></h2>
-      <p><%= t('Choose a size from the dropdown and click Search. The page starts empty so customers only see the tires they asked for.') %></p>
-    </div>
-  <% } else if (visibleTires.length > 0) { %>
+  <% if (hasSearchedSize && visibleTires.length > 0) { %>
     <div class="parts-results-summary">
       <strong><%= visibleTires.length %></strong>
       <span><%= t('matching tires found') %></span>
@@ -110,7 +134,7 @@
         </article>
       <% }) %>
     </div>
-  <% } else { %>
+  <% } else if (hasSearchedSize) { %>
     <div class="admin-empty parts-empty">
       <h2><%= t('No tires match this filter') %></h2>
       <p><%= t('Try another size or contact us for a supplier lookup.') %></p>

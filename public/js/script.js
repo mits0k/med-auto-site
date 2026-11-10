@@ -41,6 +41,40 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* ===== Tire filter dropdowns ===== */
+  document.querySelectorAll("[data-filter-picker]").forEach(picker => {
+    const field = picker.closest(".parts-filter-field");
+    const input = field && field.querySelector("[data-filter-input]");
+    const label = picker.querySelector("[data-filter-label]");
+    const options = picker.querySelectorAll("[data-filter-value]");
+
+    if (!input || !label) return;
+
+    options.forEach(option => {
+      option.addEventListener("click", () => {
+        input.value = option.dataset.filterValue || "";
+        label.textContent = option.textContent.trim();
+        options.forEach(item => {
+          const selected = item === option;
+          item.classList.toggle("selected", selected);
+          item.setAttribute("aria-selected", selected ? "true" : "false");
+        });
+        picker.removeAttribute("open");
+      });
+    });
+
+    document.addEventListener("click", event => {
+      if (!picker.contains(event.target)) picker.removeAttribute("open");
+    });
+
+    picker.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        picker.removeAttribute("open");
+        picker.querySelector("summary").focus();
+      }
+    });
+  });
+
   /* ===== Lightbox & gallery ===== */
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.querySelector(".lightbox-img");

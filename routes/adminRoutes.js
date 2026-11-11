@@ -273,20 +273,23 @@ router.post('/part-requests/:id/status', isAdmin, async (req, res) => {
 
     try {
       const taxSummary = calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1));
-      const total = (taxSummary.totalCents / 100).toFixed(2);
+      const total = new Intl.NumberFormat('fr-CA', {
+        style: 'currency',
+        currency: 'CAD'
+      }).format(taxSummary.totalCents / 100);
       const emailResult = await resend.emails.send({
         from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
         to: partRequest.customerEmail,
-        subject: 'Payment received — your tires will be ready',
+        subject: 'Paiement reçu — vos pneus seront prêts',
         text: [
-          `Hi ${partRequest.customerName},`,
+          `Bonjour ${partRequest.customerName},`,
           '',
-          'We received your e-transfer. Thank you!',
-          `Your order for ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) will be ready for pickup at MED AUTO.`,
-          `Order: ${partRequest._id}`,
-          `Total: $${total} CAD`,
+          'Nous avons bien reçu votre virement Interac. Merci!',
+          `Votre commande de ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) sera prête pour ramassage chez MED AUTO.`,
+          `Numéro de commande : ${partRequest._id}`,
+          `Total : ${total}`,
           '',
-          'We will contact you if we need to confirm any pickup details.',
+          'Nous communiquerons avec vous si nous devons confirmer les détails du ramassage.',
           '',
           'MED AUTO',
           '2046 Avenue Chartier, Dorval, QC H9P 1H2',

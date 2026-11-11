@@ -4709,8 +4709,24 @@ select:-webkit-autofill {
 
 .admin-table tbody tr { transition: background-color .16s ease; }
 .admin-table tbody tr:hover { background: rgba(255,255,255,.025); }
-.admin-actions { align-items: stretch; }
-.admin-actions .btn { width: 100%; }
+.admin-actions {
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-actions form {
+  display: inline-flex;
+}
+
+.admin-actions .btn {
+  display: inline-flex;
+  width: auto;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 11px;
+  white-space: nowrap;
+}
 
 @media (max-width: 768px) {
   .topbar .divider { display: none; }

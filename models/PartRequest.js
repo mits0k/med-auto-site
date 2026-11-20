@@ -44,7 +44,7 @@ const partRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Awaiting E-Transfer', 'Payment Received', 'Awaiting Stock Check', 'Payment Captured', 'Hold Cancelled'],
+    enum: ['Awaiting E-Transfer', 'Awaiting Payment', 'Payment Cancelled', 'Payment Received', 'Awaiting Stock Check', 'Payment Captured', 'Hold Cancelled'],
     default: 'Awaiting E-Transfer'
   },
   paymentMethod: {

@@ -14,8 +14,10 @@
   <header class="parts-hero">
     <div>
       <span class="section-eyebrow"><%= t('Secure your tire order') %></span>
-      <h1><%= t('E-transfer checkout') %></h1>
-      <p><%= t('Enter your contact details, then send the e-transfer using the instructions on the confirmation page.') %></p>
+      <h1><%= stripeEnabled ? t('Card checkout') : t('E-transfer checkout') %></h1>
+      <p><%= stripeEnabled
+        ? t('Enter your contact details, then continue to Stripe to authorize your card securely.')
+        : t('Enter your contact details, then send the e-transfer using the instructions on the confirmation page.') %></p>
     </div>
     <a class="btn btn-muted" href="/parts"><%= t('Back to tires') %></a>
   </header>
@@ -46,10 +48,15 @@
       <label><span><%= t('Phone') %></span><input type="tel" name="customerPhone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="(514) 555-0123" value="<%= form.customerPhone || '' %>" /></label>
       <label><span><%= t('Note') %> <small>(<%= t('optional') %>)</small></span><textarea name="note" rows="3" placeholder="<%= t('Questions about your order') %>"><%= form.note || '' %></textarea></label>
       <div class="parts-transfer-preview full">
-        <strong><%= t('Next: send your e-transfer') %></strong>
-        <p><%= t('After placing the order, you will see the payment email, exact total, and your order number.') %></p>
+        <% if (stripeEnabled) { %>
+          <strong><%= t('Card authorization only') %></strong>
+          <p><%= t('Your card will be authorized securely. MED AUTO charges it only after confirming supplier stock.') %></p>
+        <% } else { %>
+          <strong><%= t('Next: send your e-transfer') %></strong>
+          <p><%= t('After placing the order, you will see the payment email, exact total, and your order number.') %></p>
+        <% } %>
       </div>
-      <button class="btn btn-primary full" type="submit"><%= t('Place order') %> · <span data-order-button-total><%= formatPrice(totalCents) %></span></button>
+      <button class="btn btn-primary full" type="submit"><%= stripeEnabled ? t('Continue to secure card checkout') : t('Place order') %> · <span data-order-button-total><%= formatPrice(totalCents) %></span></button>
     </form>
   </div>
 </section>

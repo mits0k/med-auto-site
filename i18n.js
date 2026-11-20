@@ -315,7 +315,30 @@ const french = {
   'Crossover': 'Multisegment',
   'Truck': 'Camion',
   'Van / Minivan': 'Fourgonnette / Minifourgonnette',
-  'Wagon': 'Familiale'
+  'Wagon': 'Familiale',
+  'Search by tire size and pay securely by card. MED AUTO confirms supplier stock before charging your card.': 'Recherchez par dimension et payez par carte en toute sécurité. MED AUTO confirme le stock du fournisseur avant de débiter votre carte.',
+  'How card payment works': 'Fonctionnement du paiement par carte',
+  'Checkout was cancelled. No payment was captured. You can try again whenever you are ready.': 'Le paiement a été annulé. Aucun paiement n’a été prélevé. Vous pouvez réessayer quand vous le souhaitez.',
+  'We could not confirm the card authorization. Please contact MED AUTO before trying again.': 'Nous n’avons pas pu confirmer l’autorisation de la carte. Veuillez contacter MED AUTO avant de réessayer.',
+  'Pay by card': 'Payer par carte',
+  'Secure card checkout': 'Paiement sécurisé par carte',
+  'Pay by card through Stripe. MED AUTO checks supplier stock first, then captures the card payment or releases the authorization if the tires are unavailable.': 'Payez par carte avec Stripe. MED AUTO vérifie d’abord le stock du fournisseur, puis prélève le paiement ou libère l’autorisation si les pneus ne sont pas disponibles.',
+  'Customer pays by card using Stripe Checkout.': 'Le client paie par carte avec Stripe Checkout.',
+  'MED AUTO confirms Dodo supplier stock.': 'MED AUTO confirme le stock chez Dodo.',
+  'MED AUTO captures the payment or releases the authorization if unavailable.': 'MED AUTO prélève le paiement ou libère l’autorisation si les pneus ne sont pas disponibles.',
+  'Card checkout': 'Paiement par carte',
+  'Enter your contact details, then continue to Stripe to authorize your card securely.': 'Entrez vos coordonnées, puis continuez vers Stripe pour autoriser votre carte en toute sécurité.',
+  'Card authorization only': 'Autorisation de carte seulement',
+  'Your card will be authorized securely. MED AUTO charges it only after confirming supplier stock.': 'Votre carte sera autorisée de façon sécurisée. MED AUTO ne la débitera qu’après avoir confirmé le stock du fournisseur.',
+  'Continue to secure card checkout': 'Continuer vers le paiement sécurisé',
+  'Card authorized': 'Carte autorisée',
+  'Card authorization received': 'Autorisation de carte reçue',
+  'MED AUTO will confirm supplier stock, then capture your payment. Your card may show a temporary authorization in the meantime.': 'MED AUTO confirmera le stock du fournisseur, puis prélèvera votre paiement. Une autorisation temporaire peut apparaître sur votre carte entre-temps.',
+  'Order number': 'Numéro de commande',
+  'Order total': 'Total de la commande',
+  'Status': 'Statut',
+  'Card authorized; stock check pending': 'Carte autorisée; vérification du stock en attente',
+  'We will email you after supplier stock is confirmed and your payment is captured.': 'Nous vous enverrons un courriel après la confirmation du stock et le prélèvement du paiement.'
 };
 
 function createTranslator(language) {

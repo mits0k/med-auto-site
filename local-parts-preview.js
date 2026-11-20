@@ -123,10 +123,11 @@ const partsCategories = [
 ];
 
 function getPartsCatalog() {
-  const tireSizes = [...new Set(dodoPreviewTires.map(tire => tire.size))]
+  const tires = dodoPreviewTires.filter(tire => Number(tire.stockQuantity || 0) >= 4);
+  const tireSizes = [...new Set(tires.map(tire => tire.size))]
     .filter(Boolean)
     .sort();
-  const tireSeasons = [...new Set(dodoPreviewTires.map(tire => tire.season))]
+  const tireSeasons = [...new Set(tires.map(tire => tire.season))]
     .filter(Boolean)
     .sort();
 
@@ -134,7 +135,7 @@ function getPartsCatalog() {
     partsCategories,
     tireSizes,
     tireSeasons,
-    tires: dodoPreviewTires
+    tires
   };
 }
 

@@ -13,6 +13,10 @@ const TradeIn = require('../models/TradeIn');
 const PartRequest = require('../models/PartRequest');
 const dodoPreviewTires = require('../data/dodo-preview-tires.json');
 const { calculateQuebecTaxes } = require('../utils/quebecTaxes');
+const {
+  createTireCheckoutSession,
+  retrieveCheckoutSession
+} = require('../utils/stripePayments');
 
 const displaySort = {
   sold: 1,
@@ -74,10 +78,11 @@ const partsCategories = [
 ];
 
 function getPartsCatalog() {
-  const tireSizes = [...new Set(dodoPreviewTires.map(tire => tire.size))]
+  const tires = dodoPreviewTires.filter(tire => Number(tire.stockQuantity || 0) >= 4);
+  const tireSizes = [...new Set(tires.map(tire => tire.size))]
     .filter(Boolean)
     .sort();
-  const tireSeasons = [...new Set(dodoPreviewTires.map(tire => tire.season))]
+  const tireSeasons = [...new Set(tires.map(tire => tire.season))]
     .filter(Boolean)
     .sort();
 
@@ -85,7 +90,7 @@ function getPartsCatalog() {
     partsCategories,
     tireSizes,
     tireSeasons,
-    tires: dodoPreviewTires
+    tires
   };
 }
 
@@ -187,7 +192,8 @@ router.get('/parts', async (req, res) => {
     selectedSizeSearch: String(req.query.size || '').trim(),
     selectedSeason: req.query.season || 'all',
     paymentStatus: req.query.payment || '',
-    requestStatus: req.query.request || ''
+    requestStatus: req.query.request || '',
+    stripeEnabled: Boolean(process.env.STRIPE_SECRET_KEY)
   });
 });
 
@@ -209,6 +215,7 @@ router.get('/parts/checkout', (req, res) => {
     quantity,
     error: null,
     form: {},
+    stripeEnabled: Boolean(process.env.STRIPE_SECRET_KEY),
     etransferEmail: process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com'
   });
 });
@@ -219,6 +226,86 @@ router.get('/parts/order-confirmation', (req, res) => {
 
   delete req.session.partOrderConfirmation;
   res.render('parts-order-confirmation', confirmation);
+});
+
+router.get('/parts/payment-return', async (req, res) => {
+  try {
+    const requestId = String(req.query.request || '');
+    const sessionId = String(req.query.session_id || '');
+    const partRequest = await PartRequest.findById(requestId);
+    if (!partRequest || !sessionId || partRequest.stripeCheckoutSessionId !== sessionId) {
+      return res.redirect('/parts?request=payment-error');
+    }
+
+    const session = await retrieveCheckoutSession(sessionId);
+    const paymentIntent = session.payment_intent;
+    const paymentIntentId = typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id;
+    const paymentIntentStatus = typeof paymentIntent === 'object' ? paymentIntent?.status : '';
+
+    const expectedTotal = calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1)).totalCents;
+    if (
+      session.client_reference_id !== String(partRequest._id) ||
+      paymentIntentStatus !== 'requires_capture' ||
+      Number(session.amount_total) !== expectedTotal
+    ) {
+      return res.redirect('/parts?request=payment-error');
+    }
+
+    partRequest.stripePaymentIntentId = paymentIntentId;
+    partRequest.status = 'Awaiting Stock Check';
+    partRequest.customerName = session.customer_details?.name || partRequest.customerName;
+    partRequest.customerEmail = session.customer_details?.email || partRequest.customerEmail;
+    partRequest.customerPhone = session.customer_details?.phone || partRequest.customerPhone;
+    await partRequest.save();
+
+    if (resend && process.env.BOOKING_EMAIL_TO) {
+      try {
+        const taxSummary = calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1));
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+          to: process.env.BOOKING_EMAIL_TO,
+          subject: `Card authorized - tire stock check ${partRequest.size}`,
+          text: [
+            'New tire order with card authorization',
+            `Order: ${partRequest._id}`,
+            `Tire: ${partRequest.quantity} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
+            `Total authorized: $${(taxSummary.totalCents / 100).toFixed(2)} CAD`,
+            `Customer: ${partRequest.customerName} · ${partRequest.customerPhone} · ${partRequest.customerEmail}`,
+            `Supplier: ${partRequest.supplierUrl || ''}`,
+            'Confirm Dodo stock, then capture the authorization in the admin page. If stock is unavailable, cancel the authorization.'
+          ].join('\n')
+        });
+      } catch (emailError) {
+        console.error('Card authorization succeeded but order email failed:', emailError.message);
+      }
+    }
+
+    req.session.partOrderConfirmation = {
+      tire: { brand: partRequest.brand, model: partRequest.model, size: partRequest.size, priceCents: partRequest.priceCents },
+      quantity: partRequest.quantity,
+      orderId: String(partRequest._id),
+      totalCents: calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1)).totalCents,
+      paymentMethod: 'Card',
+      stockPending: true
+    };
+    return res.redirect(303, '/parts/order-confirmation');
+  } catch (error) {
+    console.error('Stripe return verification failed:', error.message);
+    return res.redirect('/parts?request=payment-error');
+  }
+});
+
+router.get('/parts/payment-cancel', async (req, res) => {
+  try {
+    const partRequest = await PartRequest.findById(String(req.query.request || ''));
+    if (partRequest && partRequest.status === 'Awaiting Payment') {
+      partRequest.status = 'Payment Cancelled';
+      await partRequest.save();
+    }
+  } catch (error) {
+    console.error('Stripe cancellation return error:', error.message);
+  }
+  return res.redirect('/parts?request=cancelled');
 });
 
 router.post('/parts/request', async (req, res) => {
@@ -248,6 +335,7 @@ router.post('/parts/request', async (req, res) => {
         quantity,
         error: req.t('Please enter your name, email and phone number.'),
         form: req.body,
+        stripeEnabled: Boolean(process.env.STRIPE_SECRET_KEY),
         etransferEmail: process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com'
       });
     }
@@ -264,10 +352,26 @@ router.post('/parts/request', async (req, res) => {
       customerName,
       customerPhone,
       customerEmail,
-      note
+      note,
+      status: process.env.STRIPE_SECRET_KEY ? 'Awaiting Payment' : 'Awaiting E-Transfer',
+      paymentMethod: process.env.STRIPE_SECRET_KEY ? 'Card' : 'E-Transfer'
     }).save();
 
     const taxSummary = calculateQuebecTaxes(Number(tire.priceCents || 0) * quantity);
+
+    if (process.env.STRIPE_SECRET_KEY) {
+      const session = await createTireCheckoutSession({
+        req,
+        tire,
+        quantity,
+        partRequest,
+        totalCents: taxSummary.totalCents
+      });
+      partRequest.stripeCheckoutSessionId = session.id;
+      await partRequest.save();
+      if (!session.url) throw new Error('Stripe did not return a checkout URL');
+      return res.redirect(303, session.url);
+    }
 
     if (resend && process.env.BOOKING_EMAIL_TO) {
       await resend.emails.send({

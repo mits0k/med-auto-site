@@ -12,10 +12,20 @@
 
 <section class="container stack-l parts-page parts-confirmation-page">
   <div class="parts-confirmation-card">
-    <span class="section-eyebrow"><%= t('Order placed') %></span>
-    <h1><%= t('Send your e-transfer to finish') %></h1>
-    <p><%= t('Your tires are not confirmed until MED AUTO receives the e-transfer.') %></p>
+    <span class="section-eyebrow"><%= paymentMethod === 'Card' ? t('Card authorized') : t('Order placed') %></span>
+    <h1><%= paymentMethod === 'Card' ? t('Card authorization received') : t('Send your e-transfer to finish') %></h1>
+    <p><%= paymentMethod === 'Card'
+      ? t('MED AUTO will confirm supplier stock, then capture your payment. Your card may show a temporary authorization in the meantime.')
+      : t('Your tires are not confirmed until MED AUTO receives the e-transfer.') %></p>
 
+    <% if (paymentMethod === 'Card') { %>
+      <div class="parts-transfer-details">
+        <div><span><%= t('Order number') %></span><strong><%= orderId %></strong></div>
+        <div><span><%= t('Order total') %></span><strong><%= formatPrice(totalCents || taxIncludedTotalCents) %></strong></div>
+        <div><span><%= t('Status') %></span><strong><%= t('Card authorized; stock check pending') %></strong></div>
+      </div>
+      <div class="part-pickup-note"><%= t('We will email you after supplier stock is confirmed and your payment is captured.') %></div>
+    <% } else { %>
     <div class="parts-transfer-details">
       <div><span><%= t('Send to') %></span><strong><%= etransferEmail %></strong></div>
       <div><span><%= t('Subtotal') %></span><strong><%= formatPrice(subtotalCents) %></strong></div>
@@ -26,6 +36,7 @@
     </div>
 
     <div class="part-pickup-note"><%= t('Once we receive the payment, we will email you to confirm that your tires will be ready for pickup.') %></div>
+    <% } %>
     <p class="parts-order-item"><%= quantity %> × <%= tire.brand %> <%= tire.model %> · <%= tire.size %></p>
     <a class="btn btn-primary" href="/parts"><%= t('Return to tires') %></a>
   </div>

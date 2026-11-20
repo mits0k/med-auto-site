@@ -11,6 +11,7 @@ const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
 const PartRequest = require('../models/PartRequest');
+const { capturePaymentIntent, cancelPaymentIntent } = require('../utils/stripePayments');
 const { calculateQuebecTaxes } = require('../utils/quebecTaxes');
 const {
   getTireSalesEnabled,
@@ -256,6 +257,10 @@ router.post('/part-requests/:id/status', isAdmin, async (req, res) => {
       return res.status(404).send('Part request not found');
     }
 
+    if (partRequest.paymentMethod === 'Card' || !['Awaiting E-Transfer', 'Payment Received'].includes(partRequest.status)) {
+      return res.redirect('/admin/part-requests?updated=payment-method-mismatch');
+    }
+
     if (partRequest.status === 'Payment Received' && partRequest.customerNotifiedAt) {
       return res.redirect('/admin/part-requests?updated=already-received');
     }
@@ -307,6 +312,77 @@ router.post('/part-requests/:id/status', isAdmin, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).send('Error updating part request');
+  }
+});
+
+router.post('/part-requests/:id/capture', isAdmin, async (req, res) => {
+  try {
+    const partRequest = await PartRequest.findById(req.params.id);
+    if (!partRequest) return res.status(404).send('Part request not found');
+    if (partRequest.status !== 'Awaiting Stock Check' || !partRequest.stripePaymentIntentId) {
+      return res.redirect('/admin/part-requests?updated=capture-invalid');
+    }
+
+    await capturePaymentIntent(partRequest.stripePaymentIntentId);
+    partRequest.status = 'Payment Captured';
+    partRequest.paymentMethod = 'Card';
+    partRequest.paymentReceivedAt = new Date();
+    await partRequest.save();
+
+    if (!partRequest.customerEmail || !resend) {
+      return res.redirect('/admin/part-requests?updated=captured-no-email');
+    }
+
+    const taxSummary = calculateQuebecTaxes(Number(partRequest.priceCents || 0) * Number(partRequest.quantity || 1));
+    const total = new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(taxSummary.totalCents / 100);
+    try {
+      const emailResult = await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+        to: partRequest.customerEmail,
+        subject: 'Paiement confirmé — commande de pneus MED AUTO',
+        text: [
+          `Bonjour ${partRequest.customerName},`,
+          '',
+          'Nous avons confirmé le stock de vos pneus et votre paiement a été traité.',
+          `Commande : ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
+          `Numéro de commande : ${partRequest._id}`,
+          `Total : ${total}`,
+          'Le ramassage se fera chez MED AUTO. Nous communiquerons avec vous pour confirmer les détails.',
+          '',
+          'MED AUTO',
+          '2046 Avenue Chartier, Dorval, QC H9P 1H2',
+          '(514) 463-4503'
+        ].join('\n')
+      });
+      if (emailResult.error) throw new Error(emailResult.error.message || 'Resend rejected the email');
+      partRequest.customerNotifiedAt = new Date();
+      await partRequest.save();
+      return res.redirect('/admin/part-requests?updated=captured');
+    } catch (emailError) {
+      console.error('Stripe payment captured but confirmation email failed:', emailError.message);
+      return res.redirect('/admin/part-requests?updated=captured-no-email');
+    }
+  } catch (error) {
+    console.error('Stripe capture failed:', error.message);
+    return res.redirect('/admin/part-requests?updated=capture-failed');
+  }
+});
+
+router.post('/part-requests/:id/cancel-hold', isAdmin, async (req, res) => {
+  try {
+    const partRequest = await PartRequest.findById(req.params.id);
+    if (!partRequest) return res.status(404).send('Part request not found');
+    if (partRequest.status !== 'Awaiting Stock Check' || !partRequest.stripePaymentIntentId) {
+      return res.redirect('/admin/part-requests?updated=cancel-invalid');
+    }
+
+    await cancelPaymentIntent(partRequest.stripePaymentIntentId);
+    partRequest.status = 'Hold Cancelled';
+    await partRequest.save();
+    return res.redirect('/admin/part-requests?updated=hold-cancelled');
+  } catch (error) {
+    console.error('Stripe authorization cancellation failed:', error.message);
+    return res.redirect('/admin/part-requests?updated=cancel-failed');
   }
 });
 

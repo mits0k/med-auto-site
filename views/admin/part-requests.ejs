@@ -1,8 +1,8 @@
 <%- include('../partials/header') %>
 
 <%
-  const openCount = partRequests.filter(r => r.status !== 'Payment Received').length;
-  const receivedCount = partRequests.filter(r => r.status === 'Payment Received').length;
+  const openCount = partRequests.filter(r => ['Awaiting E-Transfer', 'Awaiting Payment', 'Awaiting Stock Check'].includes(r.status)).length;
+  const receivedCount = partRequests.filter(r => ['Payment Received', 'Payment Captured'].includes(r.status)).length;
   const notifiedCount = partRequests.filter(r => r.customerNotifiedAt).length;
   const formatMoney = cents => new Intl.NumberFormat('en-CA', {
     style: 'currency',
@@ -19,7 +19,7 @@
     <div>
       <span class="admin-kicker">Parts Pipeline</span>
       <h1>Part Requests</h1>
-      <p>Review incoming e-transfers and notify customers as soon as payment arrives.</p>
+      <p>Review e-transfer orders and card authorizations. Confirm supplier stock before capturing a card payment.</p>
     </div>
 
     <div class="admin-hero-actions">
@@ -43,11 +43,21 @@
     </div>
   <% } else if (updateStatus === 'already-received') { %>
     <div class="form-alert success-popup">That payment was already marked received.</div>
+  <% } else if (updateStatus === 'captured') { %>
+    <div class="form-alert success-popup">Card payment captured and customer confirmation email sent.</div>
+  <% } else if (updateStatus === 'captured-no-email') { %>
+    <div class="form-alert form-alert-error">Card payment was captured, but the customer email could not be sent. Contact the customer directly.</div>
+  <% } else if (updateStatus === 'capture-failed') { %>
+    <div class="form-alert form-alert-error">Card payment could not be captured. Check Stripe before retrying.</div>
+  <% } else if (updateStatus === 'hold-cancelled') { %>
+    <div class="form-alert success-popup">Card authorization cancelled and released.</div>
+  <% } else if (updateStatus === 'cancel-failed') { %>
+    <div class="form-alert form-alert-error">Card authorization could not be cancelled. Check Stripe.</div>
   <% } %>
 
   <div class="admin-stats" aria-label="Part request summary">
     <div class="admin-stat">
-      <span>Awaiting Transfer</span>
+      <span>Open Orders</span>
       <strong><%= openCount %></strong>
     </div>
     <div class="admin-stat">
@@ -65,7 +75,7 @@
       <div class="admin-panel-header">
         <div>
           <h2>Tire Reservations</h2>
-          <p>Check your bank account first. Click Payment Received only after the e-transfer has arrived.</p>
+          <p>For card orders, check Dodo supplier stock before capturing. For e-transfers, verify the deposit before confirming payment.</p>
         </div>
       </div>
 
@@ -100,14 +110,20 @@
                   <span class="admin-cell-meta">Total with GST + QST</span>
                   <span class="admin-cell-meta"><%= formatMoney(request.priceCents) %> each</span>
                   <span class="admin-cell-meta">
-                    E-transfer · Order <%= request._id %>
+                    <%= request.paymentMethod || 'E-Transfer' %> · Order <%= request._id %>
                   </span>
                 </td>
                 <td>
-                  <span class="status-badge <%= request.status === 'Payment Received'
+                  <span class="status-badge <%= ['Payment Received', 'Payment Captured'].includes(request.status)
                     ? 'status-sold'
                     : 'status-new' %>">
-                    <%= request.status === 'Payment Received' ? 'Payment received' : 'Awaiting e-transfer' %>
+                    <%= request.status === 'Awaiting Stock Check' ? 'Card authorized · check stock'
+                      : request.status === 'Payment Captured' ? 'Card payment captured'
+                      : request.status === 'Hold Cancelled' ? 'Card authorization released'
+                      : request.status === 'Payment Cancelled' ? 'Checkout cancelled'
+                      : request.status === 'Payment Received' ? 'E-transfer received'
+                      : request.status === 'Awaiting Payment' ? 'Awaiting card checkout'
+                      : 'Awaiting e-transfer' %>
                   </span>
                   <% if (request.customerNotifiedAt) { %><span class="admin-cell-meta">Customer emailed</span><% } %>
                 </td>
@@ -122,16 +138,23 @@
                 <td class="admin-message-cell"><%= request.note || '-' %></td>
                 <td>
                   <div class="admin-actions">
-                    <% if (request.status !== 'Payment Received') { %>
+                    <% if (request.status === 'Awaiting Stock Check') { %>
+                      <form action="/admin/part-requests/<%= request._id %>/capture" method="POST">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Have you confirmed the tires are available from Dodo? This will charge the customer\'s card.');">Capture card payment</button>
+                      </form>
+                      <form action="/admin/part-requests/<%= request._id %>/cancel-hold" method="POST">
+                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Cancel and release this card authorization?');">Release authorization</button>
+                      </form>
+                    <% } else if (request.status === 'Awaiting E-Transfer') { %>
                       <form action="/admin/part-requests/<%= request._id %>/status" method="POST">
                         <button type="submit" class="btn btn-primary" onclick="return confirm('Have you received this e-transfer? This will email the customer.');">Payment Received</button>
                       </form>
-                    <% } else if (!request.customerNotifiedAt) { %>
+                    <% } else if (request.status === 'Payment Received' && !request.customerNotifiedAt) { %>
                       <form action="/admin/part-requests/<%= request._id %>/status" method="POST">
                         <button type="submit" class="btn btn-secondary">Retry Customer Email</button>
                       </form>
                     <% } else { %>
-                      <span class="admin-muted"><%= request.customerNotifiedAt ? 'Payment confirmed · email sent' : 'Payment confirmed' %></span>
+                      <span class="admin-muted"><%= request.status === 'Awaiting Payment' ? 'Waiting for Stripe checkout' : request.status === 'Payment Captured' ? (request.customerNotifiedAt ? 'Captured · customer emailed' : 'Captured · email follow-up needed') : request.status %></span>
                     <% } %>
 
                     <form

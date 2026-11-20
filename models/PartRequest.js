@@ -7,7 +7,7 @@ const partRequestSchema = new mongoose.Schema({
   },
   supplier: {
     type: String,
-    default: 'Dodo Wheels'
+    default: 'Tire supplier'
   },
   supplierProductId: String,
   supplierUrl: String,

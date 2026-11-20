@@ -22,7 +22,7 @@
       <span class="section-eyebrow"><%= t('Parts department') %></span>
       <h1><%= t('Tires for your next drive') %></h1>
       <p><%= stripeEnabled
-        ? t('Search by tire size and pay securely by card. MED AUTO confirms supplier stock before charging your card.')
+        ? t('Browse available tires by size and pay securely by card. Pickup at MED AUTO in Dorval.')
         : t('Search by tire size, order by e-transfer, then pick up at MED AUTO after payment is confirmed.') %></p>
     </div>
     <a class="btn btn-muted" href="#payment-preview"><%= stripeEnabled ? t('How card payment works') : t('How e-transfer works') %></a>
@@ -124,7 +124,7 @@
                 <dd><%= formatPrice(tire.priceCents) %> <small><%= t('before tax') %></small></dd>
               </div>
             </dl>
-            <div class="part-pickup-note"><%= t('Pickup only at MED AUTO after stock is confirmed.') %></div>
+            <div class="part-pickup-note"><%= t('Pickup at MED AUTO in Dorval.') %></div>
             <div class="part-card-actions">
               <form action="/parts/checkout" method="GET" class="part-checkout-form part-request-form">
                 <input type="hidden" name="tireId" value="<%= tire.id %>" />
@@ -143,7 +143,7 @@
   <% } else if (hasSearchedSize) { %>
     <div class="admin-empty parts-empty">
       <h2><%= t('No tires match this filter') %></h2>
-      <p><%= t('Try another size or contact us for a supplier lookup.') %></p>
+      <p><%= t('Try another size or contact us for help.') %></p>
     </div>
   <% } %>
 
@@ -152,14 +152,14 @@
       <span class="section-eyebrow"><%= t('How it works') %></span>
       <h2><%= stripeEnabled ? t('Secure card checkout') : t('Simple e-transfer checkout') %></h2>
       <p><%= stripeEnabled
-        ? t('Pay by card through Stripe. MED AUTO checks supplier stock first, then captures the card payment or releases the authorization if the tires are unavailable.')
+        ? t('Pay securely by card through Stripe. Your card is authorized at checkout; MED AUTO will process the payment and email you about pickup.')
         : t('Customers place an order and send an e-transfer. MED AUTO confirms payment and emails when the tires will be ready for pickup.') %></p>
     </div>
     <ol>
       <% if (stripeEnabled) { %>
         <li><%= t('Customer pays by card using Stripe Checkout.') %></li>
-        <li><%= t('MED AUTO confirms Dodo supplier stock.') %></li>
-        <li><%= t('MED AUTO captures the payment or releases the authorization if unavailable.') %></li>
+        <li><%= t('Your card is authorized securely at checkout.') %></li>
+        <li><%= t('MED AUTO processes your payment and emails pickup details.') %></li>
       <% } else { %>
         <li><%= t('Customer chooses tires and completes checkout.') %></li>
         <li><%= t('Customer sends the e-transfer using the order number.') %></li>

@@ -75,7 +75,7 @@
       <div class="admin-panel-header">
         <div>
           <h2>Tire Reservations</h2>
-          <p>For card orders, check Dodo supplier stock before capturing. For e-transfers, verify the deposit before confirming payment.</p>
+          <p>For card orders, review the order before capturing payment. For e-transfers, verify the deposit before confirming payment.</p>
         </div>
       </div>
 
@@ -129,7 +129,7 @@
                 </td>
                 <td>
                   <% if (request.supplierUrl) { %>
-                    <a href="<%= request.supplierUrl %>" target="_blank" rel="noopener">Open Dodo tire</a>
+                    <a href="<%= request.supplierUrl %>" target="_blank" rel="noopener">Open product listing</a>
                   <% } else { %>
                     <span class="admin-muted">No supplier link</span>
                   <% } %>
@@ -140,7 +140,7 @@
                   <div class="admin-actions">
                     <% if (request.status === 'Awaiting Stock Check') { %>
                       <form action="/admin/part-requests/<%= request._id %>/capture" method="POST">
-                        <button type="submit" class="btn btn-primary" onclick="return confirm('Have you confirmed the tires are available from Dodo? This will charge the customer\'s card.');">Capture card payment</button>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Capture this card payment now? This will charge the customer\'s card.');">Capture card payment</button>
                       </form>
                       <form action="/admin/part-requests/<%= request._id %>/cancel-hold" method="POST">
                         <button type="submit" class="btn btn-secondary" onclick="return confirm('Cancel and release this card authorization?');">Release authorization</button>

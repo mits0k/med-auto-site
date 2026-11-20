@@ -343,7 +343,7 @@ router.post('/part-requests/:id/capture', isAdmin, async (req, res) => {
         text: [
           `Bonjour ${partRequest.customerName},`,
           '',
-          'Nous avons confirmé le stock de vos pneus et votre paiement a été traité.',
+          'Votre commande de pneus a été traitée et votre paiement a été effectué.',
           `Commande : ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
           `Numéro de commande : ${partRequest._id}`,
           `Total : ${total}`,

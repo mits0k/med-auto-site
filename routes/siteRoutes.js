@@ -264,7 +264,7 @@ router.get('/parts/payment-return', async (req, res) => {
         await resend.emails.send({
           from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
           to: process.env.BOOKING_EMAIL_TO,
-          subject: `Card authorized - tire stock check ${partRequest.size}`,
+          subject: `Card authorized - tire order ${partRequest.size}`,
           text: [
             'New tire order with card authorization',
             `Order: ${partRequest._id}`,
@@ -272,7 +272,7 @@ router.get('/parts/payment-return', async (req, res) => {
             `Total authorized: $${(taxSummary.totalCents / 100).toFixed(2)} CAD`,
             `Customer: ${partRequest.customerName} · ${partRequest.customerPhone} · ${partRequest.customerEmail}`,
             `Supplier: ${partRequest.supplierUrl || ''}`,
-            'Confirm Dodo stock, then capture the authorization in the admin page. If stock is unavailable, cancel the authorization.'
+            'Review the tire order, then capture the authorization in the admin page.'
           ].join('\n')
         });
       } catch (emailError) {
@@ -391,7 +391,7 @@ router.post('/parts/request', async (req, res) => {
           `GST: $${(taxSummary.gstCents / 100).toFixed(2)}`,
           `QST: $${(taxSummary.qstCents / 100).toFixed(2)}`,
           `E-transfer total: $${(taxSummary.totalCents / 100).toFixed(2)}`,
-          `Dodo link: ${tire.sourceUrl || ''}`,
+          `Product listing: ${tire.sourceUrl || ''}`,
           '',
           `Customer: ${customerName}`,
           `Phone: ${customerPhone}`,

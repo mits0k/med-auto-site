@@ -22,7 +22,7 @@
       <span class="section-eyebrow"><%= t('Parts department') %></span>
       <h1><%= t('Tires for your next drive') %></h1>
       <p><%= stripeEnabled
-        ? t('Browse available tires by size and pay securely by card. Pickup at MED AUTO in Dorval.')
+        ? t('Browse available tires by size, pay securely online, and pick up at MED AUTO in Dorval.')
         : t('Search by tire size, order by e-transfer, then pick up at MED AUTO after payment is confirmed.') %></p>
     </div>
     <a class="btn btn-muted" href="#payment-preview"><%= stripeEnabled ? t('How card payment works') : t('How e-transfer works') %></a>
@@ -124,7 +124,7 @@
                 <dd><%= formatPrice(tire.priceCents) %> <small><%= t('before tax') %></small></dd>
               </div>
             </dl>
-            <div class="part-pickup-note"><%= t('Pickup at MED AUTO in Dorval.') %></div>
+            <div class="part-pickup-note"><%= t('Pickup only at MED AUTO in Dorval.') %></div>
             <div class="part-card-actions">
               <form action="/parts/checkout" method="GET" class="part-checkout-form part-request-form">
                 <input type="hidden" name="tireId" value="<%= tire.id %>" />
@@ -152,7 +152,7 @@
       <span class="section-eyebrow"><%= t('How it works') %></span>
       <h2><%= stripeEnabled ? t('Secure card checkout') : t('Simple e-transfer checkout') %></h2>
       <p><%= stripeEnabled
-        ? t('Pay securely by card through Stripe. Your card is authorized at checkout; MED AUTO will process the payment and email you about pickup.')
+        ? t('Pay securely by card through Stripe. Pickup is at MED AUTO in Dorval; tires are not shipped.')
         : t('Customers place an order and send an e-transfer. MED AUTO confirms payment and emails when the tires will be ready for pickup.') %></p>
     </div>
     <ol>

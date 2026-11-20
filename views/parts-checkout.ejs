@@ -16,7 +16,7 @@
       <span class="section-eyebrow"><%= t('Secure your tire order') %></span>
       <h1><%= stripeEnabled ? t('Card checkout') : t('E-transfer checkout') %></h1>
       <p><%= stripeEnabled
-        ? t('Enter your contact details, then continue to Stripe to authorize your card securely.')
+        ? t('Enter your contact details, then continue to Stripe to authorize your card securely. Pickup is at MED AUTO in Dorval.')
         : t('Enter your contact details, then send the e-transfer using the instructions on the confirmation page.') %></p>
     </div>
     <a class="btn btn-muted" href="/parts"><%= t('Back to tires') %></a>
@@ -29,6 +29,7 @@
       <% if (tire.imageUrl) { %><img src="<%= tire.imageUrl %>" alt="" /><% } %>
       <span class="part-card-kicker"><%= t(tire.season) %> · <%= tire.size %></span>
       <h2><%= tire.brand %> <%= tire.model %></h2>
+      <div class="part-pickup-note"><%= t('Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.') %></div>
       <dl class="parts-checkout-totals">
         <% if (tire.stockQuantity) { %><div><dt><%= t('Availability') %></dt><dd><%= tire.stockQuantity %> <%= t('left') %></dd></div><% } %>
         <div><dt><%= t('Quantity') %></dt><dd data-order-quantity><%= quantity %></dd></div>
@@ -50,7 +51,7 @@
       <div class="parts-transfer-preview full">
         <% if (stripeEnabled) { %>
           <strong><%= t('Card authorization only') %></strong>
-          <p><%= t('Your card is authorized securely at checkout. MED AUTO will process the payment and email you about pickup.') %></p>
+          <p><%= t('Your card is authorized securely at checkout. Pickup is at MED AUTO in Dorval.') %></p>
         <% } else { %>
           <strong><%= t('Next: send your e-transfer') %></strong>
           <p><%= t('After placing the order, you will see the payment email, exact total, and your order number.') %></p>

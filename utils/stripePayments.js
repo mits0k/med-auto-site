@@ -51,7 +51,7 @@ function createTireCheckoutSession({ req, tire, quantity, partRequest, totalCent
   params.append('line_items[0][price_data][currency]', 'cad');
   params.append('line_items[0][price_data][unit_amount]', String(totalCents));
   params.append('line_items[0][price_data][product_data][name]', `${quantity} × ${tire.brand} ${tire.model} tires`);
-  params.append('line_items[0][price_data][product_data][description]', `${tire.size} · ${tire.season} · GST/QST included · pickup at MED AUTO`);
+  params.append('line_items[0][price_data][product_data][description]', `${tire.size} · ${tire.season} · GST/QST included · pickup only at MED AUTO, 2046 Avenue Chartier, Dorval, QC H9P 1H2 · no shipping`);
   if (tire.imageUrl) params.append('line_items[0][price_data][product_data][images][0]', tire.imageUrl);
   params.append('metadata[partRequestId]', String(partRequest._id));
   params.append('metadata[tireId]', tire.id);

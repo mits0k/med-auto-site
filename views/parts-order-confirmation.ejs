@@ -14,6 +14,7 @@
   <div class="parts-confirmation-card">
     <span class="section-eyebrow"><%= paymentMethod === 'Card' ? t('Card authorized') : t('Order placed') %></span>
     <h1><%= paymentMethod === 'Card' ? t('Card authorization received') : t('Send your e-transfer to finish') %></h1>
+    <div class="part-pickup-note"><%= t('Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.') %></div>
     <p><%= paymentMethod === 'Card'
       ? t('MED AUTO will process your payment and contact you with pickup details. Your card may show a temporary authorization in the meantime.')
       : t('Your tires are not confirmed until MED AUTO receives the e-transfer.') %></p>

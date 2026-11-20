@@ -11,7 +11,7 @@ const Car = require('../models/Car');
 const Appointment = require('../models/Appointment');
 const TradeIn = require('../models/TradeIn');
 const PartRequest = require('../models/PartRequest');
-const { capturePaymentIntent, cancelPaymentIntent } = require('../utils/stripePayments');
+const { capturePaymentIntent, cancelPaymentIntent, refundPaymentIntent } = require('../utils/stripePayments');
 const { calculateQuebecTaxes } = require('../utils/quebecTaxes');
 const {
   getTireSalesEnabled,
@@ -285,19 +285,25 @@ router.post('/part-requests/:id/status', isAdmin, async (req, res) => {
       const emailResult = await resend.emails.send({
         from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
         to: partRequest.customerEmail,
-        subject: 'Paiement reçu — vos pneus seront prêts',
+        subject: 'Payment received / Paiement reçu — MED AUTO',
         text: [
           `Bonjour ${partRequest.customerName},`,
           '',
           'Nous avons bien reçu votre virement Interac. Merci!',
-          `Votre commande de ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) sera prête pour ramassage chez MED AUTO.`,
+          `Votre commande de ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) est confirmée pour ramassage chez MED AUTO.`,
           `Numéro de commande : ${partRequest._id}`,
           `Total : ${total}`,
+          'Ramassage uniquement chez MED AUTO : 2046 Avenue Chartier, Dorval, QC H9P 1H2. Les pneus ne sont pas expédiés.',
           '',
-          'Nous communiquerons avec vous si nous devons confirmer les détails du ramassage.',
+          `Hello ${partRequest.customerName},`,
+          '',
+          'We received your Interac e-transfer. Thank you!',
+          `Your order for ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size}) is confirmed for pickup at MED AUTO.`,
+          `Order number: ${partRequest._id}`,
+          `Total: ${total}`,
+          'Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.',
           '',
           'MED AUTO',
-          '2046 Avenue Chartier, Dorval, QC H9P 1H2',
           '(514) 463-4503'
         ].join('\n')
       });
@@ -339,7 +345,7 @@ router.post('/part-requests/:id/capture', isAdmin, async (req, res) => {
       const emailResult = await resend.emails.send({
         from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
         to: partRequest.customerEmail,
-        subject: 'Paiement confirmé — commande de pneus MED AUTO',
+        subject: 'Payment confirmed / Paiement confirmé — MED AUTO',
         text: [
           `Bonjour ${partRequest.customerName},`,
           '',
@@ -347,10 +353,17 @@ router.post('/part-requests/:id/capture', isAdmin, async (req, res) => {
           `Commande : ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
           `Numéro de commande : ${partRequest._id}`,
           `Total : ${total}`,
-          'Le ramassage se fera chez MED AUTO. Nous communiquerons avec vous pour confirmer les détails.',
+          'Ramassage uniquement chez MED AUTO : 2046 Avenue Chartier, Dorval, QC H9P 1H2. Les pneus ne sont pas expédiés.',
+          '',
+          `Hello ${partRequest.customerName},`,
+          '',
+          'Your tire order has been processed and your payment is complete.',
+          `Order: ${partRequest.quantity || 1} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
+          `Order number: ${partRequest._id}`,
+          `Total: ${total}`,
+          'Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.',
           '',
           'MED AUTO',
-          '2046 Avenue Chartier, Dorval, QC H9P 1H2',
           '(514) 463-4503'
         ].join('\n')
       });
@@ -368,20 +381,117 @@ router.post('/part-requests/:id/capture', isAdmin, async (req, res) => {
   }
 });
 
-router.post('/part-requests/:id/cancel-hold', isAdmin, async (req, res) => {
+router.post('/part-requests/:id/cancel', isAdmin, async (req, res) => {
   try {
     const partRequest = await PartRequest.findById(req.params.id);
     if (!partRequest) return res.status(404).send('Part request not found');
-    if (partRequest.status !== 'Awaiting Stock Check' || !partRequest.stripePaymentIntentId) {
+
+    if (partRequest.paymentMethod !== 'Card' || !partRequest.stripePaymentIntentId) {
       return res.redirect('/admin/part-requests?updated=cancel-invalid');
     }
 
-    await cancelPaymentIntent(partRequest.stripePaymentIntentId);
-    partRequest.status = 'Hold Cancelled';
+    let emailSubject;
+    let emailText;
+    let resultStatus;
+
+    if (partRequest.status === 'Awaiting Stock Check') {
+      await cancelPaymentIntent(partRequest.stripePaymentIntentId);
+      partRequest.status = 'Hold Cancelled';
+      emailSubject = 'Order cancelled / Commande annulée — MED AUTO';
+      emailText = [
+        `Bonjour ${partRequest.customerName},`,
+        '',
+        'Nous avons annulé votre commande de pneus. Votre carte n’a pas été débitée : seule une autorisation temporaire avait été placée, et nous l’avons libérée.',
+        'Votre banque peut prendre quelques jours pour retirer l’autorisation en attente de votre compte.',
+        '',
+        `Hello ${partRequest.customerName},`,
+        '',
+        'We cancelled your tire order. Your card was not charged: only a temporary authorization was placed, and we have released it.',
+        'Your bank may take a few days to remove the pending authorization from your account.',
+        `Numéro de commande : ${partRequest._id}`,
+        `Order number: ${partRequest._id}`,
+        '',
+        'MED AUTO',
+        '2046 Avenue Chartier, Dorval, QC H9P 1H2',
+        '(514) 463-4503'
+      ].join('\n');
+      resultStatus = 'hold-cancelled';
+    } else if (partRequest.status === 'Payment Captured') {
+      const refund = await refundPaymentIntent(partRequest.stripePaymentIntentId, String(partRequest._id));
+      partRequest.stripeRefundId = refund.id;
+      partRequest.status = refund.status === 'succeeded' ? 'Payment Refunded' : 'Refund Pending';
+      emailSubject = 'Refund submitted / Remboursement demandé — MED AUTO';
+      emailText = [
+        `Bonjour ${partRequest.customerName},`,
+        '',
+        'Nous avons annulé votre commande de pneus et soumis un remboursement complet sur la carte utilisée pour le paiement.',
+        'Le remboursement apparaît généralement dans les 5 à 10 jours ouvrables, selon votre banque. Le délai peut varier pendant le traitement par Stripe et votre institution financière.',
+        '',
+        `Hello ${partRequest.customerName},`,
+        '',
+        'We cancelled your tire order and submitted a full refund to the card used for payment.',
+        'The refund usually appears within 5–10 business days, depending on your bank. Timing can vary while Stripe and your financial institution process it.',
+        `Numéro de commande : ${partRequest._id}`,
+        `Order number: ${partRequest._id}`,
+        '',
+        'MED AUTO',
+        '2046 Avenue Chartier, Dorval, QC H9P 1H2',
+        '(514) 463-4503'
+      ].join('\n');
+      resultStatus = refund.status === 'succeeded' ? 'payment-refunded' : 'refund-pending';
+    } else if (['Hold Cancelled', 'Refund Pending', 'Payment Refunded'].includes(partRequest.status) && !partRequest.cancellationEmailSentAt) {
+      // A previous cancellation succeeded but its email failed; resend without repeating the Stripe action.
+      emailSubject = partRequest.status === 'Hold Cancelled'
+        ? 'Order cancelled / Commande annulée — MED AUTO'
+        : 'Refund submitted / Remboursement demandé — MED AUTO';
+      emailText = partRequest.status === 'Hold Cancelled'
+        ? [
+            `Bonjour ${partRequest.customerName},`, '',
+            'Nous avons annulé votre commande. Votre carte n’a pas été débitée; l’autorisation temporaire a été libérée.',
+            'Votre banque peut prendre quelques jours pour retirer l’autorisation en attente de votre compte.',
+            '', `Hello ${partRequest.customerName},`, '',
+            'We cancelled your order. Your card was not charged; the temporary authorization has been released.',
+            'Your bank may take a few days to remove the pending authorization from your account.',
+            `Numéro de commande : ${partRequest._id}`, `Order number: ${partRequest._id}`, '', 'MED AUTO',
+            '2046 Avenue Chartier, Dorval, QC H9P 1H2', '(514) 463-4503'
+          ].join('\n')
+        : [
+            `Bonjour ${partRequest.customerName},`, '',
+            'Nous avons annulé votre commande et soumis un remboursement complet sur la carte utilisée pour le paiement.',
+            'Le remboursement apparaît généralement dans les 5 à 10 jours ouvrables, selon votre banque. Le délai peut varier pendant le traitement par Stripe et votre institution financière.',
+            '', `Hello ${partRequest.customerName},`, '',
+            'We cancelled your order and submitted a full refund to the card used for payment.',
+            'The refund usually appears within 5–10 business days, depending on your bank. Timing can vary while Stripe and your financial institution process it.',
+            `Numéro de commande : ${partRequest._id}`, `Order number: ${partRequest._id}`, '', 'MED AUTO',
+            '2046 Avenue Chartier, Dorval, QC H9P 1H2', '(514) 463-4503'
+          ].join('\n');
+      resultStatus = partRequest.status === 'Hold Cancelled' ? 'hold-cancelled' : 'payment-refunded';
+    } else {
+      return res.redirect('/admin/part-requests?updated=cancel-invalid');
+    }
+
     await partRequest.save();
-    return res.redirect('/admin/part-requests?updated=hold-cancelled');
+    if (!partRequest.customerEmail || !resend) {
+      return res.redirect(`/admin/part-requests?updated=${resultStatus}-no-email`);
+    }
+
+    try {
+      const emailResult = await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+        to: partRequest.customerEmail,
+        subject: emailSubject,
+        text: emailText
+      });
+      if (emailResult.error) throw new Error(emailResult.error.message || 'Resend rejected the email');
+      partRequest.cancellationEmailSentAt = new Date();
+      await partRequest.save();
+      return res.redirect(`/admin/part-requests?updated=${resultStatus}`);
+    } catch (emailError) {
+      console.error('Tire cancellation email failed:', emailError.message);
+      return res.redirect(`/admin/part-requests?updated=${resultStatus}-no-email`);
+    }
   } catch (error) {
-    console.error('Stripe authorization cancellation failed:', error.message);
+    console.error('Tire order cancellation failed:', error.message);
     return res.redirect('/admin/part-requests?updated=cancel-failed');
   }
 });

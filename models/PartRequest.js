@@ -44,7 +44,7 @@ const partRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Awaiting E-Transfer', 'Awaiting Payment', 'Payment Cancelled', 'Payment Received', 'Awaiting Stock Check', 'Payment Captured', 'Hold Cancelled'],
+    enum: ['Awaiting E-Transfer', 'Awaiting Payment', 'Payment Cancelled', 'Payment Received', 'Awaiting Stock Check', 'Payment Captured', 'Hold Cancelled', 'Refund Pending', 'Payment Refunded'],
     default: 'Awaiting E-Transfer'
   },
   paymentMethod: {
@@ -52,8 +52,14 @@ const partRequestSchema = new mongoose.Schema({
     default: 'E-Transfer'
   },
   paymentReceivedAt: Date,
+  orderEmailSentAt: Date,
   customerNotifiedAt: Date,
+  cancellationEmailSentAt: Date,
   stripePaymentIntentId: {
+    type: String,
+    trim: true
+  },
+  stripeRefundId: {
     type: String,
     trim: true
   },

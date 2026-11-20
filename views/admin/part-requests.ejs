@@ -50,9 +50,17 @@
   <% } else if (updateStatus === 'capture-failed') { %>
     <div class="form-alert form-alert-error">Card payment could not be captured. Check Stripe before retrying.</div>
   <% } else if (updateStatus === 'hold-cancelled') { %>
-    <div class="form-alert success-popup">Card authorization cancelled and released.</div>
+    <div class="form-alert success-popup">Card authorization released and the customer was emailed.</div>
+  <% } else if (updateStatus === 'hold-cancelled-no-email') { %>
+    <div class="form-alert form-alert-error">Authorization released, but the customer email could not be sent. Use Retry cancellation email below.</div>
+  <% } else if (updateStatus === 'payment-refunded') { %>
+    <div class="form-alert success-popup">Refund submitted and the customer was emailed.</div>
+  <% } else if (updateStatus === 'payment-refunded-no-email' || updateStatus === 'refund-pending-no-email') { %>
+    <div class="form-alert form-alert-error">Refund submitted, but the customer email could not be sent. Use Retry cancellation email below.</div>
+  <% } else if (updateStatus === 'refund-pending') { %>
+    <div class="form-alert success-popup">Refund submitted and the customer was emailed. Stripe may still be processing it.</div>
   <% } else if (updateStatus === 'cancel-failed') { %>
-    <div class="form-alert form-alert-error">Card authorization could not be cancelled. Check Stripe.</div>
+    <div class="form-alert form-alert-error">The order could not be cancelled or refunded. Check Stripe before trying again.</div>
   <% } %>
 
   <div class="admin-stats" aria-label="Part request summary">
@@ -114,18 +122,21 @@
                   </span>
                 </td>
                 <td>
-                  <span class="status-badge <%= ['Payment Received', 'Payment Captured'].includes(request.status)
+                  <span class="status-badge <%= ['Payment Received', 'Payment Captured', 'Payment Refunded'].includes(request.status)
                     ? 'status-sold'
                     : 'status-new' %>">
-                    <%= request.status === 'Awaiting Stock Check' ? 'Card authorized · check stock'
+                    <%= request.status === 'Awaiting Stock Check' ? 'Card authorized · payment not captured'
                       : request.status === 'Payment Captured' ? 'Card payment captured'
                       : request.status === 'Hold Cancelled' ? 'Card authorization released'
+                      : request.status === 'Refund Pending' ? 'Refund processing'
+                      : request.status === 'Payment Refunded' ? 'Payment refunded'
                       : request.status === 'Payment Cancelled' ? 'Checkout cancelled'
                       : request.status === 'Payment Received' ? 'E-transfer received'
                       : request.status === 'Awaiting Payment' ? 'Awaiting card checkout'
                       : 'Awaiting e-transfer' %>
                   </span>
                   <% if (request.customerNotifiedAt) { %><span class="admin-cell-meta">Customer emailed</span><% } %>
+                  <% if (request.cancellationEmailSentAt) { %><span class="admin-cell-meta">Cancellation email sent</span><% } %>
                 </td>
                 <td>
                   <% if (request.supplierUrl) { %>
@@ -142,8 +153,16 @@
                       <form action="/admin/part-requests/<%= request._id %>/capture" method="POST">
                         <button type="submit" class="btn btn-primary" onclick="return confirm('Capture this card payment now? This will charge the customer\'s card.');">Capture card payment</button>
                       </form>
-                      <form action="/admin/part-requests/<%= request._id %>/cancel-hold" method="POST">
-                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Cancel and release this card authorization?');">Release authorization</button>
+                      <form action="/admin/part-requests/<%= request._id %>/cancel" method="POST">
+                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Cancel this order and release the card authorization? The customer will be emailed.');">Cancel order</button>
+                      </form>
+                    <% } else if (request.status === 'Payment Captured') { %>
+                      <form action="/admin/part-requests/<%= request._id %>/cancel" method="POST">
+                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Cancel this order and submit a full refund to the customer\'s original card? The customer will be emailed.');">Cancel &amp; refund</button>
+                      </form>
+                    <% } else if (['Hold Cancelled', 'Refund Pending', 'Payment Refunded'].includes(request.status) && !request.cancellationEmailSentAt) { %>
+                      <form action="/admin/part-requests/<%= request._id %>/cancel" method="POST">
+                        <button type="submit" class="btn btn-secondary">Retry cancellation email</button>
                       </form>
                     <% } else if (request.status === 'Awaiting E-Transfer') { %>
                       <form action="/admin/part-requests/<%= request._id %>/status" method="POST">

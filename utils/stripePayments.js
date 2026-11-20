@@ -1,6 +1,6 @@
 const https = require('https');
 
-function stripeRequest({ method = 'POST', path, params }) {
+function stripeRequest({ method = 'POST', path, params, extraHeaders = {} }) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) throw new Error('Stripe payments are not configured');
 
@@ -13,7 +13,8 @@ function stripeRequest({ method = 'POST', path, params }) {
       headers: {
         Authorization: `Bearer ${secretKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': Buffer.byteLength(body)
+        'Content-Length': Buffer.byteLength(body),
+        ...extraHeaders
       }
     }, response => {
       let responseBody = '';
@@ -83,9 +84,21 @@ function cancelPaymentIntent(paymentIntentId) {
   });
 }
 
+function refundPaymentIntent(paymentIntentId, orderId) {
+  const params = new URLSearchParams();
+  params.append('payment_intent', paymentIntentId);
+  params.append('reason', 'requested_by_customer');
+  return stripeRequest({
+    path: '/v1/refunds',
+    params,
+    extraHeaders: { 'Idempotency-Key': `med-auto-tire-order-${orderId}-refund` }
+  });
+}
+
 module.exports = {
   createTireCheckoutSession,
   retrieveCheckoutSession,
   capturePaymentIntent,
-  cancelPaymentIntent
+  cancelPaymentIntent,
+  refundPaymentIntent
 };

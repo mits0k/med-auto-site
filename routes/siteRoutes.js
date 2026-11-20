@@ -280,6 +280,43 @@ router.get('/parts/payment-return', async (req, res) => {
       }
     }
 
+    if (resend && partRequest.customerEmail && !partRequest.orderEmailSentAt) {
+      const total = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' })
+        .format(expectedTotal / 100);
+      try {
+        const emailResult = await resend.emails.send({
+          from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+          to: partRequest.customerEmail,
+          subject: 'Tire order received / Commande de pneus reçue — MED AUTO',
+          text: [
+            `Bonjour ${partRequest.customerName},`,
+            '',
+            'Nous avons reçu votre commande de pneus. Votre carte a été autorisée, mais le paiement n’a pas encore été prélevé. MED AUTO traitera le paiement et vous enverra les détails du ramassage.',
+            `Commande : ${partRequest.quantity} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
+            `Numéro de commande : ${partRequest._id}`,
+            `Total autorisé : ${total}`,
+            'Ramassage uniquement chez MED AUTO : 2046 Avenue Chartier, Dorval, QC H9P 1H2. Les pneus ne sont pas expédiés.',
+            '',
+            `Hello ${partRequest.customerName},`,
+            '',
+            'We received your tire order. Your card has been authorized, but the payment has not been captured yet. MED AUTO will process the payment and email you the pickup details.',
+            `Order: ${partRequest.quantity} × ${partRequest.brand} ${partRequest.model} (${partRequest.size})`,
+            `Order number: ${partRequest._id}`,
+            `Authorized total: ${total}`,
+            'Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.',
+            '',
+            'MED AUTO',
+            '(514) 463-4503'
+          ].join('\n')
+        });
+        if (emailResult.error) throw new Error(emailResult.error.message || 'Resend rejected the email');
+        partRequest.orderEmailSentAt = new Date();
+        await partRequest.save();
+      } catch (emailError) {
+        console.error('Stripe order receipt email failed:', emailError.message);
+      }
+    }
+
     req.session.partOrderConfirmation = {
       tire: { brand: partRequest.brand, model: partRequest.model, size: partRequest.size, priceCents: partRequest.priceCents },
       quantity: partRequest.quantity,
@@ -401,6 +438,44 @@ router.post('/parts/request', async (req, res) => {
           'Next step: verify the e-transfer, then click Payment Received in admin.'
         ].join('\n')
       });
+    }
+
+    if (resend && customerEmail && !partRequest.orderEmailSentAt) {
+      const total = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' })
+        .format(taxSummary.totalCents / 100);
+      const etransferEmail = process.env.ETRANSFER_EMAIL || 'tkalantzis70@gmail.com';
+      try {
+        const emailResult = await resend.emails.send({
+          from: process.env.EMAIL_FROM || 'MED AUTO <onboarding@resend.dev>',
+          to: customerEmail,
+          subject: 'Tire order received / Commande de pneus reçue — MED AUTO',
+          text: [
+            `Bonjour ${customerName},`,
+            '',
+            'Nous avons reçu votre commande de pneus. Pour terminer la commande, envoyez le virement Interac au courriel ci-dessous et inscrivez le numéro de commande dans le message.',
+            `Courriel pour le virement : ${etransferEmail}`,
+            `Montant : ${total}`,
+            `Numéro de commande : ${partRequest._id}`,
+            'Ramassage uniquement chez MED AUTO : 2046 Avenue Chartier, Dorval, QC H9P 1H2. Les pneus ne sont pas expédiés.',
+            '',
+            `Hello ${customerName},`,
+            '',
+            'We received your tire order. To complete it, send the Interac e-transfer to the email below and include your order number in the message.',
+            `E-transfer email: ${etransferEmail}`,
+            `Amount: ${total}`,
+            `Order number: ${partRequest._id}`,
+            'Pickup only at MED AUTO: 2046 Avenue Chartier, Dorval, QC H9P 1H2. Tires are not shipped.',
+            '',
+            'MED AUTO',
+            '(514) 463-4503'
+          ].join('\n')
+        });
+        if (emailResult.error) throw new Error(emailResult.error.message || 'Resend rejected the email');
+        partRequest.orderEmailSentAt = new Date();
+        await partRequest.save();
+      } catch (emailError) {
+        console.error('E-transfer order receipt email failed:', emailError.message);
+      }
     }
 
     req.session.partOrderConfirmation = {
